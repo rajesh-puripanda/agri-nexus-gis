@@ -7,7 +7,7 @@
 // ============================================================
 
 const historicalRepository = require("../repositories/historicalRepository");
-const soilAnalysisService = require("./soilAnalysisService");
+const soilClassification = require("../scientific/classification/soilClassification");
 
 const API_PHASE = "10.4";
 
@@ -18,37 +18,37 @@ const PARAMETERS = {
     label: "pH",
     unit: "pH",
     field: "ph",
-    classifier: soilAnalysisService.classifyPH,
+    classifier: soilClassification.classifyPH,
   },
   nitrogen: {
     label: "Nitrogen",
     unit: "kg/ha",
     field: "nitrogen",
-    classifier: soilAnalysisService.classifyNitrogen,
+    classifier: soilClassification.classifyNitrogen,
   },
   phosphorus: {
     label: "Phosphorus",
     unit: "kg/ha",
     field: "phosphorus",
-    classifier: soilAnalysisService.classifyPhosphorus,
+    classifier: soilClassification.classifyPhosphorus,
   },
   potassium: {
     label: "Potassium",
     unit: "kg/ha",
     field: "potassium",
-    classifier: soilAnalysisService.classifyPotassium,
+    classifier: soilClassification.classifyPotassium,
   },
   organic_carbon: {
     label: "Organic Carbon",
     unit: "%",
     field: "organic_carbon",
-    classifier: soilAnalysisService.classifyOrganicCarbon,
+    classifier: soilClassification.classifyOrganicCarbon,
   },
   electrical_conductivity: {
     label: "Electrical Conductivity",
     unit: "dS/m",
     field: "electrical_conductivity",
-    classifier: soilAnalysisService.classifyEC,
+    classifier: soilClassification.classifyEC,
   },
 };
 
