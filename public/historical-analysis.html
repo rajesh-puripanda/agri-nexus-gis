@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historical Soil Analysis</title>
+  <link rel="stylesheet" href="/css/historical-analysis.css">
+</head>
+<body>
+  <main class="historical-page">
+    <header class="historical-header">
+      <div>
+        <p class="page-kicker">Soil Analysis GIS</p>
+        <h1>Historical Soil Analysis</h1>
+        <p class="page-description">
+          Explore spatially relevant historical soil observations and
+          compare scientifically compatible samples.
+        </p>
+      </div>
+  <a href="/" id="backToMapLink">← Back to Map</a>
+</header>
+
+<section id="page-status" class="status-panel" aria-live="polite">
+  Loading historical analysis...
+</section>
+
+<section id="current-sample-section" class="analysis-section" hidden>
+  <div class="section-header">
+    <div>
+      <p class="section-kicker">Current Sample</p>
+      <h2>Selected Soil Sample</h2>
+    </div>
+  </div>
+
+  <div id="current-sample" class="current-sample-card"></div>
+</section>
+
+<section id="candidate-section" class="analysis-section" hidden>
+  <div class="section-header">
+    <div>
+      <p class="section-kicker">Historical Discovery</p>
+      <h2>Historical Candidate Sites</h2>
+      <p class="section-description">
+        Candidates are ranked by spatial proximity. Spatial proximity
+        identifies candidates only; scientific comparison eligibility
+        is determined separately by the backend.
+      </p>
+    </div>
+
+    <div class="candidate-controls">
+      <label for="max-candidates">Candidates</label>
+
+      <select id="max-candidates">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+      </select>
+
+      <button id="load-candidates" type="button" class="primary-button">
+        Find Candidates
+      </button>
+    </div>
+  </div>
+
+  <div id="candidate-summary" class="candidate-summary"></div>
+
+  <div id="candidate-list" class="candidate-list"></div>
+</section>
+
+<section id="comparison-section" class="analysis-section" hidden>
+  <div class="section-header">
+    <div>
+      <p class="section-kicker">Historical Comparison</p>
+      <h2>Comparison Result</h2>
+    </div>
+
+    <button id="close-comparison" type="button" class="secondary-button">
+      Close
+    </button>
+  </div>
+
+  <div id="comparison-result" class="comparison-result"></div>
+</section>
+  </main>
+
+  <script src="/js/historical-analysis.js"></script>
+
+</body>
+</html>

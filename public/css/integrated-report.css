@@ -1,0 +1,781 @@
+/* ============================================================
+   public/css/integrated-report.css
+
+   Soil Analysis GIS
+   Phase 10.6.8  Integrated Analytical GIS Reporting
+
+   Presentation Layer
+   ============================================================ */
+
+.integrated-report {
+  width: 100%;
+  margin: 0;
+}
+
+/* ============================================================
+   REPORT HEADER
+   ============================================================ */
+
+.integrated-report-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid #d8dfdb;
+  border-radius: 6px;
+  background: #f8faf9;
+}
+
+.integrated-report-header-main {
+  min-width: 0;
+}
+
+.integrated-report-title {
+  margin: 0;
+  color: #293831;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.integrated-report-subtitle {
+  margin: 3px 0 0;
+  color: #68766f;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.integrated-report-header-status {
+  flex: 0 0 auto;
+}
+
+/* ============================================================
+   REPORT METADATA
+   ============================================================ */
+
+.integrated-report-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.integrated-report-meta-item {
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid #e1e7e3;
+  border-radius: 5px;
+  background: #ffffff;
+}
+
+.integrated-report-meta-label {
+  display: block;
+  margin-bottom: 2px;
+  color: #738079;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.integrated-report-meta-value {
+  display: block;
+  color: #34443c;
+  font-size: 11px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   STATUS BADGES
+   ============================================================ */
+
+.integrated-report-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 21px;
+  padding: 2px 7px;
+  border: 1px solid #d8dfdb;
+  border-radius: 999px;
+  background: #f5f7f6;
+  color: #53615a;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.integrated-report-badge-available {
+  border-color: #b9d4c3;
+  background: #eef7f1;
+  color: #386047;
+}
+
+.integrated-report-badge-not-requested {
+  border-color: #d9dfdc;
+  background: #f5f7f6;
+  color: #69756f;
+}
+
+.integrated-report-badge-not-applicable {
+  border-color: #d8dfe4;
+  background: #f3f6f8;
+  color: #596873;
+}
+
+.integrated-report-badge-unavailable {
+  border-color: #e2d6b8;
+  background: #fbf7eb;
+  color: #75643c;
+}
+
+.integrated-report-badge-error {
+  border-color: #e3c4c4;
+  background: #fbf1f1;
+  color: #8a4545;
+}
+
+.integrated-report-badge-partial {
+  border-color: #e2d6b8;
+  background: #fbf7eb;
+  color: #75643c;
+}
+
+/* ============================================================
+   REPORT SECTIONS
+   ============================================================ */
+
+.integrated-report-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.integrated-report-section {
+  overflow: hidden;
+  border: 1px solid #d8dfdb;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.integrated-report-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e3e8e5;
+  background: #f8faf9;
+}
+
+.integrated-report-section-title {
+  margin: 0;
+  color: #34443c;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.integrated-report-section-content {
+  padding: 9px 10px;
+}
+
+/* ============================================================
+   SUMMARY METRICS
+   ============================================================ */
+
+.integrated-report-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+  margin-bottom: 9px;
+}
+
+.integrated-report-metric {
+  padding: 6px 8px;
+  border: 1px solid #e1e7e3;
+  border-radius: 5px;
+  background: #fafcfb;
+}
+
+.integrated-report-metric-label {
+  display: block;
+  margin-bottom: 2px;
+  color: #748078;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.integrated-report-metric-value {
+  display: block;
+  color: #2f4037;
+  font-size: 12px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   COMPACT DATA ROWS
+
+   Ordinary report data is intentionally kept in ONE column.
+   Each item contains label + value on the same row.
+   ============================================================ */
+
+.integrated-report-data-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+}
+
+.integrated-report-data-item {
+  display: grid;
+  grid-template-columns: minmax(130px, 180px) minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  min-width: 0;
+  padding: 5px 2px;
+  border: none;
+  border-bottom: 1px solid #edf0ee;
+  border-radius: 0;
+  background: transparent;
+}
+
+.integrated-report-data-item:last-child {
+  border-bottom: none;
+}
+
+.integrated-report-data-label {
+  display: block;
+  margin: 0;
+  color: #68766f;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.integrated-report-data-value {
+  display: block;
+  color: #35443d;
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+
+.integrated-report-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.integrated-report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.integrated-report-table th,
+.integrated-report-table td {
+  padding: 5px 7px;
+  border-bottom: 1px solid #e4e9e6;
+  text-align: left;
+  vertical-align: top;
+}
+
+.integrated-report-table th {
+  color: #53625a;
+  background: #f5f7f6;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.integrated-report-table td {
+  color: #35443d;
+}
+
+.integrated-report-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.integrated-report-table tbody tr:hover {
+  background: #fafcfb;
+}
+
+/* ============================================================
+   CLASSIFICATION / VALUE CELLS
+   ============================================================ */
+
+.integrated-report-value {
+  font-weight: 600;
+}
+
+.integrated-report-classification {
+  font-weight: 600;
+}
+
+/* ============================================================
+   NESTED CONTENT
+   ============================================================ */
+
+.integrated-report-subsection {
+  margin-top: 8px;
+}
+
+.integrated-report-subsection:first-child {
+  margin-top: 0;
+}
+
+.integrated-report-subsection-title {
+  margin: 0 0 5px;
+  color: #53625a;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.integrated-report-list {
+  margin: 0;
+  padding-left: 17px;
+  color: #4e5d55;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.integrated-report-list li {
+  margin-bottom: 2px;
+}
+
+/* ============================================================
+   EMPTY / ERROR STATES
+   ============================================================ */
+
+.integrated-report-empty {
+  margin: 0;
+  color: #718078;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.integrated-report-error {
+  margin: 0;
+  padding: 8px;
+  border: 1px solid #e3c4c4;
+  border-radius: 5px;
+  background: #fbf1f1;
+  color: #7e4141;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/* ============================================================
+   TECHNICAL DETAILS
+   ============================================================ */
+
+.integrated-report-details {
+  margin-top: 8px;
+  border: 1px solid #e1e7e3;
+  border-radius: 5px;
+  background: #fafcfb;
+}
+
+.integrated-report-details summary {
+  padding: 7px 8px;
+  cursor: pointer;
+  color: #53625a;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.integrated-report-details[open] summary {
+  border-bottom: 1px solid #e1e7e3;
+}
+
+.integrated-report-json {
+  margin: 0;
+  padding: 8px;
+  max-height: 420px;
+  overflow: auto;
+  background: #f7f9f8;
+  color: #45544c;
+  font-family:
+    Consolas,
+    "Courier New",
+    monospace;
+  font-size: 9px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   REPORT FOOTER
+   ============================================================ */
+
+.integrated-report-footer {
+  margin-top: 8px;
+  color: #7a857f;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .integrated-report-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .integrated-report-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .integrated-report-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .integrated-report-meta,
+  .integrated-report-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .integrated-report-section-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .integrated-report-data-item {
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding: 5px 2px;
+  }
+}
+
+
+/* ============================================================
+   Phase 10.6.8  Integrated Report Table Size & Scroll Override
+   ============================================================ */
+
+.integrated-report-table-container {
+  width: 100%;
+  max-width: 100%;
+  max-height: 520px;
+  overflow-x: auto;
+  overflow-y: auto;
+  box-sizing: border-box;
+  border: 1px solid #e1e7e3;
+  border-radius: 5px;
+  background: #ffffff;
+}
+
+.integrated-report-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 11px;
+}
+
+.integrated-report-table th,
+.integrated-report-table td {
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+  box-sizing: border-box;
+  padding: 5px 7px;
+  border-bottom: 1px solid #e4e9e6;
+  border-right: 1px solid #edf0ee;
+  text-align: left;
+  vertical-align: top;
+}
+
+.integrated-report-table th:last-child,
+.integrated-report-table td:last-child {
+  border-right: none;
+}
+
+.integrated-report-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  color: #53625a;
+  background: #f5f7f6;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.integrated-report-table td {
+  height: 120px;
+  color: #35443d;
+}
+
+.integrated-report-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.integrated-report-table tbody tr:hover {
+  background: #fafcfb;
+}
+
+/* ============================================================
+   CONSTRAINED CELL CONTENT
+
+   Large objects/lists receive their own vertical scrollbar.
+   The underlying report data is not removed.
+   ============================================================ */
+
+.integrated-report-table-cell-content {
+  width: 100%;
+  max-width: 100%;
+  max-height: 105px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding-right: 5px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+/* Scrollbar sizing */
+
+.integrated-report-table-container::-webkit-scrollbar,
+.integrated-report-table-cell-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.integrated-report-table-container::-webkit-scrollbar-thumb,
+.integrated-report-table-cell-content::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: #c7cfca;
+}
+
+.integrated-report-table-container::-webkit-scrollbar-track,
+.integrated-report-table-cell-content::-webkit-scrollbar-track {
+  background: #f1f4f2;
+}
+
+/* Nested lists */
+
+.integrated-report-table-cell-content .integrated-report-list {
+  margin: 0;
+  padding-left: 15px;
+}
+
+/* Nested tables must remain inside their parent cell */
+
+.integrated-report-table-cell-content .integrated-report-table-container {
+  max-height: 95px;
+  border: none;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.integrated-report-table-cell-content .integrated-report-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.integrated-report-table-cell-content .integrated-report-table th,
+.integrated-report-table-cell-content .integrated-report-table td {
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  height: auto;
+  padding: 3px 4px;
+}
+
+/* ============================================================
+   RESPONSIVE REPORT TABLE
+   ============================================================ */
+
+@media (max-width: 640px) {
+
+  .integrated-report-table-container {
+    max-height: 420px;
+  }
+
+  .integrated-report-table th,
+  .integrated-report-table td {
+    width: 160px;
+    min-width: 160px;
+    max-width: 160px;
+  }
+
+  .integrated-report-table td {
+    height: 105px;
+  }
+
+  .integrated-report-table-cell-content {
+    max-height: 90px;
+  }
+}
+
+
+/* ============================================================
+   Phase 10.6.8  Natural Report Row Height
+   ============================================================ */
+
+/*
+ * Do not force every report row to a fixed height.
+ * Short/simple values should occupy only the space they need.
+ * Large content remains constrained by the cell-content scrollbar.
+ */
+
+.integrated-report-table td {
+  height: auto;
+  min-height: 0;
+  vertical-align: top;
+}
+
+.integrated-report-table-cell-content {
+  max-height: 105px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Keep the mobile layout natural as well. */
+
+@media (max-width: 640px) {
+
+  .integrated-report-table td {
+    height: auto;
+    min-height: 0;
+  }
+
+  .integrated-report-table-cell-content {
+    max-height: 90px;
+  }
+}
+
+/* ============================================================
+   Phase 10.6.8  Flexible Report Column Width
+   ============================================================ */
+
+/*
+ * Allow columns to size naturally.
+ * The table can grow wider than the report container and
+ * remains horizontally scrollable.
+ */
+
+.integrated-report-table {
+  width: max-content;
+  min-width: 100%;
+  table-layout: auto;
+}
+
+/* Flexible column sizing */
+
+.integrated-report-table th,
+.integrated-report-table td {
+  width: auto;
+  min-width: 120px;
+  max-width: 280px;
+  box-sizing: border-box;
+}
+
+/* Headers can wrap instead of forcing excessive width */
+
+.integrated-report-table th {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Keep cell content inside its column */
+
+.integrated-report-table-cell-content {
+  width: 100%;
+  max-width: 100%;
+  max-height: 105px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}
+
+/* Nested tables retain compact flexible columns */
+
+.integrated-report-table-cell-content .integrated-report-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: auto;
+}
+
+.integrated-report-table-cell-content .integrated-report-table th,
+.integrated-report-table-cell-content .integrated-report-table td {
+  min-width: 80px;
+  max-width: 180px;
+  width: auto;
+}
+
+/* Mobile */
+
+@media (max-width: 640px) {
+
+  .integrated-report-table th,
+  .integrated-report-table td {
+    min-width: 110px;
+    max-width: 220px;
+  }
+
+  .integrated-report-table-cell-content {
+    max-height: 90px;
+  }
+}
+
+/* ============================================================
+   Phase 10.6.8  Interactive Report Column Resizing
+   ============================================================ */
+
+.integrated-report-table th {
+  position: relative;
+}
+
+.integrated-report-column-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 7px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 5;
+  user-select: none;
+  touch-action: none;
+}
+
+.integrated-report-column-resize-handle:hover {
+  background: rgba(90, 110, 100, 0.22);
+}
+
+.integrated-report-column-resize-handle.is-resizing {
+  background: rgba(70, 90, 80, 0.35);
+}
+
+body.integrated-report-column-resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+body.integrated-report-column-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}

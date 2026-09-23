@@ -1,0 +1,1333 @@
+"use strict";
+
+// ============================================================
+// server/services/interpolationService.js
+// ============================================================
+//
+// Soil Analysis GIS
+//
+// Phase 12.5.1 — Production Scientific Kriging Integration
+//
+// Responsibilities:
+//   1. Validate interpolation requests
+//   2. Retrieve soil samples
+//   3. Extract valid interpolation points
+//   4. Resolve scientific Kriging parameters once/request
+//   5. Determine spatial extent
+//   6. Build interpolation grid
+//   7. Delegate scientific interpolation calculation
+//   8. Calculate surface statistics
+//   9. Build stable API response
+//
+// Scientific calculations remain in interpolation engines.
+//
+// Scientific parameter estimation is performed once per
+// interpolation request, before grid construction.
+//
+// ============================================================
+
+const soilRepository = require("../repositories/soilRepository");
+
+const {
+  interpolateIDW,
+  calculateDistance: calculateIDWDistance,
+} = require("./interpolation/idwInterpolation");
+
+const {
+  interpolateKriging,
+} = require("./interpolation/krigingInterpolation");
+
+const {
+  interpolateSpline,
+} = require("./interpolation/splineInterpolation");
+
+const {
+  interpolateNearestNeighbour,
+} = require("./interpolation/nearestNeighbourInterpolation");
+
+const {
+  resolveScientificInterpolationParameters,
+} = require("./interpolation/scientificInterpolationParameterService");
+
+
+// ============================================================
+// API PHASE
+// ============================================================
+
+const API_PHASE = "8.3";
+
+// ============================================================
+// SUPPORTED PARAMETERS
+// ============================================================
+
+const SUPPORTED_PARAMETERS = {
+  ph: {
+    key: "ph",
+    field: "ph",
+    label: "pH",
+    unit: "pH",
+  },
+
+  nitrogen: {
+    key: "nitrogen",
+    field: "nitrogen",
+    label: "Nitrogen",
+    unit: "kg/ha",
+  },
+
+  phosphorus: {
+    key: "phosphorus",
+    field: "phosphorus",
+    label: "Phosphorus",
+    unit: "kg/ha",
+  },
+
+  potassium: {
+    key: "potassium",
+    field: "potassium",
+    label: "Potassium",
+    unit: "kg/ha",
+  },
+
+  organic_carbon: {
+    key: "organic_carbon",
+    field: "organic_carbon",
+    label: "Organic Carbon",
+    unit: "%",
+  },
+
+  electrical_conductivity: {
+    key: "electrical_conductivity",
+    field: "electrical_conductivity",
+    label: "Electrical Conductivity",
+    unit: "dS/m",
+  },
+};
+
+// ============================================================
+// SUPPORTED METHODS
+// ============================================================
+
+const SUPPORTED_METHODS = {
+  idw: {
+    key: "idw",
+    label: "Inverse Distance Weighting",
+  },
+
+  kriging: {
+    key: "kriging",
+    label: "Kriging",
+  },
+
+  spline: {
+    key: "spline",
+    label: "Thin-Plate Spline",
+  },
+
+  nearest_neighbour: {
+    key: "nearest_neighbour",
+    label: "Nearest-Neighbour",
+  },
+};
+
+// ============================================================
+// METHOD DISPLAY NAMES
+// ============================================================
+
+const METHOD_DISPLAY_NAMES = {
+  idw: "IDW",
+  kriging: "Kriging",
+  spline: "Thin-Plate Spline",
+  nearest_neighbour: "Nearest-Neighbour",
+};
+
+// ============================================================
+// METHOD-SPECIFIC SAMPLE REQUIREMENTS
+// ============================================================
+//
+// Minimum number of valid interpolation points required by
+// each scientific interpolation method.
+//
+// These service-level checks provide an early, method-aware
+// API validation layer. Each scientific engine retains its
+// own internal validation as a second line of defense.
+//
+// ============================================================
+
+const MIN_SAMPLE_COUNTS = {
+  idw: 1,
+  kriging: 2,
+  spline: 3,
+  nearest_neighbour: 1,
+};
+
+// ============================================================
+// DEFAULT SETTINGS
+// ============================================================
+
+const DEFAULT_POWER = 2;
+
+const DEFAULT_RESOLUTION = 50;
+
+const MIN_RESOLUTION = 10;
+
+const MAX_RESOLUTION = 200;
+
+const MIN_POWER = 0.5;
+
+const MAX_POWER = 10;
+
+// ============================================================
+// NUMERIC HELPER
+// ============================================================
+
+function isFiniteNumber(value) {
+  return (
+    typeof value === "number" &&
+    Number.isFinite(value)
+  );
+}
+
+// ============================================================
+// NORMALIZATION
+// ============================================================
+
+function normalizeParameter(parameter) {
+  if (typeof parameter !== "string") {
+    return null;
+  }
+
+  return (
+    SUPPORTED_PARAMETERS[
+      parameter.trim().toLowerCase()
+    ] || null
+  );
+}
+
+function normalizeMethod(method) {
+  if (
+    method === undefined ||
+    method === null ||
+    method === ""
+  ) {
+    return SUPPORTED_METHODS.idw;
+  }
+
+  if (typeof method !== "string") {
+    return null;
+  }
+
+  return (
+    SUPPORTED_METHODS[
+      method.trim().toLowerCase()
+    ] || null
+  );
+}
+
+function normalizePower(power) {
+  if (
+    power === undefined ||
+    power === null ||
+    power === ""
+  ) {
+    return DEFAULT_POWER;
+  }
+
+  const numericPower = Number(power);
+
+  return Number.isFinite(numericPower)
+    ? numericPower
+    : null;
+}
+
+function normalizeResolution(resolution) {
+  if (
+    resolution === undefined ||
+    resolution === null ||
+    resolution === ""
+  ) {
+    return DEFAULT_RESOLUTION;
+  }
+
+  const numericResolution = Number(resolution);
+
+  return Number.isInteger(numericResolution)
+    ? numericResolution
+    : null;
+}
+
+// ============================================================
+// METHOD SUCCESS MESSAGE
+// ============================================================
+
+function buildInterpolationSuccessMessage(method) {
+  if (
+    !method ||
+    !method.key ||
+    !METHOD_DISPLAY_NAMES[method.key]
+  ) {
+    return null;
+  }
+
+  return (
+    `${METHOD_DISPLAY_NAMES[method.key]} ` +
+    "interpolation surface generated successfully."
+  );
+}
+
+// ============================================================
+// REQUEST VALIDATION
+// ============================================================
+
+function validateInterpolationRequest(data = {}) {
+  const errors = [];
+
+  const parameter = normalizeParameter(
+    data.parameter,
+  );
+
+  if (!parameter) {
+    errors.push(
+      "parameter must be one of: ph, nitrogen, phosphorus, potassium, organic_carbon, electrical_conductivity.",
+    );
+  }
+
+  const method = normalizeMethod(data.method);
+
+  if (!method) {
+    const methodKeys =
+      Object.keys(SUPPORTED_METHODS).join(", ");
+
+    errors.push(
+      `method must be one of: ${methodKeys}.`,
+    );
+  }
+
+  let power = null;
+
+  // ----------------------------------------------------------
+  // IDW-specific power validation
+  // ----------------------------------------------------------
+  //
+  // Power is scientifically meaningful only for IDW.
+  // Other interpolation methods use their own engine-level
+  // parameters and therefore must not expose IDW power.
+  //
+  // ----------------------------------------------------------
+
+  if (method && method.key === "idw") {
+    power = normalizePower(data.power);
+
+    if (power === null) {
+      errors.push(
+        "power must be a valid number.",
+      );
+    } else if (
+      power < MIN_POWER ||
+      power > MAX_POWER
+    ) {
+      errors.push(
+        `power must be between ${MIN_POWER} and ${MAX_POWER}.`,
+      );
+    }
+  }
+
+  const resolution = normalizeResolution(
+    data.resolution,
+  );
+
+  if (resolution === null) {
+    errors.push(
+      "resolution must be a whole number.",
+    );
+  } else if (
+    resolution < MIN_RESOLUTION ||
+    resolution > MAX_RESOLUTION
+  ) {
+    errors.push(
+      `resolution must be between ${MIN_RESOLUTION} and ${MAX_RESOLUTION}.`,
+    );
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    parameter,
+    method,
+    power,
+    resolution,
+  };
+}
+
+// ============================================================
+// METHOD-SPECIFIC SAMPLE COUNT VALIDATION
+// ============================================================
+
+function validateInterpolationSampleCount(
+  method,
+  sampleCount,
+) {
+  const minimum =
+    MIN_SAMPLE_COUNTS[method.key];
+
+  if (
+    !Number.isInteger(sampleCount) ||
+    sampleCount < minimum
+  ) {
+    return {
+      valid: false,
+      minimum,
+      actual: sampleCount,
+      error:
+        `${method.label} interpolation requires at least ` +
+        `${minimum} valid soil sample${
+          minimum === 1 ? "" : "s"
+        }. Received ${sampleCount}.`,
+    };
+  }
+
+  return {
+    valid: true,
+    minimum,
+    actual: sampleCount,
+    error: null,
+  };
+}
+
+// ============================================================
+// EXTRACT INTERPOLATION POINTS
+// ============================================================
+
+function extractInterpolationPoints(
+  samples,
+  parameter,
+) {
+  const points = [];
+
+  if (!Array.isArray(samples)) {
+    return points;
+  }
+
+  for (const sample of samples) {
+    const latitude = Number(sample.latitude);
+    const longitude = Number(sample.longitude);
+    const value = Number(
+      sample[parameter.field],
+    );
+
+    if (!Number.isFinite(latitude)) continue;
+    if (!Number.isFinite(longitude)) continue;
+    if (!Number.isFinite(value)) continue;
+
+    if (
+      latitude < -90 ||
+      latitude > 90
+    ) {
+      continue;
+    }
+
+    if (
+      longitude < -180 ||
+      longitude > 180
+    ) {
+      continue;
+    }
+
+    points.push({
+      id: sample.id,
+      sample_code: sample.sample_code,
+      latitude,
+      longitude,
+      value,
+    });
+  }
+
+  return points;
+}
+
+// ============================================================
+// EXTENT
+// ============================================================
+
+function calculateExtent(points) {
+  if (
+    !Array.isArray(points) ||
+    points.length === 0
+  ) {
+    return null;
+  }
+
+  let minLatitude = Infinity;
+  let maxLatitude = -Infinity;
+  let minLongitude = Infinity;
+  let maxLongitude = -Infinity;
+
+  for (const point of points) {
+    minLatitude = Math.min(
+      minLatitude,
+      point.latitude,
+    );
+
+    maxLatitude = Math.max(
+      maxLatitude,
+      point.latitude,
+    );
+
+    minLongitude = Math.min(
+      minLongitude,
+      point.longitude,
+    );
+
+    maxLongitude = Math.max(
+      maxLongitude,
+      point.longitude,
+    );
+  }
+
+  return {
+    minLatitude,
+    maxLatitude,
+    minLongitude,
+    maxLongitude,
+  };
+}
+
+function padExtent(extent) {
+  if (!extent) {
+    return null;
+  }
+
+  let {
+    minLatitude,
+    maxLatitude,
+    minLongitude,
+    maxLongitude,
+  } = extent;
+
+  const latitudeRange =
+    maxLatitude - minLatitude;
+
+  const longitudeRange =
+    maxLongitude - minLongitude;
+
+  const latitudePadding =
+    latitudeRange === 0
+      ? 0.001
+      : latitudeRange * 0.02;
+
+  const longitudePadding =
+    longitudeRange === 0
+      ? 0.001
+      : longitudeRange * 0.02;
+
+  minLatitude = Math.max(
+    -90,
+    minLatitude - latitudePadding,
+  );
+
+  maxLatitude = Math.min(
+    90,
+    maxLatitude + latitudePadding,
+  );
+
+  minLongitude = Math.max(
+    -180,
+    minLongitude - longitudePadding,
+  );
+
+  maxLongitude = Math.min(
+    180,
+    maxLongitude + longitudePadding,
+  );
+
+  return {
+    minLatitude,
+    maxLatitude,
+    minLongitude,
+    maxLongitude,
+  };
+}
+
+// ============================================================
+// COMPATIBILITY DISTANCE
+// ============================================================
+//
+// Retained as a public service helper for existing consumers.
+// The actual IDW distance calculation now belongs to the
+// dedicated IDW interpolation engine.
+//
+// ============================================================
+
+function calculateDistance(
+  latitude1,
+  longitude1,
+  latitude2,
+  longitude2,
+) {
+  return calculateIDWDistance(
+    latitude1,
+    longitude1,
+    latitude2,
+    longitude2,
+  );
+}
+
+// ============================================================
+// IDW COMPATIBILITY WRAPPER
+// ============================================================
+//
+// Retained so existing service tests/API consumers continue
+// to work while the actual IDW engine lives separately.
+//
+// ============================================================
+
+function calculateIDWValue(
+  latitude,
+  longitude,
+  points,
+  power,
+) {
+  if (
+    !Array.isArray(points) ||
+    points.length === 0
+  ) {
+    return null;
+  }
+
+  const result = interpolateIDW(
+    points,
+    {
+      latitude,
+      longitude,
+    },
+    {
+      power,
+    },
+  );
+
+  return result.prediction;
+}
+
+// ============================================================
+// NORMALIZE INTERPOLATION ENGINE RESULT
+// ============================================================
+//
+// Converts method-specific engine results into one stable
+// service-level result contract.
+//
+// Engine-specific scientific diagnostics are preserved under
+// `diagnostics`.
+//
+// ============================================================
+
+function normalizeInterpolationResult(
+  method,
+  result,
+) {
+  if (
+    !method ||
+    !result ||
+    result.success !== true
+  ) {
+    return null;
+  }
+
+  const prediction =
+    method.key === "kriging"
+      ? result.predictedValue
+      : result.prediction;
+
+  if (!Number.isFinite(prediction)) {
+    return null;
+  }
+
+  const diagnostics = {
+    engineMethod:
+      result.method || method.key,
+  };
+
+  if (method.key === "idw") {
+    diagnostics.power = result.power;
+  }
+
+  if (method.key === "kriging") {
+    diagnostics.weights = result.weights;
+    diagnostics.weightSum = result.weightSum;
+    diagnostics.lagrangeMultiplier =
+      result.lagrangeMultiplier;
+    diagnostics.covarianceParameters =
+      result.covarianceParameters;
+    diagnostics.distances =
+      result.distances;
+    diagnostics.covariance =
+      result.covariance;
+    diagnostics.system =
+      result.system;
+    diagnostics.residual =
+      result.residual;
+    diagnostics.maximumResidual =
+      result.maximumResidual;
+  }
+
+  if (method.key === "spline") {
+    diagnostics.origin =
+      result.origin;
+    diagnostics.weights =
+      result.weights;
+    diagnostics.polynomialCoefficients =
+      result.polynomialCoefficients;
+    diagnostics.engineDiagnostics =
+      result.diagnostics;
+  }
+
+  if (method.key === "nearest_neighbour") {
+    diagnostics.nearestSample =
+      result.nearestSample;
+    diagnostics.engineDiagnostics =
+      result.diagnostics;
+  }
+
+  return {
+    success: true,
+    method: method.key,
+    prediction,
+    target: result.target,
+    sampleCount: result.sampleCount,
+    diagnostics,
+  };
+}
+
+// ============================================================
+// SCIENTIFIC KRIGING PARAMETER RESOLUTION
+// ============================================================
+//
+// Production interpolation requests use the complete
+// scientific parameter-resolution chain:
+//
+//   soil observations
+//        ↓
+//   experimental variogram
+//        ↓
+//   parameter estimation
+//        ↓
+//   resolved Kriging parameters
+//
+// This function is deliberately called once per interpolation
+// request, never once per grid cell.
+//
+// ============================================================
+
+function resolveScientificKrigingParameters({
+  parameter,
+  points,
+  sampleCount,
+} = {}) {
+  return resolveScientificInterpolationParameters({
+    method: "kriging",
+    parameter: parameter?.key ?? parameter ?? null,
+    points,
+    sampleCount,
+  });
+}
+
+// ============================================================
+// INTERPOLATION METHOD DISPATCHER
+// ============================================================
+//
+// Routes interpolation requests to the appropriate scientific
+// interpolation engine.
+//
+// The service remains responsible for orchestration only.
+// Scientific calculations remain inside the dedicated engines.
+//
+// `interpolationParameters` is optional for backward
+// compatibility with existing direct consumers.
+//
+// For production Kriging requests, prepareInterpolation()
+// always supplies scientifically resolved parameters.
+//
+// ============================================================
+
+function calculateInterpolationValue(
+  method,
+  latitude,
+  longitude,
+  points,
+  power,
+  interpolationParameters = null,
+) {
+  if (
+    !method ||
+    !Array.isArray(points) ||
+    points.length === 0
+  ) {
+    return null;
+  }
+
+  const target = {
+    latitude,
+    longitude,
+  };
+
+  let result;
+
+  switch (method.key) {
+    case "idw":
+      result = interpolateIDW(
+        points,
+        target,
+        { power },
+      );
+      break;
+
+    case "kriging": {
+      if (
+        !interpolationParameters ||
+        !interpolationParameters.parameters
+      ) {
+        return null;
+      }
+
+      result = interpolateKriging(
+        points,
+        target,
+        interpolationParameters.parameters,
+      );
+
+      break;
+    }
+
+    case "spline":
+      result = interpolateSpline(
+        points,
+        target,
+      );
+      break;
+
+    case "nearest_neighbour":
+      result = interpolateNearestNeighbour(
+        points,
+        target,
+      );
+      break;
+
+    default:
+      return null;
+  }
+
+  const normalized =
+    normalizeInterpolationResult(
+      method,
+      result,
+    );
+
+  return normalized
+    ? normalized.prediction
+    : null;
+}
+
+// ============================================================
+// INTERPOLATION GRID
+// ============================================================
+//
+// `interpolationParameters` is passed through unchanged to
+// every cell.
+//
+// IMPORTANT:
+// Parameter estimation does NOT occur here.
+//
+// The parameter contract is resolved once by
+// prepareInterpolation() before this function is called.
+//
+// ============================================================
+
+function buildInterpolationGrid(
+  extent,
+  resolution,
+  points,
+  method,
+  power,
+  interpolationParameters = null,
+) {
+  if (!extent) {
+    return {
+      rows: 0,
+      columns: 0,
+      cells: [],
+    };
+  }
+
+  const rows = resolution;
+  const columns = resolution;
+
+  const latitudeRange =
+    extent.maxLatitude -
+    extent.minLatitude;
+
+  const longitudeRange =
+    extent.maxLongitude -
+    extent.minLongitude;
+
+  const latitudeStep =
+    rows > 1
+      ? latitudeRange / (rows - 1)
+      : 0;
+
+  const longitudeStep =
+    columns > 1
+      ? longitudeRange / (columns - 1)
+      : 0;
+
+  const cells = [];
+
+  for (
+    let row = 0;
+    row < rows;
+    row += 1
+  ) {
+    const latitude =
+      extent.maxLatitude -
+      row * latitudeStep;
+
+    for (
+      let column = 0;
+      column < columns;
+      column += 1
+    ) {
+      const longitude =
+        extent.minLongitude +
+        column * longitudeStep;
+
+      const value =
+        calculateInterpolationValue(
+          method,
+          latitude,
+          longitude,
+          points,
+          power,
+          interpolationParameters,
+        );
+
+      cells.push({
+        row,
+        column,
+        latitude,
+        longitude,
+        value,
+      });
+    }
+  }
+
+  return {
+    rows,
+    columns,
+    cells,
+  };
+}
+
+// ============================================================
+// STATISTICS
+// ============================================================
+
+function calculateSurfaceStatistics(cells) {
+  const validValues = [];
+
+  if (Array.isArray(cells)) {
+    for (const cell of cells) {
+      if (
+        cell &&
+        isFiniteNumber(cell.value)
+      ) {
+        validValues.push(cell.value);
+      }
+    }
+  }
+
+  if (validValues.length === 0) {
+    return {
+      validCellCount: 0,
+      minimum: null,
+      maximum: null,
+      average: null,
+    };
+  }
+
+  let minimum = Infinity;
+  let maximum = -Infinity;
+  let total = 0;
+
+  for (const value of validValues) {
+    minimum = Math.min(
+      minimum,
+      value,
+    );
+
+    maximum = Math.max(
+      maximum,
+      value,
+    );
+
+    total += value;
+  }
+
+  return {
+    validCellCount:
+      validValues.length,
+    minimum,
+    maximum,
+    average:
+      total / validValues.length,
+  };
+}
+
+// ============================================================
+// ROUNDING
+// ============================================================
+
+function roundValue(value) {
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+
+  return Number(
+    value.toFixed(6),
+  );
+}
+
+function roundGridCells(cells) {
+  return cells.map((cell) => ({
+    row: cell.row,
+    column: cell.column,
+    latitude: roundValue(
+      cell.latitude,
+    ),
+    longitude: roundValue(
+      cell.longitude,
+    ),
+    value: roundValue(
+      cell.value,
+    ),
+  }));
+}
+
+// ============================================================
+// CONFIGURATION
+// ============================================================
+
+function buildInterpolationConfiguration({
+  parameter,
+  method,
+  power,
+  resolution,
+  sampleCount,
+  extent,
+}) {
+  const settings = {
+    resolution,
+  };
+
+  // IDW-specific setting only.
+  if (method.key === "idw") {
+    settings.power = power;
+  }
+
+  return {
+    parameter: {
+      key: parameter.key,
+      label: parameter.label,
+      field: parameter.field,
+      unit: parameter.unit,
+    },
+
+    method: {
+      key: method.key,
+      label: method.label,
+    },
+
+    settings,
+
+    spatialExtent: extent,
+    sampleCount,
+
+    architecture: {
+      calculationLocation:
+        "backend",
+      presentationLocation:
+        "frontend",
+      surfaceType:
+        "continuous",
+      extentConstraint:
+        "sample_extent",
+    },
+  };
+}
+
+// ============================================================
+// PREPARE INTERPOLATION
+// ============================================================
+
+async function prepareInterpolation(
+  options = {},
+) {
+  const validation =
+    validateInterpolationRequest(
+      options,
+    );
+
+  if (!validation.valid) {
+    const error = new Error(
+      validation.errors.join(" "),
+    );
+
+    error.statusCode = 400;
+    error.validationErrors =
+      validation.errors;
+
+    throw error;
+  }
+
+  const {
+    parameter,
+    method,
+    power,
+    resolution,
+  } = validation;
+
+  const samples =
+    await soilRepository.getAllSoilSamples();
+
+  if (
+    !Array.isArray(samples) ||
+    samples.length === 0
+  ) {
+    const error = new Error(
+      "At least one soil sample is required for interpolation.",
+    );
+
+    error.statusCode = 400;
+
+    throw error;
+  }
+
+  const points =
+    extractInterpolationPoints(
+      samples,
+      parameter,
+    );
+
+  if (points.length === 0) {
+    const error = new Error(
+      `No valid soil samples contain usable ${parameter.label} values and coordinates.`,
+    );
+
+    error.statusCode = 400;
+
+    throw error;
+  }
+
+  const sampleValidation =
+    validateInterpolationSampleCount(
+      method,
+      points.length,
+    );
+
+  if (!sampleValidation.valid) {
+    const error = new Error(
+      sampleValidation.error,
+    );
+
+    error.statusCode = 400;
+
+    error.validationErrors = [
+      sampleValidation.error,
+    ];
+
+    throw error;
+  }
+
+  // ==========================================================
+  // SCIENTIFIC PARAMETER RESOLUTION
+  // ==========================================================
+  //
+  // Kriging parameters are resolved ONCE per interpolation
+  // request, using the same parameter-specific observations
+  // that will later be interpolated.
+  //
+  // No estimation occurs inside the grid-cell loop.
+  //
+  // Other methods do not require variogram parameters.
+  //
+  // ==========================================================
+
+  let interpolationParameters = null;
+
+  if (method.key === "kriging") {
+    interpolationParameters =
+      resolveScientificKrigingParameters({
+        parameter,
+        points,
+        sampleCount: points.length,
+      });
+
+    if (
+      !interpolationParameters ||
+      interpolationParameters.success !== true ||
+      !interpolationParameters.parameters
+    ) {
+      const error = new Error(
+        interpolationParameters?.error ??
+          "Unable to resolve scientific Kriging parameters.",
+      );
+
+      error.statusCode = 400;
+
+      if (
+        Array.isArray(
+          interpolationParameters?.errors,
+        )
+      ) {
+        error.validationErrors =
+          interpolationParameters.errors;
+      }
+
+      error.scientificInterpolation =
+        interpolationParameters ?? null;
+
+      throw error;
+    }
+  }
+
+  const rawExtent =
+    calculateExtent(points);
+
+  const extent =
+    padExtent(rawExtent);
+
+  const configuration =
+    buildInterpolationConfiguration({
+      parameter,
+      method,
+      power,
+      resolution,
+      sampleCount:
+        points.length,
+      extent,
+    });
+
+  const grid =
+    buildInterpolationGrid(
+      extent,
+      resolution,
+      points,
+      method,
+      power,
+      interpolationParameters,
+    );
+
+  const roundedCells =
+    roundGridCells(
+      grid.cells,
+    );
+
+  const statistics =
+    calculateSurfaceStatistics(
+      roundedCells,
+    );
+
+  return {
+    success: true,
+    phase: API_PHASE,
+    status: "completed",
+
+    message:
+      buildInterpolationSuccessMessage(method),
+
+    configuration,
+
+    statistics: {
+      validCellCount:
+        statistics.validCellCount,
+      minimum:
+        roundValue(
+          statistics.minimum,
+        ),
+      maximum:
+        roundValue(
+          statistics.maximum,
+        ),
+      average:
+        roundValue(
+          statistics.average,
+        ),
+    },
+
+    sourcePoints:
+      points.map((point) => ({
+        id: point.id,
+        sample_code:
+          point.sample_code,
+        latitude:
+          roundValue(
+            point.latitude,
+          ),
+        longitude:
+          roundValue(
+            point.longitude,
+          ),
+        value:
+          roundValue(
+            point.value,
+          ),
+      })),
+
+    grid: {
+      rows: grid.rows,
+      columns: grid.columns,
+      cellCount:
+        roundedCells.length,
+      cells: roundedCells,
+    },
+  };
+}
+
+// ============================================================
+// PUBLIC API
+// ============================================================
+
+module.exports = {
+  API_PHASE,
+
+  SUPPORTED_PARAMETERS,
+  SUPPORTED_METHODS,
+  MIN_SAMPLE_COUNTS,
+
+  DEFAULT_POWER,
+  DEFAULT_RESOLUTION,
+  MIN_RESOLUTION,
+  MAX_RESOLUTION,
+  MIN_POWER,
+  MAX_POWER,
+
+  validateInterpolationRequest,
+  validateInterpolationSampleCount,
+  extractInterpolationPoints,
+
+  calculateExtent,
+  padExtent,
+
+  calculateDistance,
+  calculateIDWValue,
+  normalizeInterpolationResult,
+
+  resolveScientificKrigingParameters,
+
+  calculateInterpolationValue,
+  buildInterpolationGrid,
+
+  calculateSurfaceStatistics,
+
+  buildInterpolationConfiguration,
+  buildInterpolationSuccessMessage,
+
+  prepareInterpolation,
+};

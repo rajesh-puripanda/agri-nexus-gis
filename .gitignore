@@ -1,0 +1,31 @@
+﻿# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / editor
+.vscode/
+.idea/
+
+# Temporary files
+tmp/
+temp/
+
+# Coverage / test output
+coverage/
+
+# Build output
+dist/
+build/

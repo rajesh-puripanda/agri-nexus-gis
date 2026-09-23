@@ -1,0 +1,80 @@
+  it("rejects collinear sample geometry", () => {
+    const result =
+      interpolateSpline(
+        createCollinearSamples(),
+        {
+          latitude: 17.710,
+          longitude: 83.300,
+        },
+      );
+
+    assert.strictEqual(
+      result.success,
+      false,
+    );
+
+    assert.strictEqual(
+      result.error,
+      "Invalid spline interpolation geometry.",
+    );
+
+    assert.strictEqual(
+      result.geometry.reason,
+      "collinear_points",
+    );
+
+    assert.strictEqual(
+      result.geometry.spatialRank,
+      1,
+    );
+
+    assert.deepStrictEqual(
+      result.geometry.duplicatePairs,
+      [],
+    );
+  });
+
+  it("rejects duplicate-location geometry", () => {
+    const samples =
+      createThreePointSamples();
+
+    samples[1].latitude =
+      samples[0].latitude;
+
+    samples[1].longitude =
+      samples[0].longitude;
+
+    const result =
+      interpolateSpline(
+        samples,
+        {
+          latitude: 17.705,
+          longitude: 83.305,
+        },
+      );
+
+    assert.strictEqual(
+      result.success,
+      false,
+    );
+
+    assert.strictEqual(
+      result.error,
+      "Invalid spline interpolation geometry.",
+    );
+
+    assert.strictEqual(
+      result.geometry.reason,
+      "duplicate_locations",
+    );
+
+    assert.strictEqual(
+      result.geometry.spatialRank,
+      1,
+    );
+
+    assert.deepStrictEqual(
+      result.geometry.duplicatePairs,
+      [[0, 1]],
+    );
+  });

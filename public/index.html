@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Soil Analysis GIS</title>
+
+    <link rel="icon" href="/soil-analysis.png" type="image/x-icon" />
+
+    <!-- =====================================================
+         GIS STYLES
+         ===================================================== -->
+
+    <link rel="stylesheet" href="/css/gis.css" />
+
+    <!-- =====================================================
+         LEAFLET
+         ===================================================== -->
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""
+    />
+
+    <!-- =====================================================
+         APPLICATION STYLES
+         ===================================================== -->
+
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/integrated-report.css" />
+  </head>
+
+  <body>
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
+    <header class="app-header">
+      <div class="app-header-title">
+        <h1>Soil Analysis GIS</h1>
+
+        <p>Spatial Soil Analysis Application</p>
+      </div>
+
+      <div
+        id="applicationStatus"
+        class="application-status"
+        aria-label="Application status"
+      >
+        <span class="application-status-dot" aria-hidden="true"></span>
+
+        <span class="application-status-text"> Online </span>
+      </div>
+    </header>
+
+    <!-- =====================================================
+         MAIN DASHBOARD
+         ===================================================== -->
+
+    <main class="dashboard">
+      <!-- ===================================================
+           STATISTICS
+           =================================================== -->
+
+      <section class="statistics">
+        <div class="stat-card">
+          <h3>Total Samples</h3>
+          <div id="sampleCount">0</div>
+        </div>
+
+        <div class="stat-card">
+          <h3>Average pH</h3>
+          <div id="averagePh">—</div>
+        </div>
+
+        <div class="stat-card">
+          <h3>Low Nitrogen</h3>
+          <div id="lowNitrogen">0</div>
+        </div>
+      </section>
+
+      <!-- ===================================================
+           MAP
+           =================================================== -->
+
+      <section class="map-section">
+        <!-- =================================================
+             PHASE 9.6 — MAP OPERATIONAL CONTROL LANE
+             ================================================= -->
+
+        <div class="map-operational-controls" aria-label="Map controls">
+
+          <button
+            type="button"
+            id="soilSampleLabelToggle"
+            class="soil-label-toggle-button map-operational-button map-icon-button"
+            title="Toggle Soil Labels"
+            aria-label="Toggle Soil Labels"
+            aria-pressed="false"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 5h16v10H8l-4 4V5z"></path>
+              <path d="M8 9h8M8 12h5"></path>
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            id="refreshMap"
+            class="map-refresh-button map-operational-button map-icon-button"
+            title="Refresh Map"
+            aria-label="Refresh Map"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 11a8 8 0 0 0-14.9-4"></path>
+              <path d="M4 4v5h5"></path>
+              <path d="M4 13a8 8 0 0 0 14.9 4"></path>
+              <path d="M20 20v-5h-5"></path>
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            id="addSoilSample"
+            class="soil-add-sample-button map-operational-button map-icon-button"
+            title="Add Soil Sample"
+            aria-label="Add Soil Sample"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5v14M5 12h14"></path>
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            id="mapParameterToggle"
+            class="map-operational-button map-icon-button"
+            title="Map Parameter"
+            aria-label="Map Parameter"
+            aria-expanded="false"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3v3M12 18v3M3 12h3M18 12h3"></path>
+              <circle cx="12" cy="12" r="4"></circle>
+            </svg>
+          </button>
+          <button
+            id="mapParameterLegendToggle"
+            class="map-operational-button map-icon-button"
+            title="Map Parameter Legend"
+            aria-label="Map Parameter Legend"
+            aria-expanded="false"
+          >
+            ▤
+          </button>
+          <button
+            type="button"
+            id="spatialQueryToggle"
+            class="map-operational-button map-icon-button"
+            title="Spatial Query"
+            aria-label="Spatial Query"
+            aria-expanded="false"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10.5" cy="10.5" r="6"></circle>
+              <path d="M15 15l5 5"></path>
+            </svg>
+          </button>
+          <button
+            type="button"
+            id="thematicAnalysisToggle"
+            class="map-operational-button map-icon-button"
+            title="Thematic Analysis"
+            aria-label="Thematic Analysis"
+            aria-expanded="false"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 5h16v14H4z"></path>
+              <path d="M8 9h8M8 12h5M8 15h7"></path>
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            id="spatialInterpolationToggle"
+            class="map-operational-button map-icon-button"
+            title="Spatial Interpolation"
+            aria-label="Spatial Interpolation"
+            aria-expanded="false"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 17c3-7 5-7 8-2s5 5 8-8"></path>
+              <circle cx="4" cy="17" r="1.5"></circle>
+              <circle cx="12" cy="15" r="1.5"></circle>
+              <circle cx="20" cy="7" r="1.5"></circle>
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            id="fertilityZoningToggle"
+            class="map-operational-button map-icon-button"
+            title="Fertility Zoning"
+            aria-label="Fertility Zoning"
+            aria-expanded="false"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3l8 5-8 5-8-5 8-5z"></path>
+              <path d="M4 12l8 5 8-5"></path>
+              <path d="M4 16l8 5 8-5"></path>
+            </svg>
+          </button>
+        </div>
+        <div id="map" class="map-container"></div>
+      </section>
+
+      <!-- ===================================================
+           SELECTED SOIL SAMPLE
+           =================================================== -->
+
+      <section class="analysis-panel">
+        <div class="analysis-panel-header">
+          <h2>Selected Soil Sample</h2>
+
+          <button
+            type="button"
+            class="analysis-panel-toggle"
+            id="selectedSamplePanelToggle"
+            aria-expanded="true"
+            aria-controls="selectedSamplePanelContent"
+          >
+            −
+          </button>
+        </div>
+
+        <div id="selectedSamplePanelContent" class="analysis-panel-content">
+          <div id="selectedSampleContainer">
+            <p class="analysis-empty-state">
+              Select a soil sample on the map to view details.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================
+           SOIL ANALYSIS
+           =================================================== -->
+
+      <section class="analysis-panel">
+        <div class="analysis-panel-header">
+          <h2>Soil Analysis</h2>
+
+          <button
+            type="button"
+            class="analysis-panel-toggle"
+            id="soilAnalysisPanelToggle"
+            aria-expanded="true"
+            aria-controls="soilAnalysisPanelContent"
+          >
+            −
+          </button>
+        </div>
+
+        <div id="soilAnalysisPanelContent" class="analysis-panel-content">
+          <div class="table-container">
+            <table class="analysis-table">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Value</th>
+                  <th>Unit</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+
+              <tbody id="soilAnalysisTableBody">
+                <tr>
+                  <td colspan="4">Select a soil sample to view analysis.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================
+           SOIL INTERPRETATION & RECOMMENDATIONS
+           =================================================== -->
+
+      <section class="analysis-panel">
+        <div class="analysis-panel-header">
+          <h2>Soil Interpretation &amp; Recommendations</h2>
+
+          <button
+            type="button"
+            class="analysis-panel-toggle"
+            id="soilInterpretationPanelToggle"
+            aria-expanded="false"
+            aria-controls="soilInterpretationPanelContent"
+          >
+            +
+          </button>
+        </div>
+
+        <div
+          id="soilInterpretationPanelContent"
+          class="analysis-panel-content"
+          hidden
+        >
+          <div class="table-container">
+            <table class="analysis-table">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Interpretation</th>
+                  <th>Recommendation</th>
+                </tr>
+              </thead>
+
+              <tbody id="soilRecommendationTableBody">
+                <tr>
+                  <td colspan="3">
+                    Select a soil sample to view interpretation and
+                    recommendations.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================
+           CROP SUITABILITY
+           =================================================== -->
+
+      <section class="analysis-panel">
+        <div class="analysis-panel-header">
+          <h2>Crop Suitability</h2>
+
+          <button
+            type="button"
+            class="analysis-panel-toggle"
+            id="cropSuitabilityPanelToggle"
+            aria-expanded="false"
+            aria-controls="cropSuitabilityPanelContent"
+          >
+            +
+          </button>
+        </div>
+
+        <div
+          id="cropSuitabilityPanelContent"
+          class="analysis-panel-content"
+          hidden
+        >
+          <div id="cropSuitabilityContainer">
+            <p class="analysis-empty-state">
+              Select a soil sample to view crop suitability.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================
+           SOIL MANAGEMENT PLAN
+           =================================================== -->
+
+      <section class="analysis-panel">
+        <div class="analysis-panel-header">
+          <h2>Soil Management Plan</h2>
+
+          <button
+            type="button"
+            class="analysis-panel-toggle"
+            id="soilManagementPanelToggle"
+            aria-expanded="false"
+            aria-controls="soilManagementPanelContent"
+          >
+            +
+          </button>
+        </div>
+
+        <div
+          id="soilManagementPanelContent"
+          class="analysis-panel-content"
+          hidden
+        >
+          <div id="managementObservationsContainer">
+            <p class="analysis-empty-state">
+              Select a soil sample to view management observations.
+            </p>
+          </div>
+
+          <div id="soilManagementContainer">
+            <p class="analysis-empty-state">
+              Select a soil sample to view the soil management plan.
+            </p>
+          </div>
+        </div>
+      </section>
+      <!-- ===================================================
+           INTEGRATED ANALYTICAL GIS REPORT
+           =================================================== -->
+
+      <section class="analysis-panel">
+        <div class="analysis-panel-header">
+          <h2>Integrated Analytical GIS Report</h2>
+
+          <button
+            type="button"
+            class="analysis-panel-toggle"
+            id="integratedAnalyticalReportPanelToggle"
+            aria-expanded="false"
+            aria-controls="integratedAnalyticalReportPanelContent"
+          >
+            +
+          </button>
+        </div>
+
+        <div
+          id="integratedAnalyticalReportPanelContent"
+          class="analysis-panel-content"
+          hidden
+        >
+          <div class="analysis-action-row">
+            <button
+              type="button"
+              id="integratedAnalyticalReportGenerate"
+              class="soil-modal-button soil-modal-button-primary"
+            >
+              Generate Integrated Report
+            </button>
+
+            <button
+              type="button"
+              id="integratedAnalyticalReportClear"
+              class="soil-modal-button soil-modal-button-secondary"
+            >
+              Clear Report
+            </button>
+          </div>
+
+          <p
+            id="integratedAnalyticalReportStatus"
+            class="analysis-empty-state"
+          >
+            No integrated report generated.
+          </p>
+
+          <div id="integratedAnalyticalReportContainer">
+            <p class="analysis-empty-state">
+              Generate an integrated report to view the current
+              analytical GIS results.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- =====================================================
+         ADD SOIL SAMPLE MODAL
+         ===================================================== -->
+
+    <div
+      id="soilSampleModal"
+      class="modal-overlay hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="soilSampleModalTitle"
+    >
+      <div class="soil-sample-modal">
+        <!-- ===============================================
+             MODAL HEADER
+             =============================================== -->
+
+        <div class="soil-sample-modal-header">
+          <div>
+            <h2 id="soilSampleModalTitle">Add Soil Sample</h2>
+
+            <p class="soil-sample-modal-subtitle">
+              Enter field sample information
+            </p>
+          </div>
+
+          <button
+            type="button"
+            id="closeModal"
+            class="soil-sample-modal-close"
+            aria-label="Close"
+            title="Close"
+          >
+            &times;
+          </button>
+        </div>
+
+        <!-- ===============================================
+             FORM
+             =============================================== -->
+
+        <form id="soilSampleForm" novalidate>
+          <div class="soil-sample-modal-body">
+            <!-- ===========================================
+                 ERROR
+                 =========================================== -->
+
+            <div
+              id="formError"
+              class="soil-sample-form-error"
+              role="alert"
+              aria-live="polite"
+            ></div>
+
+            <!-- ===========================================
+                 SAMPLE INFORMATION
+                 =========================================== -->
+
+            <div class="soil-form-section">
+              <div class="soil-form-section-title">Sample Information</div>
+
+              <div class="soil-form-grid soil-form-grid-2">
+                <div class="soil-form-field">
+                  <label for="sampleCode">
+                    Sample Code
+                    <span class="required-mark">*</span>
+                  </label>
+
+                  <input
+                    type="text"
+                    id="sampleCode"
+                    name="sample_code"
+                    required
+                    autocomplete="off"
+                    placeholder="S-011"
+                  />
+                </div>
+
+                <div class="soil-form-field">
+                  <label for="sampleDate"> Sample Date </label>
+
+                  <input type="date" id="sampleDate" name="sample_date" />
+                </div>
+              </div>
+
+              <div class="soil-form-grid soil-form-grid-2">
+                <div class="soil-form-field">
+                  <label for="latitude"> Latitude </label>
+
+                  <input
+                    type="number"
+                    id="latitude"
+                    name="latitude"
+                    step="any"
+                    min="-90"
+                    max="90"
+                    required
+                    readonly
+                  />
+                </div>
+
+                <div class="soil-form-field">
+                  <label for="longitude"> Longitude </label>
+
+                  <input
+                    type="number"
+                    id="longitude"
+                    name="longitude"
+                    step="any"
+                    min="-180"
+                    max="180"
+                    required
+                    readonly
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- ===========================================
+                 SAMPLE DEPTH
+                 =========================================== -->
+
+            <div class="soil-form-section">
+              <div class="soil-form-section-title">Sample Depth</div>
+
+              <div class="soil-form-grid soil-form-grid-2">
+                <div class="soil-form-field">
+                  <label for="depthFromCm"> From </label>
+
+                  <div class="soil-stepper">
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="depthFromCm"
+                      data-stepper-action="decrement"
+                      aria-label="Decrease starting depth"
+                    >
+                      −
+                    </button>
+
+                    <input
+                      type="number"
+                      id="depthFromCm"
+                      name="depth_from_cm"
+                      min="0"
+                      step="1"
+                      placeholder="0"
+                    />
+
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="depthFromCm"
+                      data-stepper-action="increment"
+                      aria-label="Increase starting depth"
+                    >
+                      +
+                    </button>
+
+                    <span class="soil-stepper-unit"> cm </span>
+                  </div>
+                </div>
+
+                <div class="soil-form-field">
+                  <label for="depthToCm"> To </label>
+
+                  <div class="soil-stepper">
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="depthToCm"
+                      data-stepper-action="decrement"
+                      aria-label="Decrease ending depth"
+                    >
+                      −
+                    </button>
+
+                    <input
+                      type="number"
+                      id="depthToCm"
+                      name="depth_to_cm"
+                      min="0"
+                      step="1"
+                      placeholder="15"
+                    />
+
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="depthToCm"
+                      data-stepper-action="increment"
+                      aria-label="Increase ending depth"
+                    >
+                      +
+                    </button>
+
+                    <span class="soil-stepper-unit"> cm </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===========================================
+                 SOIL PARAMETERS
+                 =========================================== -->
+
+            <div class="soil-form-section">
+              <div class="soil-form-section-title">Soil Parameters</div>
+
+              <div class="soil-form-grid soil-form-grid-4">
+                <!-- pH -->
+
+                <div class="soil-form-field">
+                  <label for="ph"> pH </label>
+
+                  <div class="soil-stepper">
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="ph"
+                      data-stepper-action="decrement"
+                      aria-label="Decrease pH"
+                    >
+                      −
+                    </button>
+
+                    <input
+                      type="number"
+                      id="ph"
+                      name="ph"
+                      min="0"
+                      max="14"
+                      step="0.1"
+                      placeholder="6.5"
+                    />
+
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="ph"
+                      data-stepper-action="increment"
+                      aria-label="Increase pH"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Nitrogen -->
+
+                <div class="soil-form-field">
+                  <label for="nitrogen"> Nitrogen </label>
+
+                  <div class="soil-stepper">
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="nitrogen"
+                      data-stepper-action="decrement"
+                      aria-label="Decrease nitrogen"
+                    >
+                      −
+                    </button>
+
+                    <input
+                      type="number"
+                      id="nitrogen"
+                      name="nitrogen"
+                      min="0"
+                      step="0.01"
+                      placeholder="280"
+                    />
+
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="nitrogen"
+                      data-stepper-action="increment"
+                      aria-label="Increase nitrogen"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Phosphorus -->
+
+                <div class="soil-form-field">
+                  <label for="phosphorus"> Phosphorus </label>
+
+                  <div class="soil-stepper">
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="phosphorus"
+                      data-stepper-action="decrement"
+                      aria-label="Decrease phosphorus"
+                    >
+                      −
+                    </button>
+
+                    <input
+                      type="number"
+                      id="phosphorus"
+                      name="phosphorus"
+                      min="0"
+                      step="0.01"
+                      placeholder="22"
+                    />
+
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="phosphorus"
+                      data-stepper-action="increment"
+                      aria-label="Increase phosphorus"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Potassium -->
+
+                <div class="soil-form-field">
+                  <label for="potassium"> Potassium </label>
+
+                  <div class="soil-stepper">
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="potassium"
+                      data-stepper-action="decrement"
+                      aria-label="Decrease potassium"
+                    >
+                      −
+                    </button>
+
+                    <input
+                      type="number"
+                      id="potassium"
+                      name="potassium"
+                      min="0"
+                      step="0.01"
+                      placeholder="310"
+                    />
+
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="potassium"
+                      data-stepper-action="increment"
+                      aria-label="Increase potassium"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="soil-form-grid soil-form-grid-2">
+                <!-- Organic Carbon -->
+
+                <div class="soil-form-field">
+                  <label for="organicCarbon"> Organic Carbon </label>
+
+                  <div class="soil-stepper">
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="organicCarbon"
+                      data-stepper-action="decrement"
+                      aria-label="Decrease organic carbon"
+                    >
+                      −
+                    </button>
+
+                    <input
+                      type="number"
+                      id="organicCarbon"
+                      name="organic_carbon"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.65"
+                    />
+
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="organicCarbon"
+                      data-stepper-action="increment"
+                      aria-label="Increase organic carbon"
+                    >
+                      +
+                    </button>
+
+                    <span class="soil-stepper-unit"> % </span>
+                  </div>
+                </div>
+
+                <!-- Electrical Conductivity -->
+
+                <div class="soil-form-field">
+                  <label for="electricalConductivity">
+                    Electrical Conductivity
+                  </label>
+
+                  <div class="soil-stepper">
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="electricalConductivity"
+                      data-stepper-action="decrement"
+                      aria-label="Decrease electrical conductivity"
+                    >
+                      −
+                    </button>
+
+                    <input
+                      type="number"
+                      id="electricalConductivity"
+                      name="electrical_conductivity"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.42"
+                    />
+
+                    <button
+                      type="button"
+                      class="soil-stepper-button"
+                      data-stepper-target="electricalConductivity"
+                      data-stepper-action="increment"
+                      aria-label="Increase electrical conductivity"
+                    >
+                      +
+                    </button>
+
+                    <span class="soil-stepper-unit"> dS/m </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===========================================
+                 SOIL TEXTURE
+                 =========================================== -->
+
+            <div class="soil-form-section soil-form-section-last">
+              <div class="soil-form-section-title">Soil Texture</div>
+
+              <div class="soil-form-field">
+                <label for="soilTexture"> Texture </label>
+
+                <select id="soilTexture" name="soil_texture">
+                  <option value="">Select soil texture</option>
+
+                  <option value="Sandy">Sandy</option>
+
+                  <option value="Sandy Loam">Sandy Loam</option>
+
+                  <option value="Loamy">Loamy</option>
+
+                  <option value="Silty Loam">Silty Loam</option>
+
+                  <option value="Clay Loam">Clay Loam</option>
+
+                  <option value="Clay">Clay</option>
+                </select>
+
+                <small class="soil-field-help">
+                  Select one of the supported soil texture classes.
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===============================================
+               MODAL FOOTER
+               =============================================== -->
+
+          <div class="soil-sample-modal-footer">
+            <button
+              type="button"
+              id="cancelSample"
+              class="soil-modal-button soil-modal-button-secondary"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              id="saveSample"
+              class="soil-modal-button soil-modal-button-primary"
+            >
+              Save Sample
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- =====================================================
+         LEAFLET
+         ===================================================== -->
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
+      crossorigin=""
+    ></script>
+
+    <!-- =====================================================
+         APPLICATION JAVASCRIPT
+         ===================================================== -->
+
+    <script src="/js/map-ui-thematic.js"></script>
+    <script src="/js/map-ui-interpolation.js"></script>
+    <script src="/js/map-ui-fertility.js"></script>
+    <script src="/js/map-ui-sample.js"></script>
+    <script src="/js/map-ui-spatial-analysis.js"></script>
+    <script src="/js/spatial-query.js"></script>
+    <script src="/js/map-fertility.js"></script>
+    <script src="/js/map.js"></script>
+    <script src="/js/integrated-report.js"></script>
+    <script src="/js/app.js"></script>
+  </body>
+</html>

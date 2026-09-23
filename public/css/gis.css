@@ -1,0 +1,2521 @@
+/* ============================================================
+   public/css/gis.css
+   ============================================================
+   Soil Analysis GIS
+   GIS / Leaflet Presentation Styling
+   Phase 10.4
+   Spatial Query Controls & Result Layer
+   Built on:
+     Phase 7.2  — Thematic Marker Symbology
+     Phase 7.3  — Thematic Map & Legend
+     Phase 7.6  — Dashboard / UI Refinement
+     Phase 7.6.1 — Map UI HTML Extraction
+     Phase 7.7  — Map UI Refinement
+     Phase 8.2  — IDW Interpolation Frontend Integration
+     Phase 8.5  — Interpolation Controls / Surface
+     Phase 8.6  — Dynamic Interpolation Legend
+     Phase 9.4  — Fertility Zoning Surface
+     Phase 9.5  — Fertility Zoning Controls & UI
+     Phase 9.6  — Map Operational Control Lane
+     Phase 10.2.5 — Spatial Analysis Popup
+     Phase 10.4 — Spatial Query Controls & Result Layer
+   IMPORTANT:
+   Scientific classification thresholds are NOT defined here.
+   ============================================================ */
+
+/* ============================================================
+   LEAFLET MAP CONTROL BASE
+   ============================================================ */
+
+.leaflet-control {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ============================================================
+   MAP PARAMETER CONTROL
+   ============================================================ */
+
+.soil-map-control {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 5px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+  padding: 8px;
+  min-width: 180px;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+.soil-map-control-title {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.soil-map-parameter-select {
+  display: block;
+  width: 100%;
+  min-width: 160px;
+  box-sizing: border-box;
+  padding: 5px 7px;
+  border: 1px solid #bbb;
+  border-radius: 3px;
+  background: #fff;
+  color: #222;
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.soil-map-parameter-select:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+/* ============================================================
+   PHASE 9.6 — EXTERNAL MAP OPERATIONAL CONTROL LANE
+   ============================================================ */
+
+.map-operational-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 0;
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   PHASE 10.6 — COMPACT ICON TOOLBAR
+   ============================================================ */
+
+.map-operational-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 0;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+}
+
+.map-icon-button {
+  width: 46px;
+  min-width: 46px;
+  height: 46px;
+  min-height: 46px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.map-icon-button svg {
+  width: 28px;
+  height: 28px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.map-icon-button:hover {
+  background: #f5f5f5;
+}
+
+.map-icon-button.is-active {
+  background: #e8f0fe;
+  border-color: #3388ff;
+  color: #1f5fa8;
+}
+
+.map-icon-button:focus {
+  outline: 2px solid #3388ff;
+  outline-offset: 1px;
+}
+
+.map-operational-controls .map-operational-button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.map-operational-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 5px;
+  background: #ffffff;
+  color: #333333;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  pointer-events: auto;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.map-operational-button:hover {
+  background: #f5f5f5;
+}
+
+.map-operational-button:focus {
+  outline: 2px solid #3388ff;
+  outline-offset: 1px;
+}
+
+.map-operational-button:active {
+  transform: translateY(1px);
+}
+
+/* ============================================================
+   SAMPLE LABEL TOGGLE
+   ============================================================ */
+
+.soil-label-toggle-control {
+  pointer-events: auto;
+}
+
+.soil-label-toggle-button {
+  display: block;
+  padding: 6px 10px;
+  border: 1px solid #cfcfcf;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #333333;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.25);
+}
+
+.map-operational-controls .soil-label-toggle-button {
+  margin: 0;
+  box-shadow: none;
+}
+
+.soil-label-toggle-button:hover {
+  background: #f5f5f5;
+}
+
+.soil-label-toggle-button:focus {
+  outline: 2px solid #3388ff;
+  outline-offset: 1px;
+}
+
+/* ============================================================
+   SAMPLE LABEL
+   ============================================================ */
+
+.soil-sample-label {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  color: #222;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 2px 4px;
+  white-space: nowrap;
+}
+
+.soil-sample-label::before {
+  display: none;
+}
+
+/* ============================================================
+   THEMATIC MARKERS
+   ============================================================ */
+
+.soil-thematic-marker {
+  width: 30px;
+  height: 30px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+  text-align: center;
+  user-select: none;
+}
+
+.soil-thematic-marker.thematic-high {
+  background: #2e8b57;
+}
+
+.soil-thematic-marker.thematic-medium {
+  background: #d4a017;
+}
+
+.soil-thematic-marker.thematic-low {
+  background: #c0392b;
+}
+
+.soil-thematic-marker.thematic-warning {
+  background: #e67e22;
+}
+
+.soil-thematic-marker.thematic-neutral {
+  background: #3498db;
+}
+
+.soil-thematic-marker.thematic-unavailable {
+  background: #777777;
+}
+
+/* ============================================================
+   THEMATIC LEGEND
+   ============================================================ */
+
+.soil-thematic-legend-control {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 5px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+  padding: 8px;
+  min-width: 190px;
+  max-width: 240px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1000;
+  pointer-events: auto;
+  isolation: isolate;
+}
+
+.soil-thematic-panel-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.soil-thematic-panel-header-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.soil-thematic-legend-title,
+.soil-thematic-analysis-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.soil-thematic-panel-toggle {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  margin-left: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 22px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1002;
+}
+
+.soil-thematic-panel-toggle:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.soil-thematic-panel-toggle:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.soil-thematic-panel-content {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 6px;
+}
+
+.soil-thematic-panel-content[hidden] {
+  display: none;
+}
+
+.soil-thematic-legend-subtitle {
+  margin-bottom: 7px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: #555;
+}
+
+.soil-thematic-filter-status {
+  margin-bottom: 6px;
+  padding: 4px 5px;
+  border-radius: 3px;
+  background: #f0f0f0;
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+/* ============================================================
+   THEMATIC LEGEND ITEMS
+   ============================================================ */
+
+.soil-thematic-legend-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 2px 0;
+  padding: 4px 5px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: #222;
+  font-size: 11px;
+  line-height: 1.3;
+  cursor: pointer;
+  pointer-events: auto;
+  text-align: left;
+}
+
+.soil-thematic-legend-item:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.soil-thematic-legend-item.active {
+  border-color: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.08);
+  font-weight: 600;
+}
+
+.soil-thematic-legend-item:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.soil-thematic-legend-symbol {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  margin-right: 6px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.soil-thematic-legend-symbol.thematic-high {
+  background: #2e8b57;
+}
+
+.soil-thematic-legend-symbol.thematic-medium {
+  background: #d4a017;
+}
+
+.soil-thematic-legend-symbol.thematic-low {
+  background: #c0392b;
+}
+
+.soil-thematic-legend-symbol.thematic-warning {
+  background: #e67e22;
+}
+
+.soil-thematic-legend-symbol.thematic-neutral {
+  background: #3498db;
+}
+
+.soil-thematic-legend-symbol.thematic-unavailable {
+  background: #777777;
+}
+
+.soil-thematic-legend-count {
+  margin-left: auto;
+  padding-left: 8px;
+  font-size: 10px;
+  color: #555;
+}
+
+.soil-thematic-show-all {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 7px;
+  padding: 5px 7px;
+  border: 1px solid #aaa;
+  border-radius: 3px;
+  background: #fff;
+  color: #222;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.soil-thematic-show-all:hover:not(:disabled) {
+  background: #f1f1f1;
+}
+
+.soil-thematic-show-all:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.soil-thematic-show-all:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+/* ============================================================
+   THEMATIC INSPECTION
+   ============================================================ */
+
+.soil-thematic-inspection {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(0, 0, 0, 0.14);
+}
+
+.soil-thematic-inspection-title {
+  margin-bottom: 5px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.soil-thematic-inspection-row {
+  margin: 2px 0;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.soil-thematic-inspection-classification {
+  font-weight: 600;
+}
+
+/* ============================================================
+   THEMATIC ANALYSIS CONTROL
+   ============================================================ */
+
+.soil-thematic-analysis-control {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 5px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+  padding: 8px;
+  min-width: 190px;
+  max-width: 240px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1000;
+  pointer-events: auto;
+  isolation: isolate;
+}
+
+.soil-thematic-analysis-subtitle {
+  margin-bottom: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.soil-thematic-analysis-filter {
+  margin-bottom: 7px;
+  padding: 4px 5px;
+  background: #f0f0f0;
+  border-radius: 3px;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.soil-thematic-analysis-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 2px 0;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.soil-thematic-analysis-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.soil-thematic-analysis-value {
+  flex: 0 0 auto;
+  font-weight: 600;
+  text-align: right;
+}
+
+.soil-thematic-analysis-section {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(0, 0, 0, 0.14);
+}
+
+.soil-thematic-analysis-section-title {
+  margin-bottom: 4px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.soil-thematic-analysis-category {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 2px 0;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.soil-thematic-analysis-empty {
+  font-size: 10px;
+  line-height: 1.35;
+  color: #666;
+}
+
+.soil-thematic-analysis-note {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 9px;
+  line-height: 1.4;
+  color: #666;
+}
+
+/* ============================================================
+   SOIL SAMPLE POPUP
+   ============================================================ */
+
+.soil-sample-popup {
+  min-width: 190px;
+  max-width: 280px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.soil-sample-popup-title {
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  padding-bottom: 4px;
+}
+
+.soil-sample-popup-section {
+  margin-top: 7px;
+  margin-bottom: 3px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(0, 0, 0, 0.14);
+  font-size: 11px;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 5px;
+}
+
+.leaflet-popup-content {
+  margin: 10px 12px;
+}
+
+/* ============================================================
+   PHASE 8.2 — INTERPOLATION CONTROL
+   ============================================================ */
+
+.soil-interpolation-control {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 5px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+  padding: 8px;
+  min-width: 220px;
+  max-width: 260px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1000;
+  pointer-events: auto;
+  isolation: isolate;
+}
+
+.soil-interpolation-panel-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.soil-interpolation-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.soil-interpolation-panel-toggle {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1002;
+}
+
+.soil-interpolation-panel-toggle:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.soil-interpolation-panel-toggle:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.soil-interpolation-panel-content {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 7px;
+
+  max-height: min(620px, calc(100vh - 180px));
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-width: auto;
+}
+
+.soil-interpolation-panel-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.soil-interpolation-panel-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.soil-interpolation-panel-content::-webkit-scrollbar-thumb {
+  background: #aaaaaa;
+  border-radius: 5px;
+}
+
+.soil-interpolation-panel-content::-webkit-scrollbar-thumb:hover {
+  background: #888888;
+}
+
+.soil-interpolation-panel-content[hidden] {
+  display: none;
+}
+
+.soil-interpolation-subtitle {
+  margin-bottom: 8px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: #555;
+}
+
+.soil-interpolation-field-label {
+  display: block;
+  margin-top: 6px;
+  margin-bottom: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.soil-interpolation-select,
+.soil-interpolation-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 6px;
+  border: 1px solid #bbb;
+  border-radius: 3px;
+  background: #fff;
+  color: #222;
+  font-size: 11px;
+  line-height: 1.3;
+  pointer-events: auto;
+}
+
+.soil-interpolation-select {
+  cursor: pointer;
+}
+
+.soil-interpolation-select:focus,
+.soil-interpolation-input:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.soil-interpolation-visibility {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+  font-size: 11px;
+  line-height: 1.3;
+  cursor: pointer;
+  user-select: none;
+  pointer-events: auto;
+}
+
+.soil-interpolation-visibility input {
+  margin: 0;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.soil-interpolation-visibility.is-disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.soil-interpolation-visibility.is-disabled input {
+  cursor: default;
+}
+
+.soil-interpolation-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.soil-interpolation-actions button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 5px 7px;
+  border: 1px solid #aaa;
+  border-radius: 3px;
+  background: #fff;
+  color: #222;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.soil-interpolation-actions button:hover:not(:disabled) {
+  background: #f1f1f1;
+}
+
+.soil-interpolation-actions button:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.soil-interpolation-actions button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ============================================================
+   INTERPOLATION STATUS
+   ============================================================ */
+
+.soil-interpolation-status-control {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.soil-interpolation-status-control .soil-interpolation-status-indicator {
+  margin-top: 3px;
+}
+
+.soil-interpolation-status-indicator {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.soil-interpolation-status-control.status-idle
+  .soil-interpolation-status-indicator {
+  background: #777;
+}
+
+.soil-interpolation-status-control.status-loading
+  .soil-interpolation-status-indicator {
+  background: #d99a00;
+}
+
+.soil-interpolation-status-control.status-success
+  .soil-interpolation-status-indicator {
+  background: #2e8b57;
+}
+
+.soil-interpolation-status-control.status-error
+  .soil-interpolation-status-indicator {
+  background: #c0392b;
+}
+
+.soil-interpolation-status-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ============================================================
+   INTERPOLATION LEGEND
+   ============================================================ */
+
+.soil-interpolation-legend-control {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 5px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+  padding: 8px;
+  min-width: 210px;
+  max-width: 260px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1100;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  clear: both;
+  pointer-events: auto !important;
+  isolation: isolate;
+}
+
+.soil-interpolation-legend-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+.soil-interpolation-legend-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+.soil-interpolation-legend-toggle {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  margin-left: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 22px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  position: relative;
+  z-index: 1102;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.soil-interpolation-legend-toggle:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.soil-interpolation-legend-toggle:active {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.soil-interpolation-legend-toggle:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.soil-interpolation-legend-toggle:disabled {
+  cursor: default !important;
+  pointer-events: none;
+}
+
+.soil-interpolation-legend-content {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 6px;
+  pointer-events: auto;
+}
+
+.soil-interpolation-legend-content[hidden] {
+  display: none;
+}
+
+.soil-interpolation-legend-subtitle {
+  margin-bottom: 5px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: #555;
+}
+
+.soil-interpolation-gradient {
+  width: 100%;
+  height: 12px;
+  margin-top: 7px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.soil-interpolation-gradient-scale {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+.soil-interpolation-statistics {
+  margin-top: 7px;
+  pointer-events: none;
+}
+
+.soil-interpolation-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.soil-interpolation-stat-row span {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.soil-interpolation-stat-row strong {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.soil-interpolation-legend-note {
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 10px;
+  line-height: 1.35;
+  color: #666;
+  pointer-events: none;
+}
+
+/* ============================================================
+   PHASE 9.5 — FERTILITY ZONING CONTROL
+   ============================================================ */
+
+.soil-fertility-zoning-control {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 5px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+  padding: 8px;
+  min-width: 220px;
+  max-width: 260px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1000;
+  pointer-events: auto;
+  isolation: isolate;
+  overflow: visible;
+}
+
+.soil-fertility-zoning-panel-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.soil-fertility-zoning-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.soil-fertility-zoning-header-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.soil-fertility-zoning-panel-toggle {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  margin-left: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 22px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1002;
+  touch-action: manipulation;
+}
+
+.soil-fertility-zoning-panel-toggle:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.soil-fertility-zoning-panel-toggle:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.soil-fertility-zoning-panel-content {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 7px;
+}
+
+.soil-fertility-zoning-panel-content[hidden] {
+  display: none;
+}
+
+.soil-fertility-zoning-subtitle {
+  margin-bottom: 8px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: #555;
+}
+
+.soil-fertility-zoning-field-label {
+  display: block;
+  margin-top: 6px;
+  margin-bottom: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.soil-fertility-zoning-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 6px;
+  border: 1px solid #bbb;
+  border-radius: 3px;
+  background: #fff;
+  color: #222;
+  font-size: 11px;
+  line-height: 1.3;
+  pointer-events: auto;
+}
+
+.soil-fertility-zoning-input:hover {
+  border-color: #aaa;
+}
+
+.soil-fertility-zoning-input:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.soil-fertility-zoning-visibility {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+  font-size: 11px;
+  line-height: 1.3;
+  cursor: pointer;
+  user-select: none;
+  pointer-events: auto;
+}
+
+.soil-fertility-zoning-visibility input {
+  margin: 0;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.soil-fertility-zoning-visibility.is-disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.soil-fertility-zoning-visibility.is-disabled input {
+  cursor: default;
+}
+
+.soil-fertility-zoning-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.soil-fertility-zoning-actions button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 5px 7px;
+  border: 1px solid #aaa;
+  border-radius: 3px;
+  background: #fff;
+  color: #222;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.soil-fertility-zoning-actions button:hover:not(:disabled) {
+  background: #f1f1f1;
+}
+
+.soil-fertility-zoning-actions button:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.soil-fertility-zoning-actions button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ============================================================
+   FERTILITY ZONING STATUS
+   ============================================================ */
+
+.soil-fertility-zoning-status-control {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.soil-fertility-zoning-status-indicator {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  margin-top: 3px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.soil-fertility-zoning-status-control.status-idle
+  .soil-fertility-zoning-status-indicator {
+  background: #777;
+}
+
+.soil-fertility-zoning-status-control.status-loading
+  .soil-fertility-zoning-status-indicator {
+  background: #d99a00;
+}
+
+.soil-fertility-zoning-status-control.status-success
+  .soil-fertility-zoning-status-indicator {
+  background: #2e8b57;
+}
+
+.soil-fertility-zoning-status-control.status-error
+  .soil-fertility-zoning-status-indicator {
+  background: #c0392b;
+}
+
+.soil-fertility-zoning-status-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ============================================================
+   PHASE 9.5 — FERTILITY ZONING LEGEND
+   ============================================================ */
+
+.soil-fertility-zoning-legend-control {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 5px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+  padding: 8px;
+  min-width: 210px;
+  max-width: 260px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1050;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  clear: both;
+  pointer-events: auto !important;
+  isolation: isolate;
+  overflow: visible;
+}
+
+.soil-fertility-zoning-legend-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+.soil-fertility-zoning-legend-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+.soil-fertility-zoning-legend-toggle {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  margin-left: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 22px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  position: relative;
+  z-index: 1052;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.soil-fertility-zoning-legend-toggle:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.soil-fertility-zoning-legend-toggle:active {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.soil-fertility-zoning-legend-toggle:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.soil-fertility-zoning-legend-content {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 6px;
+  pointer-events: auto;
+}
+
+.soil-fertility-zoning-legend-content[hidden] {
+  display: none;
+}
+
+.soil-fertility-zoning-legend-subtitle {
+  margin-bottom: 7px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: #555;
+}
+
+.soil-fertility-zoning-legend-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 3px 0;
+  padding: 4px 5px;
+  border-radius: 3px;
+  background: transparent;
+  color: #222;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.soil-fertility-zoning-legend-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.soil-fertility-zoning-legend-symbol {
+  display: inline-block;
+  width: 22px;
+  height: 18px;
+  min-width: 22px;
+  margin-right: 7px;
+  box-sizing: border-box;
+  border: 1px solid rgba(0, 0, 0, 0.28);
+  border-radius: 2px;
+}
+
+.soil-fertility-zoning-legend-symbol.fertility-zone-low {
+  background: #c0392b;
+}
+
+.soil-fertility-zoning-legend-symbol.fertility-zone-moderate_good {
+  background: #d9a300;
+}
+
+.soil-fertility-zoning-legend-symbol.fertility-zone-high {
+  background: #2e8b57;
+}
+
+.soil-fertility-zoning-legend-symbol.fertility-zone-unavailable {
+  background: #7f8c8d;
+}
+
+.soil-fertility-zoning-legend-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.soil-fertility-zoning-legend-count {
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding-left: 8px;
+  font-size: 10px;
+  color: #555;
+  text-align: right;
+}
+
+.soil-fertility-zoning-legend-note {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 9px;
+  line-height: 1.4;
+  color: #666;
+  pointer-events: none;
+}
+
+/* ============================================================
+   LEAFLET CONTROL SPACING
+   ============================================================ */
+
+.leaflet-top.leaflet-left .leaflet-control {
+  margin-top: 10px;
+}
+
+.leaflet-top.leaflet-left .leaflet-control:first-child {
+  margin-top: 10px;
+}
+
+.leaflet-top.leaflet-right .leaflet-control {
+  margin-top: 10px;
+}
+
+.leaflet-top.leaflet-right .leaflet-control:first-child {
+  margin-top: 10px;
+}
+
+/* ============================================================
+   THEMATIC / INTERPOLATION / FERTILITY LEGEND SEPARATION
+   ============================================================ */
+
+.leaflet-control.soil-thematic-legend-control,
+.leaflet-control.soil-interpolation-legend-control,
+.leaflet-control.soil-fertility-zoning-legend-control {
+  display: block;
+  float: none;
+  clear: both;
+  box-sizing: border-box;
+}
+
+.leaflet-control.soil-thematic-legend-control {
+  margin-top: 10px;
+  margin-bottom: 14px;
+}
+
+.leaflet-control.soil-interpolation-legend-control {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.leaflet-control.soil-fertility-zoning-legend-control {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+/* ============================================================
+   BOTTOM-LEFT CONTROLS
+   ============================================================ */
+
+.leaflet-bottom.leaflet-left .leaflet-control {
+  margin-bottom: 10px;
+  margin-left: 10px;
+}
+
+/* ============================================================
+   BOTTOM-RIGHT CONTROLS
+   ============================================================ */
+
+.leaflet-bottom.leaflet-right .leaflet-control {
+  margin-bottom: 10px;
+  margin-right: 10px;
+}
+
+.leaflet-bottom.leaflet-right .soil-thematic-legend-control {
+  margin-bottom: 14px;
+  pointer-events: auto;
+}
+
+.leaflet-bottom.leaflet-right .soil-interpolation-legend-control {
+  margin-top: 14px;
+  margin-bottom: 10px;
+  pointer-events: auto !important;
+}
+
+.leaflet-bottom.leaflet-right .soil-fertility-zoning-legend-control {
+  margin-top: 14px;
+  margin-bottom: 10px;
+  pointer-events: auto !important;
+}
+
+/* ============================================================
+   LEAFLET LEGEND EVENT ISOLATION
+   ============================================================ */
+
+.leaflet-control.soil-interpolation-legend-control {
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 1100;
+}
+
+.leaflet-control.soil-interpolation-legend-control
+  .soil-interpolation-legend-toggle {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  position: relative;
+  z-index: 1102;
+}
+
+.leaflet-control.soil-thematic-legend-control {
+  pointer-events: auto !important;
+}
+
+.leaflet-control.soil-thematic-legend-control .soil-thematic-panel-toggle {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  position: relative;
+  z-index: 1002;
+}
+
+.leaflet-control.soil-fertility-zoning-legend-control {
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 1110;
+}
+
+.leaflet-control.soil-fertility-zoning-legend-control
+  .soil-fertility-zoning-legend-toggle {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  position: relative;
+  z-index: 1052;
+}
+
+/* ============================================================
+   CONTROL CONTENT BOX SIZING
+   ============================================================ */
+
+.soil-thematic-legend-control,
+.soil-thematic-analysis-control,
+.soil-interpolation-control,
+.soil-interpolation-legend-control,
+.soil-fertility-zoning-control,
+.soil-fertility-zoning-legend-control {
+  overflow: visible;
+  isolation: isolate;
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   FERTILITY ZONING SURFACE PRESENTATION
+   ============================================================ */
+
+.soil-fertility-zoning-cell {
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+.soil-fertility-zoning-cell.fertility-zone-low {
+  background: #c0392b;
+}
+
+.soil-fertility-zoning-cell.fertility-zone-moderate_good {
+  background: #d9a300;
+}
+
+.soil-fertility-zoning-cell.fertility-zone-high {
+  background: #2e8b57;
+}
+
+.soil-fertility-zoning-cell.fertility-zone-unavailable {
+  background: #7f8c8d;
+}
+
+/* ============================================================
+   DIRECT MAP SOIL SAMPLE ENTRY
+   Phase 8.2
+   ============================================================ */
+
+.soil-add-sample-control {
+  pointer-events: auto !important;
+}
+
+.soil-add-sample-button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  touch-action: manipulation;
+}
+
+.map-operational-controls .soil-add-sample-button {
+  margin: 0;
+  box-shadow: none;
+}
+
+.soil-add-sample-button.active {
+  font-weight: 700;
+}
+
+.soil-map-add-sample-mode {
+  cursor: crosshair !important;
+}
+
+.soil-map-add-sample-mode .leaflet-interactive {
+  cursor: crosshair;
+}
+
+/* ============================================================
+   COMPACT SOIL SAMPLE ENTRY MODAL
+   Phase 8.2 UI Refinement
+   ============================================================ */
+
+#soilSampleModal {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  box-sizing: border-box;
+  background: rgba(20, 30, 40, 0.38);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+#soilSampleModal.hidden {
+  display: none;
+}
+
+/* ============================================================
+   MODAL CARD
+   ============================================================ */
+
+.soil-sample-modal {
+  width: min(620px, 100%);
+  max-height: calc(100vh - 36px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 12px;
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.12);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ============================================================
+   MODAL HEADER
+   ============================================================ */
+
+.soil-sample-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 16px 11px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: #fafafa;
+}
+
+.soil-sample-modal-header h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #222;
+}
+
+.soil-sample-modal-subtitle {
+  margin: 3px 0 0;
+  font-size: 10px;
+  line-height: 1.3;
+  color: #777;
+}
+
+.soil-sample-modal-close {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #555;
+  font-size: 21px;
+  line-height: 28px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.soil-sample-modal-close:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #222;
+}
+
+.soil-sample-modal-close:focus {
+  outline: 2px solid #3388ff;
+  outline-offset: 1px;
+}
+
+/* ============================================================
+   MODAL BODY
+   ============================================================ */
+
+.soil-sample-modal-body {
+  overflow-y: auto;
+  padding: 12px 16px 10px;
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   FORM ERROR
+   ============================================================ */
+
+.soil-sample-form-error {
+  display: none;
+  margin-bottom: 9px;
+  padding: 7px 9px;
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  border-radius: 6px;
+  background: rgba(192, 57, 43, 0.08);
+  color: #a93226;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.soil-sample-form-error:not(:empty) {
+  display: block;
+}
+
+/* ============================================================
+   FORM SECTION
+   ============================================================ */
+
+.soil-form-section {
+  margin-bottom: 10px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.soil-form-section-last {
+  margin-bottom: 0;
+  padding-bottom: 2px;
+  border-bottom: 0;
+}
+
+.soil-form-section-title {
+  margin-bottom: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #444;
+}
+
+/* ============================================================
+   FORM GRIDS
+   ============================================================ */
+
+.soil-form-grid {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.soil-form-grid:last-child {
+  margin-bottom: 0;
+}
+
+.soil-form-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.soil-form-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* ============================================================
+   FORM FIELD
+   ============================================================ */
+
+.soil-form-field {
+  min-width: 0;
+}
+
+.soil-form-field label {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #555;
+}
+
+.required-mark {
+  color: #c0392b;
+  font-weight: 700;
+}
+
+/* ============================================================
+   FORM INPUTS
+   ============================================================ */
+
+.soil-form-field input {
+  width: 100%;
+  height: 31px;
+  box-sizing: border-box;
+  padding: 5px 8px;
+  border: 1px solid #c8c8c8;
+  border-radius: 5px;
+  background: #ffffff;
+  color: #222;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  line-height: 1.2;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.soil-form-field input:hover {
+  border-color: #aaa;
+}
+
+.soil-form-field input:focus {
+  border-color: #3388ff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(51, 136, 255, 0.12);
+}
+
+.soil-form-field input[readonly] {
+  background: #f5f6f7;
+  color: #555;
+  cursor: default;
+}
+
+.soil-form-field input::placeholder {
+  color: #aaa;
+}
+
+/* ============================================================
+   NUMBER INPUT ARROWS
+   ============================================================ */
+
+.soil-form-field input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.soil-form-field input[type="number"]::-webkit-inner-spin-button,
+.soil-form-field input[type="number"]::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+/* ============================================================
+   INPUT + UNIT
+   ============================================================ */
+
+.soil-input-with-unit {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.soil-input-with-unit input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.soil-input-with-unit span {
+  flex: 0 0 auto;
+  min-width: 28px;
+  font-size: 9px;
+  line-height: 1;
+  color: #777;
+}
+
+/* ============================================================
+   FIELD HELP
+   ============================================================ */
+
+.soil-field-help {
+  display: block;
+  margin-top: 3px;
+  font-size: 9px;
+  line-height: 1.3;
+  color: #888;
+}
+
+/* ============================================================
+   MODAL FOOTER
+   ============================================================ */
+
+.soil-sample-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  padding: 10px 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  background: #fafafa;
+}
+
+/* ============================================================
+   MODAL BUTTONS
+   ============================================================ */
+
+.soil-modal-button {
+  min-width: 92px;
+  height: 32px;
+  padding: 5px 13px;
+  border-radius: 5px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    transform 0.05s ease;
+}
+
+.soil-modal-button:active {
+  transform: translateY(1px);
+}
+
+.soil-modal-button:focus {
+  outline: 2px solid #3388ff;
+  outline-offset: 1px;
+}
+
+.soil-modal-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+  transform: none;
+}
+
+.soil-modal-button-secondary {
+  border: 1px solid #bbb;
+  background: #ffffff;
+  color: #444;
+}
+
+.soil-modal-button-secondary:hover:not(:disabled) {
+  background: #f2f2f2;
+  border-color: #aaa;
+}
+
+.soil-modal-button-primary {
+  border: 1px solid #2f6fad;
+  background: #3388ff;
+  color: #ffffff;
+}
+
+.soil-modal-button-primary:hover:not(:disabled) {
+  background: #2878e8;
+  border-color: #246bbf;
+}
+
+/* ============================================================
+   RESPONSIVE SAMPLE FORM
+   ============================================================ */
+
+@media (max-width: 700px) {
+  #soilSampleModal {
+    padding: 10px;
+  }
+
+  .soil-sample-modal {
+    width: 100%;
+    max-height: calc(100vh - 20px);
+    border-radius: 10px;
+  }
+
+  .soil-form-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .soil-sample-modal-body {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .soil-sample-modal-footer {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+@media (max-width: 460px) {
+  .soil-form-grid-2,
+  .soil-form-grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .soil-sample-modal-header {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .soil-sample-modal-header h2 {
+    font-size: 16px;
+  }
+
+  .soil-sample-modal-footer {
+    justify-content: stretch;
+  }
+
+  .soil-modal-button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+/* ============================================================
+   PHASE 9.6 — TOP-RIGHT ANALYTICAL CONTROL STACK
+   ============================================================ */
+
+.leaflet-top.leaflet-right .soil-thematic-analysis-control,
+.leaflet-top.leaflet-right .soil-fertility-zoning-control {
+  transform: none;
+}
+
+/* ============================================================
+   PHASE 10.2.5 — SPATIAL ANALYSIS POPUP STACKING
+   ============================================================ */
+
+.leaflet-popup-pane {
+  z-index: 3000 !important;
+}
+
+.leaflet-popup {
+  z-index: 3001 !important;
+}
+
+/* ============================================================
+   PHASE 10.2.5 — SPATIAL ANALYSIS POPUP CONTROL PRIORITY
+   ============================================================ */
+
+.leaflet-top.leaflet-right {
+  z-index: 900 !important;
+}
+
+/* ============================================================
+   PHASE 10.4 — SPATIAL QUERY CONTROL
+   ============================================================ */
+
+.spatial-query-control {
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  max-width: 280px;
+  max-height: calc(100vh - 30px);
+  box-sizing: border-box;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 5px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+  font-family: Arial, Helvetica, sans-serif;
+  pointer-events: auto;
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------
+   HEADER
+   ------------------------------------------------------------ */
+
+.spatial-query-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+.spatial-query-header-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.spatial-query-title {
+  display: block;
+  color: #293831;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.spatial-query-toggle {
+  flex: 0 0 auto;
+  border: 0;
+  padding: 2px 4px;
+  background: transparent;
+  color: #555;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.spatial-query-toggle:hover {
+  color: #222;
+}
+
+.spatial-query-toggle:focus {
+  outline: 2px solid #3388ff;
+  outline-offset: 1px;
+}
+
+/* ------------------------------------------------------------
+   CONTENT
+   ------------------------------------------------------------ */
+
+.spatial-query-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 8px;
+  padding-right: 5px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+.spatial-query-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.spatial-query-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.spatial-query-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ------------------------------------------------------------
+   FIELDS
+   ------------------------------------------------------------ */
+
+.spatial-query-field {
+  margin-bottom: 7px;
+}
+
+.spatial-query-field:last-child {
+  margin-bottom: 0;
+}
+
+.spatial-query-field label {
+  display: block;
+  margin-bottom: 3px;
+  color: #444;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* ------------------------------------------------------------
+   SELECTS AND INPUTS
+   ------------------------------------------------------------ */
+
+.spatial-query-select,
+.spatial-query-input {
+  width: 100%;
+  min-height: 28px;
+  box-sizing: border-box;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #333;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.spatial-query-select {
+  padding: 4px 6px;
+}
+
+.spatial-query-input {
+  padding: 4px 6px;
+}
+
+.spatial-query-select:focus,
+.spatial-query-input:focus {
+  border-color: #3388ff;
+  outline: 2px solid rgba(51, 136, 255, 0.18);
+  outline-offset: 0;
+}
+
+.spatial-query-select:disabled,
+.spatial-query-input:disabled {
+  background: #f3f3f3;
+  color: #888;
+  cursor: default;
+}
+
+/* ------------------------------------------------------------
+   SPATIAL FILTER FIELDS
+   ------------------------------------------------------------ */
+
+.spatial-query-spatial-fields {
+  margin-top: 2px;
+}
+
+.spatial-query-help {
+  display: block;
+  margin-top: 3px;
+  color: #888;
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+/* ------------------------------------------------------------
+   STATUS
+   ------------------------------------------------------------ */
+
+.spatial-query-status {
+  min-height: 14px;
+  margin-top: 7px;
+  color: #666;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.spatial-query-status-success {
+  color: #39734a;
+}
+
+.spatial-query-status-error {
+  color: #a33a3a;
+}
+
+.spatial-query-status-info {
+  color: #555;
+}
+
+.spatial-query-status-loading {
+  color: #555;
+}
+
+/* ------------------------------------------------------------
+   ACTIONS
+   ------------------------------------------------------------ */
+
+.spatial-query-actions {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+  padding-bottom: 2px;
+}
+
+.spatial-query-button {
+  min-height: 28px;
+  padding: 4px 9px;
+  border-radius: 4px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    transform 0.05s ease;
+}
+
+.spatial-query-button:active {
+  transform: translateY(1px);
+}
+
+.spatial-query-button:focus {
+  outline: 2px solid #3388ff;
+  outline-offset: 1px;
+}
+
+.spatial-query-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+  transform: none;
+}
+
+.spatial-query-button-primary {
+  border: 1px solid #2f6fad;
+  background: #3388ff;
+  color: #ffffff;
+}
+
+.spatial-query-button-primary:hover:not(:disabled) {
+  background: #2878e8;
+  border-color: #246bbf;
+}
+
+.spatial-query-button-secondary {
+  border: 1px solid #bbb;
+  background: #ffffff;
+  color: #444;
+}
+
+.spatial-query-button-secondary:hover:not(:disabled) {
+  background: #f2f2f2;
+  border-color: #aaa;
+}
+
+/* ------------------------------------------------------------
+   RESULT POPUP
+   ------------------------------------------------------------ */
+
+.spatial-query-result-popup {
+  min-width: 180px;
+  max-width: 260px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.spatial-query-result-popup strong {
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------
+   LEAFLET CONTROL INTEGRATION
+   ------------------------------------------------------------ */
+
+.leaflet-control.spatial-query-control {
+  position: relative;
+  z-index: 1200;
+  pointer-events: auto !important;
+}
+
+/* ------------------------------------------------------------
+   RESPONSIVE SPATIAL QUERY CONTROL
+   ------------------------------------------------------------ */
+
+@media (max-width: 700px) {
+  .spatial-query-control {
+    width: 250px;
+    max-width: 250px;
+    max-height: calc(100vh - 20px);
+    padding: 7px;
+  }
+
+  .spatial-query-content {
+    padding-right: 4px;
+  }
+
+  .spatial-query-actions {
+    gap: 4px;
+  }
+
+  .spatial-query-button {
+    flex: 1 1 auto;
+  }
+}
+
+.soil-map-control-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 6px;
+  box-sizing: border-box;
+}
+
+.soil-map-control-header .soil-map-control-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+
+.soil-interpolation-legend-header-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.soil-fertility-zoning-legend-header-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.soil-fertility-zoning-legend-toggle {
+  margin-left: 0;
+}
+.soil-fertility-zoning-legend-header-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+/* ============================================================
+   Cursor Coordinate Display
+   ============================================================ */
+
+.map-cursor-coordinate-control {
+  margin: 0 0 10px 10px !important;
+  padding: 5px 8px;
+  min-width: 190px;
+  box-sizing: border-box;
+
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 4px;
+
+  color: #333333;
+  font-size: 12px;
+  font-family: Arial, sans-serif;
+  line-height: 1.3;
+
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+/* ============================================================
+   END OF GIS CSS
+   ============================================================ */

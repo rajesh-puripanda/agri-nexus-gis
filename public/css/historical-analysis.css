@@ -1,0 +1,675 @@
+/* ============================================================
+   public/css/historical-analysis.css
+   ============================================================
+   Soil Analysis GIS
+   Phase 10.4.5.3
+   Historical Analysis Page
+   ============================================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+  background: #f4f6f8;
+  color: #1f2933;
+}
+
+button,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.historical-page {
+  width: min(1400px, 100%);
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.historical-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #d9dee5;
+  border-radius: 10px;
+}
+
+.page-kicker,
+.section-kicker {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #667085;
+}
+
+.historical-header h1 {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.page-description {
+  max-width: 760px;
+  margin: 10px 0 0;
+  color: #667085;
+  line-height: 1.5;
+}
+
+.back-link {
+  flex-shrink: 0;
+  color: #2457a6;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================
+   STATUS
+   ============================================================ */
+
+.status-panel {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid #d9dee5;
+  border-radius: 8px;
+  color: #475467;
+}
+
+.status-panel.success {
+  border-color: #a8c7b0;
+}
+
+.status-panel.error {
+  border-color: #d9a6a6;
+}
+
+.status-panel.warning {
+  border-color: #d9c28a;
+}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+
+.analysis-section {
+  margin-bottom: 24px;
+  padding: 22px;
+  background: #ffffff;
+  border: 1px solid #d9dee5;
+  border-radius: 10px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.section-description {
+  max-width: 850px;
+  margin: 8px 0 0;
+  color: #667085;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   CURRENT SAMPLE
+   ============================================================ */
+
+.current-sample-card {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.sample-field {
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #e4e7ec;
+  border-radius: 7px;
+}
+
+.sample-field-label {
+  margin-bottom: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #667085;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sample-field-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d2939;
+}
+
+/* ============================================================
+   CONTROLS
+   ============================================================ */
+
+.candidate-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.candidate-controls label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475467;
+}
+
+.candidate-controls select {
+  min-width: 70px;
+  padding: 8px 10px;
+  border: 1px solid #cfd4dc;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.primary-button,
+.secondary-button,
+.compare-button {
+  padding: 9px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.primary-button {
+  border: 1px solid #2457a6;
+  background: #2457a6;
+  color: #ffffff;
+}
+
+.primary-button:hover {
+  background: #1d478a;
+}
+
+.secondary-button {
+  border: 1px solid #cfd4dc;
+  background: #ffffff;
+  color: #344054;
+}
+
+.secondary-button:hover {
+  background: #f8fafc;
+}
+
+/* ============================================================
+   CANDIDATE SUMMARY
+   ============================================================ */
+
+.candidate-summary {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border-radius: 7px;
+  color: #475467;
+  font-size: 14px;
+}
+
+/* ============================================================
+   CANDIDATE LIST
+   ============================================================ */
+
+.candidate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.candidate-card {
+  padding: 18px;
+  border: 1px solid #d9dee5;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.candidate-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.candidate-title {
+  margin: 0;
+  font-size: 17px;
+}
+
+.candidate-subtitle {
+  margin: 5px 0 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+.candidate-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.candidate-field {
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 6px;
+}
+
+.candidate-field-label {
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #667085;
+  text-transform: uppercase;
+}
+
+.candidate-field-value {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.candidate-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 15px;
+  padding-top: 14px;
+  border-top: 1px solid #eaecf0;
+}
+
+.compatibility {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.compatible {
+  color: #176b3a;
+}
+
+.incompatible {
+  color: #9b2c2c;
+}
+
+.compare-button {
+  border: 1px solid #2457a6;
+  background: #ffffff;
+  color: #2457a6;
+}
+
+.compare-button:hover {
+  background: #eef4ff;
+}
+
+.compare-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ============================================================
+   COMPARISON
+   ============================================================ */
+
+.comparison-result {
+  min-height: 40px;
+}
+
+.comparison-card {
+  padding: 18px;
+  border: 1px solid #d9dee5;
+  border-radius: 8px;
+}
+
+.comparison-header {
+  margin-bottom: 18px;
+}
+
+.comparison-header h3 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.comparison-header p {
+  margin: 6px 0 0;
+  color: #667085;
+}
+
+.comparison-status {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.comparison-status.eligible {
+  background: #edf8f1;
+  color: #176b3a;
+}
+
+.comparison-status.ineligible {
+  background: #fdf0f0;
+  color: #9b2c2c;
+}
+
+.comparison-table-wrapper {
+  overflow-x: auto;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 10px 12px;
+  border: 1px solid #d9dee5;
+  text-align: left;
+  vertical-align: top;
+}
+
+.comparison-table th {
+  background: #f8fafc;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #667085;
+}
+
+/* ============================================================
+   EMPTY / ERROR STATES
+   ============================================================ */
+
+.empty-state {
+  padding: 28px;
+  text-align: center;
+  color: #667085;
+  border: 1px dashed #cfd4dc;
+  border-radius: 8px;
+}
+
+.error-state {
+  padding: 16px;
+  color: #9b2c2c;
+  background: #fdf0f0;
+  border: 1px solid #e6b8b8;
+  border-radius: 7px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1000px) {
+  .current-sample-card {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .candidate-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .historical-page {
+    padding: 12px;
+  }
+
+  .historical-header,
+  .section-header,
+  .candidate-card-header,
+  .candidate-footer {
+    flex-direction: column;
+  }
+
+  .current-sample-card,
+  .candidate-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .candidate-controls select,
+  .candidate-controls button {
+    flex: 1;
+  }
+}
+
+/* ============================================================
+   HISTORICAL COMPARISON RESULT
+   ============================================================ */
+
+.comparison-overview{
+  display:flex;
+  flex-direction:column;
+  gap:1.25rem;
+}
+
+.comparison-overview-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:1rem;
+}
+
+.comparison-overview-header h3{
+  margin:.15rem 0 .25rem;
+}
+
+.comparison-kicker{
+  margin:0;
+  font-size:.75rem;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.comparison-subtitle{
+  margin:0;
+  opacity:.7;
+}
+
+.comparison-meta{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:.75rem;
+}
+
+.comparison-meta>div{
+  padding:.8rem;
+  border:1px solid #ddd;
+  border-radius:.5rem;
+}
+
+.comparison-meta .label{
+  display:block;
+  margin-bottom:.25rem;
+}
+
+.comparison-meta strong{
+  display:block;
+}
+
+.comparison-badge{
+  display:inline-flex;
+  align-items:center;
+  width:max-content;
+  padding:.2rem .55rem;
+  border-radius:999px;
+  font-size:.75rem;
+  font-weight:700;
+}
+
+.comparison-badge.compatible{
+  background:#e7f5e9;
+  color:#176b2c;
+}
+
+.comparison-badge.incompatible{
+  background:#fdeaea;
+  color:#9b1c1c;
+}
+
+.comparison-meta .comparison-badge{
+  margin-left:.4rem;
+  vertical-align:middle;
+}
+
+.comparison-subsection{
+  margin-top:1.5rem;
+}
+
+.comparison-subsection-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:1rem;
+  margin-bottom:.75rem;
+}
+
+.comparison-subsection-header h3{
+  margin:.15rem 0 0;
+}
+
+.comparison-count{
+  font-size:.8rem;
+  opacity:.7;
+  white-space:nowrap;
+}
+
+.comparison-table-wrapper{
+  width:100%;
+  overflow-x:auto;
+}
+
+.comparison-table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:700px;
+}
+
+.comparison-table th,
+.comparison-table td{
+  padding:.75rem;
+  text-align:left;
+  vertical-align:middle;
+  border-bottom:1px solid #ddd;
+}
+
+.comparison-table th{
+  font-size:.78rem;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.comparison-table td{
+  font-size:.9rem;
+}
+
+.classification-badge{
+  display:inline-block;
+  padding:.2rem .5rem;
+  border-radius:999px;
+  font-size:.78rem;
+  font-weight:600;
+  background:#f0f0f0;
+}
+
+.change-arrow{
+  display:inline-block;
+  margin:0 .3rem;
+  opacity:.65;
+}
+
+.classification-transition{
+  display:inline-flex;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+.classification-transition small{
+  width:100%;
+  margin-top:.15rem;
+  font-size:.7rem;
+  opacity:.7;
+}
+
+.classification-transition.changed{
+  font-weight:600;
+}
+
+.classification-transition.unchanged{
+  opacity:.85;
+}
+
+.comparison-provenance{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.5rem 1.25rem;
+  margin-top:1.5rem;
+  padding-top:1rem;
+  border-top:1px solid #ddd;
+  font-size:.8rem;
+  opacity:.75;
+}
+
+.comparison-provenance p{
+  margin:0;
+}
+
+@media (max-width:700px){
+  .comparison-overview-header,
+  .comparison-subsection-header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .comparison-meta{
+    grid-template-columns:1fr;
+  }
+}
