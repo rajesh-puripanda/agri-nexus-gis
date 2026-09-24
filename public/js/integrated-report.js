@@ -1,4 +1,4 @@
-"use strict";
+ï»¿"use strict";
 
 // ============================================================
 // public/js/integrated-report.js
@@ -486,12 +486,12 @@ function formatValue(value) {
     value === undefined ||
     value === ""
   ) {
-    return "—";
+    return "â€”";
   }
 
   if (typeof value === "number") {
     if (!Number.isFinite(value)) {
-      return "—";
+      return "â€”";
     }
 
     return escapeHtml(
@@ -515,7 +515,7 @@ function formatValue(value) {
 
 function formatDate(value) {
   if (!value) {
-    return "—";
+    return "â€”";
   }
 
   const date =
@@ -760,110 +760,161 @@ function renderArrayData(
    ============================================================ */
 
 function renderSampleSummary(data) {
-  if (
-    !data ||
-    typeof data !== "object"
-  ) {
+  if (!data || typeof data !== "object") {
     return renderObjectData(data);
   }
 
-  const sample =
-    data.sample ||
-    data.selectedSample ||
-    data;
+  const count =
+    data.count ??
+    (Array.isArray(data.samples)
+      ? data.samples.length
+      : 0);
 
-  const sampleCode =
-    sample.sample_code ??
-    sample.sampleCode ??
-    sample.code;
+  const sampleIds =
+    Array.isArray(data.sampleIds)
+      ? data.sampleIds
+      : [];
 
-  const sampleDate =
-    sample.sample_date ??
-    sample.sampleDate ??
-    data.sampleDate;
+  const samples =
+    Array.isArray(data.samples)
+      ? data.samples
+      : [];
 
-  const latitude =
-    sample.latitude ??
-    data.latitude;
+  const geographicExtent =
+    data.geographicExtent ||
+    null;
 
-  const longitude =
-    sample.longitude ??
-    data.longitude;
+  const depthContext =
+    data.depthContext ||
+    null;
 
-  const depthFrom =
-    sample.depth_from_cm ??
-    sample.depthFromCm ??
-    sample.depthFrom;
-
-  const depthTo =
-    sample.depth_to_cm ??
-    sample.depthToCm ??
-    sample.depthTo;
-
-  const texture =
-    sample.soil_texture ??
-    sample.soilTexture ??
-    sample.texture;
-
-  return `
+  let html = `
     <div class="integrated-report-summary-grid">
 
       ${renderDataItem(
-        "Sample",
-        sampleCode,
+        "Sample count",
+        count,
       )}
 
       ${renderDataItem(
-        "Sample date",
-        sampleDate
-          ? formatDate(sampleDate)
-          : "—",
+        "Sample IDs",
+        sampleIds.length
+          ? sampleIds.join(", ")
+          : "",
       )}
 
       ${renderDataItem(
-        "Location",
-        latitude !== undefined &&
-        longitude !== undefined
-          ? `${latitude}, ${longitude}`
-          : "—",
+        "Geographic extent",
+        geographicExtent
+          ? formatValue(geographicExtent)
+          : "",
       )}
 
       ${renderDataItem(
-        "Depth",
-        depthFrom !== undefined &&
-        depthTo !== undefined
-          ? `${depthFrom}–${depthTo} cm`
-          : "—",
-      )}
-
-      ${renderDataItem(
-        "Soil texture",
-        texture,
+        "Depth context",
+        depthContext
+          ? formatValue(depthContext)
+          : "",
       )}
 
     </div>
-
-    ${renderAdditionalObjectData(
-      data,
-      [
-        "sample",
-        "selectedSample",
-        "sample_code",
-        "sampleCode",
-        "sample_date",
-        "sampleDate",
-        "latitude",
-        "longitude",
-        "depth_from_cm",
-        "depth_to_cm",
-        "depthFromCm",
-        "depthToCm",
-        "texture",
-        "soil_texture",
-        "soilTexture",
-      ],
-    )}
   `;
+
+  if (samples.length) {
+    html += `
+      <div class="integrated-report-subsection">
+        <h4 class="integrated-report-subsection-title">
+          Selected samples
+        </h4>
+
+        <div class="integrated-report-table-container">
+          <table class="integrated-report-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Sample</th>
+                <th>Date</th>
+                <th>Location</th>
+                <th>Depth</th>
+                <th>Soil texture</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              ${samples.map((sample) => {
+                const id =
+                  sample.id ??
+                  sample.sample_id;
+
+                const sampleCode =
+                  sample.sample_code ??
+                  sample.sampleCode ??
+                  "";
+
+                const sampleDate =
+                  sample.sample_date ??
+                  sample.sampleDate;
+
+                const latitude =
+                  sample.latitude;
+
+                const longitude =
+                  sample.longitude;
+
+                const depthFrom =
+                  sample.depth_from_cm ??
+                  sample.depthFromCm;
+
+                const depthTo =
+                  sample.depth_to_cm ??
+                  sample.depthToCm;
+
+                const texture =
+                  sample.soil_texture ??
+                  sample.soilTexture;
+
+                return `
+                  <tr>
+                    <td>${formatValue(id)}</td>
+
+                    <td>
+                      ${escapeHtml(sampleCode)}
+                    </td>
+
+                    <td>
+                      ${sampleDate
+                        ? formatDate(sampleDate)
+                        : ""}
+                    </td>
+
+                    <td>
+                      ${latitude !== undefined &&
+                        longitude !== undefined
+                        ? `${formatValue(latitude)}, ${formatValue(longitude)}`
+                        : ""}
+                    </td>
+
+                    <td>
+                      ${depthFrom !== undefined &&
+                        depthTo !== undefined
+                        ? `${formatValue(depthFrom)}â€“${formatValue(depthTo)} cm`
+                        : ""}
+                    </td>
+
+                    <td>
+                      ${formatValue(texture)}
+                    </td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  return html;
 }
 
 /* ============================================================
@@ -871,124 +922,197 @@ function renderSampleSummary(data) {
    ============================================================ */
 
 function renderThematicAnalysis(data) {
-  if (
-    !data ||
-    typeof data !== "object"
-  ) {
+  if (!data || typeof data !== "object") {
     return renderObjectData(data);
   }
 
-  const rows = [];
+  const reports =
+    Array.isArray(data.reports)
+      ? data.reports
+      : [];
 
-  const candidates =
-    data.parameters ||
-    data.results ||
-    data.classifications ||
-    data.analysis ||
-    data;
-
-  if (
-    Array.isArray(candidates)
-  ) {
-    return renderArrayData(
-      candidates,
-    );
+  if (!reports.length) {
+    return renderObjectData(data);
   }
 
-  if (
-    candidates &&
-    typeof candidates === "object"
-  ) {
-    Object.entries(candidates)
-      .forEach(
-        ([key, value]) => {
-          if (
-            key === "metadata" ||
-            key === "provenance"
-          ) {
-            return;
-          }
+  let html = `
+    <div class="integrated-report-summary-grid">
 
-          if (
-            value &&
-            typeof value === "object" &&
-            !Array.isArray(value)
-          ) {
-            const parameter =
-              value.parameter ||
-              value.name ||
-              humanizeKey(key);
-
-            const measurement =
-              value.value ??
-              value.rawValue ??
-              value.observedValue;
-
-            const classification =
-              value.classification ??
-              value.status ??
-              value.interpretation;
-
-            rows.push(`
-              <tr>
-                <td>
-                  ${escapeHtml(parameter)}
-                </td>
-
-                <td class="integrated-report-value">
-                  ${formatValue(measurement)}
-                </td>
-
-                <td>
-                  ${formatValue(
-                    value.unit,
-                  )}
-                </td>
-
-                <td class="integrated-report-classification">
-                  ${formatValue(
-                    classification,
-                  )}
-                </td>
-              </tr>
-            `);
-          }
-        },
-      );
-  }
-
-  if (rows.length) {
-    return `
-      <div class="integrated-report-table-container">
-        <table class="integrated-report-table">
-          <thead>
-            <tr>
-              <th>Parameter</th>
-              <th>Value</th>
-              <th>Unit</th>
-              <th>Classification</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${rows.join("")}
-          </tbody>
-        </table>
-      </div>
-
-      ${renderAdditionalObjectData(
-        data,
-        [
-          "parameters",
-          "results",
-          "classifications",
-          "analysis",
-        ],
+      ${renderDataItem(
+        "Reports",
+        data.count ?? reports.length,
       )}
-    `;
-  }
 
-  return renderObjectData(data);
+      ${renderDataItem(
+        "Sample IDs",
+        Array.isArray(data.sampleIds) &&
+        data.sampleIds.length
+          ? data.sampleIds.join(", ")
+          : "",
+      )}
+
+    </div>
+  `;
+
+  reports.forEach((report, index) => {
+    if (!report || typeof report !== "object") {
+      return;
+    }
+
+    const sample =
+      report.sample || {};
+
+    const sampleCode =
+      sample.sample_code ??
+      sample.sampleCode ??
+      sample.id ??
+      `Sample ${index + 1}`;
+
+    const laboratoryResults =
+      report.laboratoryResults ||
+      {};
+
+    const analysis =
+      report.analysis ||
+      {};
+
+    const interpretation =
+      report.interpretation ||
+      report.recommendations ||
+      null;
+
+    const cropSuitability =
+      report.cropSuitability ||
+      null;
+
+    const managementPlan =
+      report.managementPlan ||
+      null;
+
+    html += `
+      <div class="integrated-report-subsection">
+
+        <h4 class="integrated-report-subsection-title">
+          Sample ${escapeHtml(String(sampleCode))}
+        </h4>
+
+        <div class="integrated-report-summary-grid">
+
+          ${renderDataItem(
+            "Sample ID",
+            sample.id,
+          )}
+
+          ${renderDataItem(
+            "Sample code",
+            sample.sample_code,
+          )}
+
+          ${renderDataItem(
+            "Sample date",
+            sample.sample_date
+              ? formatDate(sample.sample_date)
+              : "",
+          )}
+
+          ${renderDataItem(
+            "Location",
+            sample.location &&
+            sample.location.latitude !== undefined &&
+            sample.location.longitude !== undefined
+              ? `${formatValue(sample.location.latitude)}, ${formatValue(sample.location.longitude)}`
+              : "",
+          )}
+
+          ${renderDataItem(
+            "Depth",
+            sample.depth &&
+            sample.depth.from_cm !== undefined &&
+            sample.depth.to_cm !== undefined
+              ? `${formatValue(sample.depth.from_cm)}${formatValue(sample.depth.to_cm)} cm`
+              : "",
+          )}
+
+          ${renderDataItem(
+            "Soil texture",
+            sample.soil_texture,
+          )}
+
+        </div>
+
+        <div class="integrated-report-subsection">
+          <h4 class="integrated-report-subsection-title">
+            Laboratory results
+          </h4>
+
+          ${renderObjectData(
+            laboratoryResults,
+          )}
+        </div>
+
+        <div class="integrated-report-subsection">
+          <h4 class="integrated-report-subsection-title">
+            Analysis
+          </h4>
+
+          ${renderObjectData(
+            analysis,
+          )}
+        </div>
+
+        ${
+          interpretation
+            ? `
+              <div class="integrated-report-subsection">
+                <h4 class="integrated-report-subsection-title">
+                  Interpretation
+                </h4>
+
+                ${renderObjectData(
+                  interpretation,
+                )}
+              </div>
+            `
+            : ""
+        }
+
+        ${
+          cropSuitability
+            ? `
+              <div class="integrated-report-subsection">
+                <h4 class="integrated-report-subsection-title">
+                  Crop suitability
+                </h4>
+
+                ${renderObjectData(
+                  cropSuitability,
+                )}
+              </div>
+            `
+            : ""
+        }
+
+        ${
+          managementPlan
+            ? `
+              <div class="integrated-report-subsection">
+                <h4 class="integrated-report-subsection-title">
+                  Management plan
+                </h4>
+
+                ${renderObjectData(
+                  managementPlan,
+                )}
+              </div>
+            `
+            : ""
+        }
+
+      </div>
+    `;
+  });
+
+  return html;
 }
 
 /* ============================================================
@@ -1048,26 +1172,40 @@ function renderHistoricalComparison(data) {
     return renderObjectData(data);
   }
 
+  const metadata =
+    data.metadata ||
+    {};
+
+  const provenance =
+    data.provenance ||
+    {};
+
   const candidate =
     data.candidate ||
     data.nearestCandidate ||
-    data.selectedCandidate;
+    data.selectedCandidate ||
+    metadata.candidate ||
+    null;
 
   const comparison =
     data.comparison ||
-    data.historicalComparison;
+    data.historicalComparison ||
+    null;
 
   const observations =
     data.observations ||
-    comparison?.observations;
+    comparison?.observations ||
+    null;
 
   const changes =
     data.changes ||
-    comparison?.changes;
+    comparison?.changes ||
+    null;
 
   const depthCompatibility =
     data.depthCompatibility ||
-    data.depth_compatibility;
+    data.depth_compatibility ||
+    null;
 
   let html = "";
 
@@ -1090,9 +1228,7 @@ function renderHistoricalComparison(data) {
           Observations
         </h4>
 
-        ${renderArrayData(
-          observations,
-        )}
+        ${renderArrayData(observations)}
       </div>
     `;
   }
@@ -1104,9 +1240,7 @@ function renderHistoricalComparison(data) {
           Changes
         </h4>
 
-        ${renderArrayData(
-          changes,
-        )}
+        ${renderArrayData(changes)}
       </div>
     `;
   }
@@ -1125,12 +1259,127 @@ function renderHistoricalComparison(data) {
     `;
   }
 
+  if (
+    metadata &&
+    Object.keys(metadata).length
+  ) {
+    html += `
+      <div class="integrated-report-subsection">
+        <h4 class="integrated-report-subsection-title">
+          Historical context
+        </h4>
+
+        ${renderObjectData(metadata)}
+      </div>
+    `;
+  }
+
+  if (
+    provenance &&
+    Object.keys(provenance).length
+  ) {
+    html += `
+      <div class="integrated-report-subsection">
+        <h4 class="integrated-report-subsection-title">
+          Provenance
+        </h4>
+
+        ${renderObjectData(provenance)}
+      </div>
+    `;
+  }
+
   if (!html) {
-    html =
-      renderObjectData(data);
+    html = renderObjectData(data);
   }
 
   return html;
+}
+
+/* ============================================================
+   OVERALL SUMMARY
+   ============================================================ */
+
+function renderOverallSummary(data) {
+  if (
+    !data ||
+    typeof data !== "object"
+  ) {
+    return renderObjectData(data);
+  }
+
+  const sections =
+    data.sections ||
+    {};
+
+  const available =
+    sections.available ??
+    0;
+
+  const unavailable =
+    sections.unavailable ??
+    0;
+
+  const notRequested =
+    sections.notRequested ??
+    0;
+
+  const notApplicable =
+    sections.notApplicable ??
+    0;
+
+  const errors =
+    sections.error ??
+    0;
+
+  return `
+    <div class="integrated-report-summary-grid">
+
+      ${renderDataItem(
+        "Sample count",
+        data.sampleCount,
+      )}
+
+      ${renderDataItem(
+        "Sample IDs",
+        Array.isArray(data.sampleIds) &&
+        data.sampleIds.length
+          ? data.sampleIds.join(", ")
+          : "",
+      )}
+
+      ${renderDataItem(
+        "Selected parameter",
+        data.selectedParameter,
+      )}
+
+      ${renderDataItem(
+        "Available sections",
+        available,
+      )}
+
+      ${renderDataItem(
+        "Unavailable sections",
+        unavailable,
+      )}
+
+      ${renderDataItem(
+        "Not requested",
+        notRequested,
+      )}
+
+      ${renderDataItem(
+        "Not applicable",
+        notApplicable,
+      )}
+
+      ${renderDataItem(
+        "Errors",
+        errors,
+      )}
+
+    </div>
+  `;
 }
 
 /* ============================================================
@@ -1151,11 +1400,13 @@ function renderSectionData(
     case "Historical Comparison":
       return renderHistoricalComparison(data);
 
+    case "Overall Summary":
+      return renderOverallSummary(data);
+
     default:
       return renderObjectData(data);
   }
 }
-
 /* ============================================================
    REPORT SECTION
    ============================================================ */
@@ -1318,7 +1569,7 @@ function renderIntegratedReport(
                 ? formatDate(
                     report.generatedAt,
                   )
-                : "—",
+                : "â€”",
             )}
 
             ${renderDataItem(
@@ -1853,3 +2104,9 @@ if (
     observeReportContainer();
   }
 })();
+
+
+
+
+
+

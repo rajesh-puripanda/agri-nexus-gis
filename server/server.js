@@ -123,7 +123,7 @@ app.use(
 app.get("/api/health", async (req, res) => {
   res.json({
     success: true,
-    application: "Soil Analysis GIS",
+    application: "AgriNexus GIS",
     status: "running",
   });
 });
@@ -147,7 +147,7 @@ app.use("/api", (req, res) => {
 async function startServer() {
   console.log("");
   console.log("========================================");
-  console.log(" SOIL ANALYSIS GIS");
+  console.log(" AGRINEXUS GIS");
   console.log("========================================");
 
   try {

@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", initializeApplication);
 async function initializeApplication() {
   console.log("");
   console.log("========================================");
-  console.log(" SOIL ANALYSIS GIS FRONTEND");
+  console.log(" AGRINEXUS GIS FRONTEND");
   console.log("========================================");
 
   try {
