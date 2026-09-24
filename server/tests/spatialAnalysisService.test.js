@@ -28,8 +28,14 @@
 
 const assert = require("assert");
 
-const spatialAnalysisService = require("../services/spatialAnalysisService");
-const soilRepository = require("../repositories/soilRepository");
+const spatialAnalysisService =
+  require("../services/spatialAnalysisService");
+
+const soilAnalysisService =
+  require("../services/soilAnalysisService");
+
+const soilRepository =
+  require("../repositories/soilRepository");
 
 const {
   API_PHASE,

@@ -52,8 +52,9 @@
 // ============================================================
 
 const soilRepository = require("../repositories/soilRepository");
-const soilAnalysisService = require("./soilAnalysisService");
+const soilClassification = require("../scientific/classification/soilClassification");
 const interpolationService = require("./interpolationService");
+const soilAnalysisService = require("./soilAnalysisService");
 
 // ------------------------------------------------------------
 // API / phase metadata
@@ -74,7 +75,7 @@ const SPATIAL_PARAMETERS = {
     interpolationKey: "ph",
     label: "pH",
     unit: "pH",
-    classifier: soilAnalysisService.classifyPH,
+    classifier: soilClassification.classifyPH,
   },
 
   nitrogen: {
@@ -82,7 +83,7 @@ const SPATIAL_PARAMETERS = {
     interpolationKey: "nitrogen",
     label: "Nitrogen",
     unit: "kg/ha",
-    classifier: soilAnalysisService.classifyNitrogen,
+    classifier: soilClassification.classifyNitrogen,
   },
 
   phosphorus: {
@@ -90,7 +91,7 @@ const SPATIAL_PARAMETERS = {
     interpolationKey: "phosphorus",
     label: "Phosphorus",
     unit: "kg/ha",
-    classifier: soilAnalysisService.classifyPhosphorus,
+    classifier: soilClassification.classifyPhosphorus,
   },
 
   potassium: {
@@ -98,7 +99,7 @@ const SPATIAL_PARAMETERS = {
     interpolationKey: "potassium",
     label: "Potassium",
     unit: "kg/ha",
-    classifier: soilAnalysisService.classifyPotassium,
+    classifier: soilClassification.classifyPotassium,
   },
 
   organicCarbon: {
@@ -106,7 +107,7 @@ const SPATIAL_PARAMETERS = {
     interpolationKey: "organic_carbon",
     label: "Organic Carbon",
     unit: "%",
-    classifier: soilAnalysisService.classifyOrganicCarbon,
+    classifier: soilClassification.classifyOrganicCarbon,
   },
 
   electricalConductivity: {
@@ -114,7 +115,7 @@ const SPATIAL_PARAMETERS = {
     interpolationKey: "electrical_conductivity",
     label: "Electrical Conductivity",
     unit: "dS/m",
-    classifier: soilAnalysisService.classifyEC,
+    classifier: soilClassification.classifyEC,
   },
 };
 
