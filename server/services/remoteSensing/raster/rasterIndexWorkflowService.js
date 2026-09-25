@@ -60,6 +60,13 @@ const {
     "../../../scientific/remoteSensing/raster/rasterIndexClassificationContract"
 );
 
+const {
+    validateRasterIndexWorkflowResult,
+    createRasterIndexWorkflowResultContract
+} = require(
+    "../../../scientific/remoteSensing/raster/rasterIndexWorkflowContract"
+);
+
 const WORKFLOW_VERSION = "1.0";
 
 function assertNonEmptyString(value, name) {
@@ -409,7 +416,8 @@ async function processRasterIndexWorkflow({
                 outputPaths.classification
         });
 
-    return {
+    const workflowResult =
+        createRasterIndexWorkflowResultContract({
         workflowVersion:
             WORKFLOW_VERSION,
 
@@ -441,7 +449,21 @@ async function processRasterIndexWorkflow({
         continuousOutput,
 
         classificationOutput
-    };
+    });
+
+    const workflowValidation =
+        validateRasterIndexWorkflowResult(
+            workflowResult
+        );
+
+    if (!workflowValidation.valid) {
+        throw new Error(
+            `Raster index workflow result validation failed: ` +
+            workflowValidation.errors.join("; ")
+        );
+    }
+
+    return workflowResult;
 }
 
 module.exports = {
