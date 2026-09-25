@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 // ============================================================
 // server/services/interpolation/comparativeAnalysisService.js
@@ -940,6 +940,8 @@ function analyzeComparativeValidation(
 
     methodDifferences,
 
+    ...methodDifferences,
+
     errors:
       Array.isArray(
         comparativeValidation.errors,
@@ -1003,3 +1005,4 @@ module.exports = {
   analyzeComparativeValidation,
   comparativeInterpolationAnalysis,
 };
+

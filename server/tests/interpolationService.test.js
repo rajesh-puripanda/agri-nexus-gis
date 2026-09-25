@@ -3280,3 +3280,238 @@ test(
     }
   },
 );
+
+// ============================================================
+// PHASE 12.9 — COMPARATIVE ANALYSIS SURFACE INTEGRATION
+// ============================================================
+
+test(
+  "generateInterpolationSurface exposes comparative validation and analysis",
+  async () => {
+    const original =
+      soilRepository.getAllSoilSamples;
+
+    soilRepository.getAllSoilSamples =
+      async () =>
+        SCIENTIFIC_KRIGING_SAMPLES;
+
+    try {
+      const result =
+        await generateInterpolationSurface({
+          parameter: "nitrogen",
+          method: "kriging",
+          resolution: 10,
+          model: "spherical",
+
+          runComparativeValidation: true,
+        });
+
+      // --------------------------------------------------------
+      // Normal interpolation surface remains successful
+      // --------------------------------------------------------
+
+      assert.equal(
+        result.success,
+        true,
+      );
+
+      assert.ok(result.grid);
+
+      assert.equal(
+        result.grid.rows,
+        10,
+      );
+
+      assert.equal(
+        result.grid.columns,
+        10,
+      );
+
+      assert.equal(
+        result.grid.cells.length,
+        100,
+      );
+
+      assert.ok(result.statistics);
+
+      // --------------------------------------------------------
+      // Phase 12.8.5 — Comparative Validation
+      // --------------------------------------------------------
+
+      assert.ok(
+        result.comparativeValidation,
+      );
+
+      assert.equal(
+        result.comparativeValidation.requested,
+        true,
+      );
+
+      assert.equal(
+        result.comparativeValidation.validationType,
+        "comparative_interpolation_validation",
+      );
+
+      assert.equal(
+        result.comparativeValidation.diagnosticType,
+        "loocv",
+      );
+
+      assert.equal(
+        result.comparativeValidation.sampleCount,
+        SCIENTIFIC_KRIGING_SAMPLES.length,
+      );
+
+      assert.ok(
+        result.comparativeValidation.methods,
+      );
+
+      for (
+        const method of [
+          "kriging",
+          "idw",
+          "spline",
+          "nearest_neighbour",
+        ]
+      ) {
+        assert.ok(
+          result.comparativeValidation.methods[
+            method
+          ],
+        );
+      }
+
+      // --------------------------------------------------------
+      // Phase 12.9 — Comparative Analysis
+      // --------------------------------------------------------
+
+      assert.ok(
+        result.comparativeAnalysis,
+      );
+
+      assert.equal(
+        result.comparativeAnalysis.analysisType,
+        "comparative_interpolation_analysis",
+      );
+
+      assert.equal(
+        result.comparativeAnalysis.diagnosticType,
+        "loocv_analysis",
+      );
+
+      assert.equal(
+        result.comparativeAnalysis.sampleCount,
+        SCIENTIFIC_KRIGING_SAMPLES.length,
+      );
+
+      assert.ok(
+        result.comparativeAnalysis.methods,
+      );
+
+      for (
+        const method of [
+          "kriging",
+          "idw",
+          "spline",
+          "nearest_neighbour",
+        ]
+      ) {
+        assert.ok(
+          result.comparativeAnalysis.methods[
+            method
+          ],
+        );
+      }
+
+      // --------------------------------------------------------
+      // Prediction consistency contract
+      // --------------------------------------------------------
+
+      assert.ok(
+        result.comparativeAnalysis
+          .predictionConsistency,
+      );
+
+      assert.ok(
+        Number.isInteger(
+          result.comparativeAnalysis
+            .predictionConsistency
+            .commonSuccessfulFoldCount,
+        ),
+      );
+
+      assert.ok(
+        Number.isInteger(
+          result.comparativeAnalysis
+            .predictionConsistency
+            .commonFailedFoldCount,
+        ),
+      );
+
+      assert.ok(
+        Array.isArray(
+          result.comparativeAnalysis
+            .predictionConsistency
+            .commonSuccessfulFolds,
+        ),
+      );
+
+      assert.ok(
+        Array.isArray(
+          result.comparativeAnalysis
+            .predictionConsistency
+            .commonFailedFolds,
+        ),
+      );
+
+      // --------------------------------------------------------
+      // Pairwise analysis contract
+      // --------------------------------------------------------
+
+      assert.ok(
+        result.comparativeAnalysis
+          .methodDifferences,
+      );
+
+      for (
+        const pair of [
+          "idw_vs_kriging",
+          "idw_vs_spline",
+          "idw_vs_nearest_neighbour",
+          "kriging_vs_spline",
+          "kriging_vs_nearest_neighbour",
+          "spline_vs_nearest_neighbour",
+        ]
+      ) {
+        assert.ok(
+          result.comparativeAnalysis[pair],
+          `Missing comparative pair: ${pair}`,
+        );
+      }
+
+      // --------------------------------------------------------
+      // Diagnostic-only contract
+      //
+      // Comparative analysis must not replace or alter
+      // the production interpolation surface.
+      // --------------------------------------------------------
+
+      assert.ok(
+        result.interpolationParameters,
+      );
+
+      assert.equal(
+        result.interpolationParameters.method,
+        "kriging",
+      );
+
+      assert.equal(
+        result.interpolationParameters.parameter,
+        "nitrogen",
+      );
+    } finally {
+      soilRepository.getAllSoilSamples =
+        original;
+    }
+  },
+);
