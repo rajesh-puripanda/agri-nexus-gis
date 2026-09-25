@@ -27,6 +27,345 @@ let analysisPanelsInitialized = false;
 // DOM READY
 // ============================================================
 
+/* ============================================================
+   AGRINEXUS GIS — MAP WORKSPACE STATE
+   ------------------------------------------------------------
+   Preserves the analytical map state when navigating to
+   Historical Analysis and returning to the main map.
+   ============================================================ */
+
+const AGRINEXUS_WORKSPACE_STATE_KEY =
+  "agriNexusGIS.workspaceState.v1";
+
+function saveAgriNexusWorkspaceState() {
+  try {
+    const currentMap =
+      typeof window.getMap === "function"
+        ? window.getMap()
+        : null;
+
+    if (!currentMap) {
+      console.warn(
+        "Workspace state not saved: map is unavailable.",
+      );
+      return false;
+    }
+
+    const center = currentMap.getCenter();
+
+    const interpolationResult =
+      typeof window.getInterpolationResult === "function"
+        ? window.getInterpolationResult()
+        : null;
+
+    const interpolationConfiguration =
+      interpolationResult?.configuration || null;
+
+    const fertilityZoningConfiguration =
+      typeof window.getFertilityZoningConfiguration ===
+      "function"
+        ? window.getFertilityZoningConfiguration()
+        : null;
+
+    const interpolationRequest =
+      interpolationConfiguration
+        ? {
+            parameter:
+              interpolationConfiguration.parameter?.key ||
+              interpolationConfiguration.parameter?.field ||
+              "ph",
+
+            method:
+              interpolationConfiguration.method?.key ||
+              "idw",
+
+            resolution:
+              interpolationConfiguration.settings?.resolution ??
+              50,
+
+            power:
+              interpolationConfiguration.settings?.power ?? 2,
+          }
+        : null;
+
+    const fertilityZoningRequest =
+      fertilityZoningConfiguration?.settings
+        ? {
+            power:
+              fertilityZoningConfiguration.settings.power ?? 2,
+
+            resolution:
+              fertilityZoningConfiguration.settings.resolution ??
+              50,
+          }
+        : null;
+
+    const state = {
+      version: 1,
+
+      map: {
+        center: {
+          lat: center.lat,
+          lng: center.lng,
+        },
+        zoom: currentMap.getZoom(),
+      },
+
+      thematic: {
+        parameter:
+          typeof window.getThematicMapParameter === "function"
+            ? window.getThematicMapParameter()
+            : "standard",
+      },
+
+      sampleLabels: {
+        visible:
+          typeof window.areSampleLabelsVisible === "function"
+            ? window.areSampleLabelsVisible()
+            : true,
+      },
+
+      interpolation: {
+        visible:
+          typeof window.isInterpolationSurfaceVisible ===
+          "function"
+            ? window.isInterpolationSurfaceVisible()
+            : false,
+
+        request: interpolationRequest,
+      },
+
+      fertilityZoning: {
+        visible:
+          typeof window.isFertilityZoningVisible === "function"
+            ? window.isFertilityZoningVisible()
+            : false,
+
+        request: fertilityZoningRequest,
+      },
+    };
+
+    sessionStorage.setItem(
+      AGRINEXUS_WORKSPACE_STATE_KEY,
+      JSON.stringify(state),
+    );
+
+    console.log(
+      "AgriNexus GIS workspace state saved.",
+      state,
+    );
+
+    return true;
+  } catch (error) {
+    console.error(
+      "Failed to save AgriNexus GIS workspace state.",
+      error,
+    );
+
+    return false;
+  }
+}
+
+async function restoreAgriNexusWorkspaceState() {
+  let rawState = null;
+
+  try {
+    rawState = sessionStorage.getItem(
+      AGRINEXUS_WORKSPACE_STATE_KEY,
+    );
+  } catch (error) {
+    console.warn(
+      "Unable to read AgriNexus GIS workspace state.",
+      error,
+    );
+
+    return false;
+  }
+
+  if (!rawState) {
+    return false;
+  }
+
+  let state;
+
+  try {
+    state = JSON.parse(rawState);
+  } catch (error) {
+    console.warn(
+      "Invalid AgriNexus GIS workspace state. Clearing it.",
+      error,
+    );
+
+    sessionStorage.removeItem(
+      AGRINEXUS_WORKSPACE_STATE_KEY,
+    );
+
+    return false;
+  }
+
+  try {
+    const currentMap =
+      typeof window.getMap === "function"
+        ? window.getMap()
+        : null;
+
+    if (!currentMap) {
+      console.warn(
+        "Workspace state not restored: map is unavailable.",
+      );
+
+      return false;
+    }
+
+    console.log(
+      "Restoring AgriNexus GIS workspace state...",
+      state,
+    );
+
+    /* --------------------------------------------------------
+       Map position
+       -------------------------------------------------------- */
+
+    if (
+      state.map &&
+      state.map.center &&
+      Number.isFinite(state.map.center.lat) &&
+      Number.isFinite(state.map.center.lng) &&
+      Number.isFinite(state.map.zoom)
+    ) {
+      currentMap.setView(
+        [
+          state.map.center.lat,
+          state.map.center.lng,
+        ],
+        state.map.zoom,
+        {
+          animate: false,
+        },
+      );
+    }
+
+    /* --------------------------------------------------------
+       Thematic map
+       -------------------------------------------------------- */
+
+    if (
+      state.thematic &&
+      typeof window.setThematicMapParameter === "function"
+    ) {
+      window.setThematicMapParameter(
+        state.thematic.parameter || "standard",
+      );
+    }
+
+    /* --------------------------------------------------------
+       Sample labels
+       -------------------------------------------------------- */
+
+    if (
+      state.sampleLabels &&
+      typeof window.setSampleLabelsVisible === "function"
+    ) {
+      window.setSampleLabelsVisible(
+        Boolean(state.sampleLabels.visible),
+      );
+    }
+
+    /* --------------------------------------------------------
+      Interpolation
+      -------------------------------------------------------- */
+
+    if (
+      state.interpolation &&
+      state.interpolation.visible &&
+      state.interpolation.request &&
+      typeof window.generateInterpolationSurface ===
+        "function"
+    ) {
+      const request = {
+        ...state.interpolation.request,
+      };
+
+      console.log(
+        "Restoring interpolation surface:",
+        request,
+      );
+
+      await window.generateInterpolationSurface(request);
+    }
+
+    /* --------------------------------------------------------
+      Fertility zoning
+      -------------------------------------------------------- */
+
+    if (
+      state.fertilityZoning &&
+      state.fertilityZoning.visible &&
+      state.fertilityZoning.request &&
+      typeof window.generateFertilityZoning === "function"
+    ) {
+      const request = {
+        ...state.fertilityZoning.request,
+      };
+
+      console.log(
+        "Restoring fertility zoning surface:",
+        request,
+      );
+
+      await window.generateFertilityZoning(request);
+    }
+
+    console.log(
+      "AgriNexus GIS workspace state restored successfully.",
+    );
+
+    sessionStorage.removeItem(
+      AGRINEXUS_WORKSPACE_STATE_KEY,
+    );
+
+    return true;
+  } catch (error) {
+    console.error(
+      "Failed to restore AgriNexus GIS workspace state.",
+      error,
+    );
+
+    sessionStorage.removeItem(
+      AGRINEXUS_WORKSPACE_STATE_KEY,
+    );
+
+    return false;
+  }
+}
+
+window.saveAgriNexusWorkspaceState =
+  saveAgriNexusWorkspaceState;
+
+window.restoreAgriNexusWorkspaceState =
+  restoreAgriNexusWorkspaceState;
+
+document.addEventListener(
+  "click",
+  (event) => {
+    const historicalLink =
+      event.target.closest(
+        'a[href^="/historical-analysis.html?"]',
+      );
+
+    if (!historicalLink) {
+      return;
+    }
+
+    if (
+      typeof window.saveAgriNexusWorkspaceState ===
+      "function"
+    ) {
+      window.saveAgriNexusWorkspaceState();
+    }
+  },
+);
+
 document.addEventListener("DOMContentLoaded", initializeApplication);
 
 // ============================================================
@@ -71,6 +410,13 @@ async function initializeApplication() {
     }
 
     await loadSoilSamples();
+
+    if (
+      typeof window.restoreAgriNexusWorkspaceState ===
+      "function"
+    ) {
+      await window.restoreAgriNexusWorkspaceState();
+    }
 
     console.log("Frontend initialization completed.");
   } catch (error) {
