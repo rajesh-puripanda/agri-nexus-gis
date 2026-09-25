@@ -2516,6 +2516,11 @@
   pointer-events: none;
   user-select: none;
 }
+
+.leaflet-container.spatial-query-map-tool-active {
+  cursor: crosshair !important;
+}
+
 /* ============================================================
    END OF GIS CSS
    ============================================================ */

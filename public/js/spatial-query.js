@@ -2489,7 +2489,9 @@ function bindSpatialQueryMapToolEvents(container) {
   if (pickCoordinatesButton) {
     pickCoordinatesButton.addEventListener(
       "click",
-      () => {
+      (event) => {
+        event.stopPropagation();
+
         startSpatialQueryCoordinatePicker();
       },
     );
@@ -2498,7 +2500,9 @@ function bindSpatialQueryMapToolEvents(container) {
   if (drawBoxButton) {
     drawBoxButton.addEventListener(
       "click",
-      () => {
+      (event) => {
+        event.stopPropagation();
+
         startSpatialQueryBoxDrawing();
       },
     );
@@ -2507,7 +2511,8 @@ function bindSpatialQueryMapToolEvents(container) {
   if (clearSelectionButton) {
     clearSelectionButton.addEventListener(
       "click",
-      () => {
+      (event) => {
+        event.stopPropagation();
         cancelSpatialQueryMapInteraction(true);
 
         if (spatialQueryState.spatialType === "radius") {
@@ -2730,8 +2735,9 @@ window.clearSpatialQueryResults = clearSpatialQueryResults;
 
 window.isSpatialQueryRequestInProgress = isSpatialQueryRequestInProgress;
 
-window.consumeSpatialQueryIgnoredMapClick =
-  consumeSpatialQueryIgnoredMapClick;
+window.consumeSpatialQueryIgnoredMapClick = consumeSpatialQueryIgnoredMapClick;
+
+window.isSpatialQueryMapInteractionActive = isSpatialQueryMapInteractionActive;
 
 /* ============================================================
    LOAD MESSAGE

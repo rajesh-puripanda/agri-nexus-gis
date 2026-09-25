@@ -2384,6 +2384,14 @@ function handleMapClick(event) {
   }
 
   if (
+    typeof window.isSpatialQueryMapInteractionActive ===
+      "function" &&
+    window.isSpatialQueryMapInteractionActive()
+  ) {
+    return;
+  }
+
+  if (
     typeof window.consumeSpatialQueryIgnoredMapClick ===
       "function" &&
     window.consumeSpatialQueryIgnoredMapClick()
