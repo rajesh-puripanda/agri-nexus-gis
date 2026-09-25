@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // ============================================================
 // server/services/remoteSensing/raster/rasterIndexClassificationService.js
@@ -32,6 +32,7 @@
 // ============================================================
 
 const {
+    RASTER_INDEX_CLASSIFICATION_CONTRACT_VERSION,
     validateRasterIndexClassificationRequest,
     createRasterIndexClassificationResultContract
 } = require("../../../scientific/remoteSensing/raster/rasterIndexClassificationContract");
@@ -150,6 +151,7 @@ function calculateClassStatistics({
 
 function classifyRasterIndex({
     indexCode,
+    definition,
     raster,
     classificationRules,
     noData
@@ -217,8 +219,25 @@ function classifyRasterIndex({
             noData: 0,
             spatialReference: raster.spatialReference,
             metadata: {
-                sourceType: "Raster Index Classification",
-                indexCode
+                sourceType:
+                    "Calculated Raster Classification",
+
+                processingType:
+                    "pixelwise_raster_classification",
+
+                indexCode,
+
+                indexName:
+                    definition.name,
+
+                analysisVersion:
+                    RASTER_INDEX_CLASSIFICATION_CONTRACT_VERSION,
+
+                classificationMethod:
+                    classificationRules.method,
+
+                sourceRasterContractVersion:
+                    raster.contractVersion || null
             }
         },
         validPixelCount,
@@ -261,8 +280,10 @@ function processRasterIndexClassification(request) {
         parameters.noData
     );
 
-    const classificationResult = classifyRasterIndex({
+    const classificationResult =
+    classifyRasterIndex({
         indexCode,
+        definition,
         raster,
         classificationRules,
         noData
