@@ -2383,6 +2383,14 @@ function handleMapClick(event) {
     return;
   }
 
+  if (
+    typeof window.consumeSpatialQueryIgnoredMapClick ===
+      "function" &&
+    window.consumeSpatialQueryIgnoredMapClick()
+  ) {
+    return;
+  }
+
   const latitude = Number(event.latlng.lat);
   const longitude = Number(event.latlng.lng);
 

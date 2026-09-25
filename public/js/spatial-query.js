@@ -222,6 +222,20 @@ let spatialQueryRequestSequence = 0;
 
 let spatialQueryResizeHandlerAttached = false;
 
+let spatialQueryMapInteractionHandlersAttached = false;
+
+let spatialQueryMapInteractionMode = "none";
+
+let spatialQueryDrawingStartLatLng = null;
+
+let spatialQuerySelectionRectangle = null;
+
+let spatialQueryLocationMarker = null;
+
+let spatialQueryMapDraggingWasEnabled = false;
+
+let spatialQueryIgnoreNextMapClick = false;
+
 let spatialQueryState = {
   parameter: "",
   classification: "",
@@ -275,7 +289,7 @@ function buildSpatialQueryControl() {
               title="Move Spatial Query panel"
               aria-label="Move Spatial Query panel"
             >
-              ↕
+                            ↕
             </button>
 
             <button
@@ -285,7 +299,7 @@ function buildSpatialQueryControl() {
               aria-controls="spatialQueryControlContent"
               title="Collapse spatial query controls"
             >
-              −
+              âˆ’
             </button>
           </div>
         </div>
@@ -572,11 +586,15 @@ function updateSpatialQueryClassificationOptions(container) {
    ============================================================ */
 
 function updateSpatialQuerySpatialFields(container) {
-  const fieldsContainer = container.querySelector("#spatialQuerySpatialFields");
+  const fieldsContainer = container.querySelector(
+    "#spatialQuerySpatialFields",
+  );
 
   if (!fieldsContainer) {
     return;
   }
+
+  cancelSpatialQueryMapInteraction(false);
 
   fieldsContainer.innerHTML = "";
 
@@ -595,7 +613,9 @@ function updateSpatialQuerySpatialFields(container) {
           max="90"
           step="any"
           placeholder="17.6868"
-          value="${escapeSpatialQueryAttribute(spatialQueryState.latitude)}"
+          value="${escapeSpatialQueryAttribute(
+            spatialQueryState.latitude,
+          )}"
         />
       </div>
 
@@ -612,7 +632,9 @@ function updateSpatialQuerySpatialFields(container) {
           max="180"
           step="any"
           placeholder="83.2185"
-          value="${escapeSpatialQueryAttribute(spatialQueryState.longitude)}"
+          value="${escapeSpatialQueryAttribute(
+            spatialQueryState.longitude,
+          )}"
         />
       </div>
 
@@ -629,14 +651,44 @@ function updateSpatialQuerySpatialFields(container) {
           max="100000"
           step="1"
           placeholder="2000"
-          value="${escapeSpatialQueryAttribute(spatialQueryState.radius)}"
+          value="${escapeSpatialQueryAttribute(
+            spatialQueryState.radius,
+          )}"
         />
 
         <small class="spatial-query-help">
           Maximum 100,000 meters.
         </small>
       </div>
+
+      <div class="spatial-query-map-tools">
+        <button
+          type="button"
+          id="spatialQueryPickCoordinates"
+          class="spatial-query-button spatial-query-button-secondary"
+        >
+          Pick Coordinates
+        </button>
+
+        <button
+          type="button"
+          id="spatialQueryClearSelection"
+          class="spatial-query-button spatial-query-button-secondary"
+        >
+          Clear Selection
+        </button>
+
+        <small
+          id="spatialQueryMapToolStatus"
+          class="spatial-query-help"
+          aria-live="polite"
+        >
+          Click "Pick Coordinates", then click the map.
+        </small>
+      </div>
     `;
+
+    bindSpatialQueryMapToolEvents(container);
 
     scheduleSpatialQueryControlLayoutUpdate();
 
@@ -657,7 +709,9 @@ function updateSpatialQuerySpatialFields(container) {
           min="-90"
           max="90"
           step="any"
-          value="${escapeSpatialQueryAttribute(spatialQueryState.minLatitude)}"
+          value="${escapeSpatialQueryAttribute(
+            spatialQueryState.minLatitude,
+          )}"
         />
       </div>
 
@@ -673,7 +727,9 @@ function updateSpatialQuerySpatialFields(container) {
           min="-90"
           max="90"
           step="any"
-          value="${escapeSpatialQueryAttribute(spatialQueryState.maxLatitude)}"
+          value="${escapeSpatialQueryAttribute(
+            spatialQueryState.maxLatitude,
+          )}"
         />
       </div>
 
@@ -689,7 +745,9 @@ function updateSpatialQuerySpatialFields(container) {
           min="-180"
           max="180"
           step="any"
-          value="${escapeSpatialQueryAttribute(spatialQueryState.minLongitude)}"
+          value="${escapeSpatialQueryAttribute(
+            spatialQueryState.minLongitude,
+          )}"
         />
       </div>
 
@@ -705,10 +763,40 @@ function updateSpatialQuerySpatialFields(container) {
           min="-180"
           max="180"
           step="any"
-          value="${escapeSpatialQueryAttribute(spatialQueryState.maxLongitude)}"
+          value="${escapeSpatialQueryAttribute(
+            spatialQueryState.maxLongitude,
+          )}"
         />
       </div>
+
+      <div class="spatial-query-map-tools">
+        <button
+          type="button"
+          id="spatialQueryDrawBox"
+          class="spatial-query-button spatial-query-button-secondary"
+        >
+          Draw Box
+        </button>
+
+        <button
+          type="button"
+          id="spatialQueryClearSelection"
+          class="spatial-query-button spatial-query-button-secondary"
+        >
+          Clear Selection
+        </button>
+
+        <small
+          id="spatialQueryMapToolStatus"
+          class="spatial-query-help"
+          aria-live="polite"
+        >
+          Click "Draw Box", then drag on the map.
+        </small>
+      </div>
     `;
+
+    bindSpatialQueryMapToolEvents(container);
 
     scheduleSpatialQueryControlLayoutUpdate();
 
@@ -717,6 +805,121 @@ function updateSpatialQuerySpatialFields(container) {
 
   scheduleSpatialQueryControlLayoutUpdate();
 }
+
+/* ============================================================
+   MAP SELECTION / INTERACTION HELPERS
+   ============================================================ */
+
+function clearSpatialQuerySelection() {
+  if (spatialQueryLocationMarker) {
+    if (
+      spatialQueryMap &&
+      spatialQueryMap.hasLayer(spatialQueryLocationMarker)
+    ) {
+      spatialQueryMap.removeLayer(spatialQueryLocationMarker);
+    }
+
+    spatialQueryLocationMarker = null;
+  }
+
+  if (spatialQuerySelectionRectangle) {
+    if (
+      spatialQueryMap &&
+      spatialQueryMap.hasLayer(spatialQuerySelectionRectangle)
+    ) {
+      spatialQueryMap.removeLayer(spatialQuerySelectionRectangle);
+    }
+
+    spatialQuerySelectionRectangle = null;
+  }
+
+  spatialQueryDrawingStartLatLng = null;
+
+  return true;
+}
+
+function updateSpatialQueryRadiusCoordinates(
+  latitude,
+  longitude,
+) {
+  const container = spatialQueryControlContainer;
+
+  if (!container) {
+    return;
+  }
+
+  const latitudeInput = container.querySelector(
+    "#spatialQueryLatitude",
+  );
+
+  const longitudeInput = container.querySelector(
+    "#spatialQueryLongitude",
+  );
+
+  if (latitudeInput) {
+    latitudeInput.value = Number(latitude).toFixed(7);
+  }
+
+  if (longitudeInput) {
+    longitudeInput.value = Number(longitude).toFixed(7);
+  }
+
+  captureSpatialQuerySpatialFields(container);
+
+  updateSpatialQueryControlState(container);
+}
+
+function updateSpatialQueryBoundingBox(bounds) {
+  if (!bounds || !bounds.isValid()) {
+    return;
+  }
+
+  const southWest = bounds.getSouthWest();
+  const northEast = bounds.getNorthEast();
+
+  const container = spatialQueryControlContainer;
+
+  if (!container) {
+    return;
+  }
+
+  const minLatitudeInput = container.querySelector(
+    "#spatialQueryMinLatitude",
+  );
+
+  const maxLatitudeInput = container.querySelector(
+    "#spatialQueryMaxLatitude",
+  );
+
+  const minLongitudeInput = container.querySelector(
+    "#spatialQueryMinLongitude",
+  );
+
+  const maxLongitudeInput = container.querySelector(
+    "#spatialQueryMaxLongitude",
+  );
+
+  if (minLatitudeInput) {
+    minLatitudeInput.value = Number(southWest.lat).toFixed(7);
+  }
+
+  if (maxLatitudeInput) {
+    maxLatitudeInput.value = Number(northEast.lat).toFixed(7);
+  }
+
+  if (minLongitudeInput) {
+    minLongitudeInput.value = Number(southWest.lng).toFixed(7);
+  }
+
+  if (maxLongitudeInput) {
+    maxLongitudeInput.value = Number(northEast.lng).toFixed(7);
+  }
+
+  captureSpatialQuerySpatialFields(container);
+
+  updateSpatialQueryControlState(container);
+}
+
 
 /* ============================================================
    HTML ATTRIBUTE ESCAPING
@@ -1933,6 +2136,475 @@ async function executeSpatialQuery(state = spatialQueryState) {
    INITIALIZATION
    ============================================================ */
 
+
+/* ============================================================
+   MAP INTERACTION SUBSYSTEM
+   ============================================================ */
+
+/* ============================================================
+   MAP INTERACTION STATE / HELPERS
+   ============================================================ */
+
+function isSpatialQueryMapInteractionActive() {
+  return spatialQueryMapInteractionMode !== "none";
+}
+
+function setSpatialQueryMapCursor(active) {
+  if (!spatialQueryMap) {
+    return;
+  }
+
+  const mapContainer = spatialQueryMap.getContainer();
+
+  if (!mapContainer) {
+    return;
+  }
+
+  mapContainer.classList.toggle(
+    "spatial-query-map-tool-active",
+    Boolean(active),
+  );
+}
+
+function updateSpatialQueryMapToolStatus(message) {
+  if (!spatialQueryControlContainer) {
+    return;
+  }
+
+  const status =
+    spatialQueryControlContainer.querySelector(
+      "#spatialQueryMapToolStatus",
+    );
+
+  if (status) {
+    status.textContent = message || "";
+  }
+}
+
+/* ============================================================
+   START COORDINATE PICKER
+   ============================================================ */
+
+function startSpatialQueryCoordinatePicker() {
+  if (!spatialQueryMap) {
+    return false;
+  }
+
+  cancelSpatialQueryMapInteraction(true);
+
+  spatialQueryMapInteractionMode = "pick_coordinates";
+
+  setSpatialQueryMapCursor(true);
+
+  updateSpatialQueryMapToolStatus(
+    "Click the map to select coordinates.",
+  );
+
+  return true;
+}
+
+/* ============================================================
+   START BOUNDING BOX DRAWING
+   ============================================================ */
+
+function startSpatialQueryBoxDrawing() {
+  if (!spatialQueryMap) {
+    return false;
+  }
+
+  cancelSpatialQueryMapInteraction(true);
+
+  spatialQueryMapInteractionMode = "draw_box";
+
+  spatialQueryDrawingStartLatLng = null;
+
+  spatialQueryMapDraggingWasEnabled =
+    spatialQueryMap.dragging.enabled();
+
+  /*
+   * Disable Leaflet's normal map dragging while the user
+   * draws the rectangle.
+   */
+  spatialQueryMap.dragging.disable();
+
+  setSpatialQueryMapCursor(true);
+
+  updateSpatialQueryMapToolStatus(
+    "Drag on the map to draw the bounding box.",
+  );
+
+  return true;
+}
+
+function markSpatialQueryMapClickToIgnore() {
+  spatialQueryIgnoreNextMapClick = true;
+}
+
+function consumeSpatialQueryIgnoredMapClick() {
+  if (!spatialQueryIgnoreNextMapClick) {
+    return false;
+  }
+
+  spatialQueryIgnoreNextMapClick = false;
+
+  return true;
+}
+
+/* ============================================================
+   MAP CLICK  PICK COORDINATES
+   ============================================================ */
+
+function handleSpatialQueryMapClick(event) {
+  if (
+    spatialQueryMapInteractionMode !== "pick_coordinates" ||
+    !event?.latlng
+  ) {
+    return;
+  }
+
+  const latitude = Number(event.latlng.lat);
+  const longitude = Number(event.latlng.lng);
+
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude)
+  ) {
+    updateSpatialQueryMapToolStatus(
+      "Invalid map coordinates. Please try again.",
+    );
+
+    return;
+  }
+
+  clearSpatialQuerySelection();
+
+  spatialQueryLocationMarker = L.circleMarker(
+    [latitude, longitude],
+    {
+      radius: 7,
+      weight: 2,
+      fillOpacity: 0.85,
+      interactive: false,
+    },
+  );
+
+  spatialQueryLocationMarker.addTo(spatialQueryMap);
+
+  updateSpatialQueryRadiusCoordinates(
+    latitude,
+    longitude,
+  );
+
+  finishSpatialQueryMapInteraction();
+
+  updateSpatialQueryMapToolStatus(
+    `Selected ${latitude.toFixed(7)}, ${longitude.toFixed(7)}.`,
+  );
+}
+
+/* ============================================================
+   MAP MOUSE DOWN  START BOX
+   ============================================================ */
+
+function handleSpatialQueryMapMouseDown(event) {
+  if (
+    spatialQueryMapInteractionMode !== "draw_box" ||
+    !event?.latlng
+  ) {
+    return;
+  }
+
+  spatialQueryDrawingStartLatLng = event.latlng;
+
+  clearSpatialQuerySelection();
+
+  /*
+   * clearSpatialQuerySelection() clears the drawing start
+   * coordinate, so restore it immediately afterward.
+   */
+  spatialQueryDrawingStartLatLng = event.latlng;
+
+  /*
+   * Prevent this mouse action from being interpreted as
+   * another map operation.
+   */
+  if (event.originalEvent) {
+    L.DomEvent.stop(event.originalEvent);
+  }
+}
+
+/* ============================================================
+   MAP MOUSE MOVE  UPDATE BOX
+   ============================================================ */
+
+function handleSpatialQueryMapMouseMove(event) {
+  if (
+    spatialQueryMapInteractionMode !== "draw_box" ||
+    !spatialQueryDrawingStartLatLng ||
+    !event?.latlng
+  ) {
+    return;
+  }
+
+  const bounds = L.latLngBounds(
+    spatialQueryDrawingStartLatLng,
+    event.latlng,
+  );
+
+  if (spatialQuerySelectionRectangle) {
+    spatialQuerySelectionRectangle.setBounds(bounds);
+  } else {
+    spatialQuerySelectionRectangle = L.rectangle(
+      bounds,
+      {
+        weight: 2,
+        fillOpacity: 0.12,
+        interactive: false,
+      },
+    ).addTo(spatialQueryMap);
+  }
+
+  if (event.originalEvent) {
+    L.DomEvent.stop(event.originalEvent);
+  }
+}
+
+/* ============================================================
+   MAP MOUSE UP  COMPLETE BOX
+   ============================================================ */
+
+function handleSpatialQueryMapMouseUp(event) {
+  if (
+    spatialQueryMapInteractionMode !== "draw_box" ||
+    !spatialQueryDrawingStartLatLng ||
+    !event?.latlng
+  ) {
+    return;
+  }
+
+  const bounds = L.latLngBounds(
+    spatialQueryDrawingStartLatLng,
+    event.latlng,
+  );
+
+  const southWest = bounds.getSouthWest();
+  const northEast = bounds.getNorthEast();
+
+  if (
+    northEast.lat === southWest.lat ||
+    northEast.lng === southWest.lng
+  ) {
+    cancelSpatialQueryMapInteraction(false);
+
+    updateSpatialQueryMapToolStatus(
+      "Draw a box with a non-zero width and height.",
+    );
+
+    return;
+  }
+
+  if (spatialQuerySelectionRectangle) {
+    spatialQuerySelectionRectangle.setBounds(bounds);
+  } else {
+    spatialQuerySelectionRectangle = L.rectangle(
+      bounds,
+      {
+        weight: 2,
+        fillOpacity: 0.12,
+        interactive: false,
+      },
+    ).addTo(spatialQueryMap);
+  }
+
+  updateSpatialQueryBoundingBox(bounds);
+
+  /*
+   * The mouseup that completes the rectangle can generate
+   * a Leaflet click immediately afterward.
+   *
+   * Tell the map-level Spatial Analysis handler to ignore
+   * exactly that click.
+   */
+  markSpatialQueryMapClickToIgnore();
+
+  finishSpatialQueryMapInteraction();
+
+  updateSpatialQueryMapToolStatus(
+    "Bounding box selected. You can edit the values manually.",
+  );
+}
+
+/* ============================================================
+   MAP INTERACTION HANDLERS
+   ============================================================ */
+
+function attachSpatialQueryMapInteractionHandlers() {
+  if (
+    !spatialQueryMap ||
+    spatialQueryMapInteractionHandlersAttached
+  ) {
+    return;
+  }
+
+  spatialQueryMap.on(
+    "click",
+    handleSpatialQueryMapClick,
+  );
+
+  spatialQueryMap.on(
+    "mousedown",
+    handleSpatialQueryMapMouseDown,
+  );
+
+  spatialQueryMap.on(
+    "mousemove",
+    handleSpatialQueryMapMouseMove,
+  );
+
+  spatialQueryMap.on(
+    "mouseup",
+    handleSpatialQueryMapMouseUp,
+  );
+
+  spatialQueryMapInteractionHandlersAttached = true;
+}
+
+/* ============================================================
+   MAP TOOL BUTTON EVENTS
+   ============================================================ */
+
+function bindSpatialQueryMapToolEvents(container) {
+  const pickCoordinatesButton = container.querySelector(
+    "#spatialQueryPickCoordinates",
+  );
+
+  const drawBoxButton = container.querySelector(
+    "#spatialQueryDrawBox",
+  );
+
+  const clearSelectionButton = container.querySelector(
+    "#spatialQueryClearSelection",
+  );
+
+  if (pickCoordinatesButton) {
+    pickCoordinatesButton.addEventListener(
+      "click",
+      () => {
+        startSpatialQueryCoordinatePicker();
+      },
+    );
+  }
+
+  if (drawBoxButton) {
+    drawBoxButton.addEventListener(
+      "click",
+      () => {
+        startSpatialQueryBoxDrawing();
+      },
+    );
+  }
+
+  if (clearSelectionButton) {
+    clearSelectionButton.addEventListener(
+      "click",
+      () => {
+        cancelSpatialQueryMapInteraction(true);
+
+        if (spatialQueryState.spatialType === "radius") {
+          spatialQueryState.latitude = "";
+          spatialQueryState.longitude = "";
+
+          const latitudeInput = container.querySelector(
+            "#spatialQueryLatitude",
+          );
+
+          const longitudeInput = container.querySelector(
+            "#spatialQueryLongitude",
+          );
+
+          if (latitudeInput) {
+            latitudeInput.value = "";
+          }
+
+          if (longitudeInput) {
+            longitudeInput.value = "";
+          }
+        }
+
+        if (spatialQueryState.spatialType === "bbox") {
+          spatialQueryState.minLatitude = "";
+          spatialQueryState.maxLatitude = "";
+          spatialQueryState.minLongitude = "";
+          spatialQueryState.maxLongitude = "";
+
+          [
+            "#spatialQueryMinLatitude",
+            "#spatialQueryMaxLatitude",
+            "#spatialQueryMinLongitude",
+            "#spatialQueryMaxLongitude",
+          ].forEach((selector) => {
+            const input = container.querySelector(selector);
+
+            if (input) {
+              input.value = "";
+            }
+          });
+        }
+
+        updateSpatialQueryControlState(container);
+
+        updateSpatialQueryMapToolStatus(
+          "Selection cleared.",
+        );
+      },
+    );
+  }
+}
+function finishSpatialQueryMapInteraction() {
+  const completedMode =
+    spatialQueryMapInteractionMode;
+
+  spatialQueryMapInteractionMode = "none";
+
+  spatialQueryDrawingStartLatLng = null;
+
+  setSpatialQueryMapCursor(false);
+
+  if (
+    completedMode === "draw_box" &&
+    spatialQueryMap &&
+    spatialQueryMapDraggingWasEnabled
+  ) {
+    spatialQueryMap.dragging.enable();
+  }
+}
+
+function cancelSpatialQueryMapInteraction(
+  clearSelection = true,
+) {
+  if (
+    spatialQueryMap &&
+    spatialQueryMapInteractionMode === "draw_box"
+  ) {
+    if (spatialQueryMapDraggingWasEnabled) {
+      spatialQueryMap.dragging.enable();
+    }
+  }
+
+  spatialQueryMapInteractionMode = "none";
+
+  spatialQueryDrawingStartLatLng = null;
+
+  setSpatialQueryMapCursor(false);
+
+  if (clearSelection) {
+    clearSpatialQuerySelection();
+  }
+
+  return true;
+}
+
+
 function initializeSpatialQuery(options = {}) {
   const suppliedMap = options.map;
 
@@ -1943,6 +2615,8 @@ function initializeSpatialQuery(options = {}) {
   }
 
   spatialQueryMap = suppliedMap;
+
+  attachSpatialQueryMapInteractionHandlers();
 
   ensureSpatialQueryResultPane();
 
@@ -2055,6 +2729,9 @@ window.focusSpatialQueryResults = focusSpatialQueryResults;
 window.clearSpatialQueryResults = clearSpatialQueryResults;
 
 window.isSpatialQueryRequestInProgress = isSpatialQueryRequestInProgress;
+
+window.consumeSpatialQueryIgnoredMapClick =
+  consumeSpatialQueryIgnoredMapClick;
 
 /* ============================================================
    LOAD MESSAGE
