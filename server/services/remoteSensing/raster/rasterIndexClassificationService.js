@@ -37,6 +37,10 @@ const {
     createRasterIndexClassificationResultContract
 } = require("../../../scientific/remoteSensing/raster/rasterIndexClassificationContract");
 
+const {
+    getIndexDefinition
+} = require("../../../scientific/remoteSensing/indices/indexRegistry");
+
 function isNoDataValue(value, noData) {
     if (noData === undefined || noData === null) {
         return false;
@@ -151,7 +155,7 @@ function calculateClassStatistics({
 
 function classifyRasterIndex({
     indexCode,
-    definition,
+    definition = getIndexDefinition(indexCode),
     raster,
     classificationRules,
     noData

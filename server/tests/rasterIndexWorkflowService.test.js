@@ -65,16 +65,16 @@ const spatialReference = {
 const sourceBands = {
     Blue: new Float32Array([
         0.05, 0.05,
-        0.05, 0.05,
-        0.05, 0.05,
-        0.05, 0.05
+        0.06, 0.06,
+        0.07, 0.07,
+        0.08, 0.08
     ]),
 
     Green: new Float32Array([
         0.10, 0.10,
-        0.10, 0.10,
-        0.10, 0.10,
-        0.10, 0.10
+        0.12, 0.12,
+        0.14, 0.14,
+        0.16, 0.16
     ]),
 
     Red: new Float32Array([
@@ -89,6 +89,13 @@ const sourceBands = {
         0.40, 0.40,
         0.50, 0.50,
         0.60, 0.60
+    ]),
+
+    SWIR: new Float32Array([
+        0.15, 0.15,
+        0.20, 0.20,
+        0.25, 0.25,
+        0.30, 0.30
     ])
 };
 
@@ -101,21 +108,24 @@ async function createFixtureGeoTiff(filePath) {
 
     const interleaved =
         new Float32Array(
-            pixelCount * 4
+            pixelCount * 5
         );
 
     for (let i = 0; i < pixelCount; i++) {
-        interleaved[(i * 4) + 0] =
+        interleaved[(i * 5) + 0] =
             sourceBands.Blue[i];
 
-        interleaved[(i * 4) + 1] =
+        interleaved[(i * 5) + 1] =
             sourceBands.Green[i];
 
-        interleaved[(i * 4) + 2] =
+        interleaved[(i * 5) + 2] =
             sourceBands.Red[i];
 
-        interleaved[(i * 4) + 3] =
+        interleaved[(i * 5) + 3] =
             sourceBands.NIR[i];
+
+        interleaved[(i * 5) + 4] =
+            sourceBands.SWIR[i];
     }
 
     const arrayBuffer =
@@ -125,9 +135,10 @@ async function createFixtureGeoTiff(filePath) {
                 width,
                 height,
 
-                SamplesPerPixel: 4,
+                SamplesPerPixel: 5,
 
                 BitsPerSample: [
+                    32,
                     32,
                     32,
                     32,
@@ -135,6 +146,7 @@ async function createFixtureGeoTiff(filePath) {
                 ],
 
                 SampleFormat: [
+                    3,
                     3,
                     3,
                     3,
@@ -258,7 +270,8 @@ test(
                         Blue: 1,
                         Green: 2,
                         Red: 3,
-                        NIR: 4
+                        NIR: 4,
+                        SWIR: 5
                     },
 
                     noData: -9999,
@@ -747,6 +760,462 @@ test(
         }
     }
 );
+
+// ------------------------------------------------------------
+// Multi-index workflow regression
+// ------------------------------------------------------------
+
+test(
+    "processRasterIndexWorkflow supports all registered remote sensing indices",
+    async () => {
+        const tempDirectory =
+            await fs.promises.mkdtemp(
+                path.join(
+                    os.tmpdir(),
+                    "agrinexus-multi-index-workflow-"
+                )
+            );
+
+        try {
+            const inputPath =
+                path.join(
+                    tempDirectory,
+                    "source.tif"
+                );
+
+            const outputDirectory =
+                path.join(
+                    tempDirectory,
+                    "output"
+                );
+
+            await fs.promises.mkdir(
+                outputDirectory,
+                {
+                    recursive: true
+                }
+            );
+
+            await createFixtureGeoTiff(
+                inputPath
+            );
+
+            const indexCases = [
+                {
+                    indexCode: "NDVI",
+                    bandMapping: {
+                        Red: 3,
+                        NIR: 4
+                    }
+                },
+
+                {
+                    indexCode: "EVI",
+                    bandMapping: {
+                        Blue: 1,
+                        Red: 3,
+                        NIR: 4
+                    }
+                },
+
+                {
+                    indexCode: "SAVI",
+                    bandMapping: {
+                        Red: 3,
+                        NIR: 4
+                    }
+                },
+
+                {
+                    indexCode: "GNDVI",
+                    bandMapping: {
+                        Green: 2,
+                        NIR: 4
+                    }
+                },
+
+                {
+                    indexCode: "ARVI",
+                    bandMapping: {
+                        Blue: 1,
+                        Red: 3,
+                        NIR: 4
+                    }
+                },
+
+                {
+                    indexCode: "NDWI",
+                    bandMapping: {
+                        Green: 2,
+                        NIR: 4
+                    }
+                },
+
+                {
+                    indexCode: "NDMI",
+                    bandMapping: {
+                        NIR: 4,
+                        SWIR: 5
+                    }
+                }
+            ];
+
+            assert.equal(
+                indexCases.length,
+                7
+            );
+
+            for (const indexCase of indexCases) {
+                const {
+                    indexCode,
+                    bandMapping
+                } = indexCase;
+
+                const definition =
+                    getIndexDefinition(
+                        indexCode
+                    );
+
+                assert.ok(
+                    definition,
+                    `Missing registry definition for ${indexCode}`
+                );
+
+                const result =
+                    await processRasterIndexWorkflow({
+                        inputPath,
+
+                        indexCode,
+
+                        bandMapping,
+
+                        noData: -9999,
+
+                        outputDirectory
+                    });
+
+                // --------------------------------------------
+                // Workflow contract
+                // --------------------------------------------
+
+                assert.equal(
+                    result.workflowVersion,
+                    "1.0"
+                );
+
+                assert.equal(
+                    result.indexCode,
+                    indexCode
+                );
+
+                assert.equal(
+                    result.input.filePath,
+                    inputPath
+                );
+
+                assert.equal(
+                    result.input.width,
+                    4
+                );
+
+                assert.equal(
+                    result.input.height,
+                    2
+                );
+
+                assert.equal(
+                    result.input.pixelCount,
+                    8
+                );
+
+                assert.equal(
+                    result.processing.indexCode,
+                    indexCode
+                );
+
+                assert.equal(
+                    result.processing.indexName,
+                    definition.name
+                );
+
+                assert.equal(
+                    result.processing.classificationMethod,
+                    "baseline_qualitative"
+                );
+
+                // --------------------------------------------
+                // Output contract
+                // --------------------------------------------
+
+                assert.equal(
+                    path.basename(
+                        result.continuousOutput.outputPath
+                    ),
+                    `${indexCode}_index.tif`
+                );
+
+                assert.equal(
+                    path.basename(
+                        result.classificationOutput.outputPath
+                    ),
+                    `${indexCode}_classification.tif`
+                );
+
+                assert.equal(
+                    result.continuousOutput.dataType,
+                    "Float32"
+                );
+
+                assert.equal(
+                    result.classificationOutput.dataType,
+                    "Uint8"
+                );
+
+                assert.ok(
+                    await fs.promises
+                        .access(
+                            result.continuousOutput.outputPath
+                        )
+                        .then(() => true)
+                        .catch(() => false),
+                    `${indexCode} continuous output missing`
+                );
+
+                assert.ok(
+                    await fs.promises
+                        .access(
+                            result.classificationOutput.outputPath
+                        )
+                        .then(() => true)
+                        .catch(() => false),
+                    `${indexCode} classification output missing`
+                );
+
+                // --------------------------------------------
+                // Continuous GeoTIFF
+                // --------------------------------------------
+
+                const continuous =
+                    await readGeoTiff(
+                        result.continuousOutput.outputPath
+                    );
+
+                assert.equal(
+                    continuous.width,
+                    4
+                );
+
+                assert.equal(
+                    continuous.height,
+                    2
+                );
+
+                assert.equal(
+                    continuous.samplesPerPixel,
+                    1
+                );
+
+                assert.equal(
+                    continuous.noData,
+                    -9999
+                );
+
+                assert.deepEqual(
+                    continuous.origin,
+                    [100, 200, 0]
+                );
+
+                assert.deepEqual(
+                    continuous.resolution,
+                    [10, -10, 0]
+                );
+
+                assert.deepEqual(
+                    continuous.boundingBox,
+                    [100, 180, 140, 200]
+                );
+
+                assert.equal(
+                    continuous.geoKeys
+                        .GeographicTypeGeoKey,
+                    4326
+                );
+
+                assert.equal(
+                    continuous.data[0].length,
+                    8
+                );
+
+                // --------------------------------------------
+                // Continuous provenance
+                // --------------------------------------------
+
+                const continuousCitation =
+                    readAnalyticalCitation(
+                        continuous
+                    );
+
+                assert.equal(
+                    continuousCitation.application,
+                    "AgriNexus GIS"
+                );
+
+                assert.equal(
+                    continuousCitation.outputType,
+                    "continuous_index"
+                );
+
+                assert.equal(
+                    continuousCitation.indexCode,
+                    indexCode
+                );
+
+                assert.equal(
+                    continuousCitation.indexName,
+                    definition.name
+                );
+
+                assert.equal(
+                    continuousCitation
+                        .processingType,
+                    "pixelwise_scalar_index"
+                );
+
+                assert.equal(
+                    continuousCitation.analysisVersion,
+                    "1.0"
+                );
+
+                assert.equal(
+                    continuousCitation
+                        .sourceRasterContractVersion,
+                    "1.0"
+                );
+
+                assert.equal(
+                    continuousCitation.classificationMethod,
+                    null
+                );
+
+                // --------------------------------------------
+                // Classification GeoTIFF
+                // --------------------------------------------
+
+                const classification =
+                    await readGeoTiff(
+                        result.classificationOutput.outputPath
+                    );
+
+                assert.equal(
+                    classification.width,
+                    4
+                );
+
+                assert.equal(
+                    classification.height,
+                    2
+                );
+
+                assert.equal(
+                    classification.samplesPerPixel,
+                    1
+                );
+
+                assert.equal(
+                    classification.noData,
+                    0
+                );
+
+                assert.deepEqual(
+                    classification.origin,
+                    [100, 200, 0]
+                );
+
+                assert.deepEqual(
+                    classification.resolution,
+                    [10, -10, 0]
+                );
+
+                assert.deepEqual(
+                    classification.boundingBox,
+                    [100, 180, 140, 200]
+                );
+
+                assert.equal(
+                    classification.geoKeys
+                        .GeographicTypeGeoKey,
+                    4326
+                );
+
+                assert.equal(
+                    classification.data[0].length,
+                    8
+                );
+
+                // --------------------------------------------
+                // Classification provenance
+                // --------------------------------------------
+
+                const classificationCitation =
+                    readAnalyticalCitation(
+                        classification
+                    );
+
+                assert.equal(
+                    classificationCitation.application,
+                    "AgriNexus GIS"
+                );
+
+                assert.equal(
+                    classificationCitation.outputType,
+                    "classification"
+                );
+
+                assert.equal(
+                    classificationCitation.indexCode,
+                    indexCode
+                );
+
+                assert.equal(
+                    classificationCitation.indexName,
+                    definition.name
+                );
+
+                assert.equal(
+                    classificationCitation
+                        .processingType,
+                    "pixelwise_raster_classification"
+                );
+
+                assert.equal(
+                    classificationCitation.analysisVersion,
+                    "1.0"
+                );
+
+                assert.equal(
+                    classificationCitation
+                        .sourceRasterContractVersion,
+                    "1.0"
+                );
+
+                assert.equal(
+                    classificationCitation
+                        .classificationMethod,
+                    "baseline_qualitative"
+                );
+            }
+        } finally {
+            await fs.promises.rm(
+                tempDirectory,
+                {
+                    recursive: true,
+                    force: true
+                }
+            );
+        }
+    }
+);
+
 
 
 
