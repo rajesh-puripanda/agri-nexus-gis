@@ -442,6 +442,81 @@ test(
     }
 );
 test(
+    "API omits invalid delegated batch failure context",
+    async () => {
+        batchService
+            .processRasterIndexBatchWorkflow =
+            async () => {
+                const error =
+                    new Error(
+                        "Simulated batch workflow failure"
+                    );
+
+                error.code = "";
+
+                error.indexCode = "   ";
+
+                error.batchIndex = -1;
+
+                throw error;
+            };
+
+        const response =
+            await supertest(app)
+                .post(
+                    "/api/remote-sensing/raster/" +
+                    "index-batch-workflow"
+                )
+                .send(
+                    validRequest()
+                );
+
+        assert.equal(
+            response.status,
+            500
+        );
+
+        assert.equal(
+            response.body.success,
+            false
+        );
+
+        assert.equal(
+            response.body.code,
+            "RASTER_INDEX_BATCH_WORKFLOW_ERROR"
+        );
+
+        assert.equal(
+            response.body.message,
+            "Simulated batch workflow failure"
+        );
+
+        assert.equal(
+            Object.prototype.hasOwnProperty.call(
+                response.body,
+                "errorCode"
+            ),
+            false
+        );
+
+        assert.equal(
+            Object.prototype.hasOwnProperty.call(
+                response.body,
+                "indexCode"
+            ),
+            false
+        );
+
+        assert.equal(
+            Object.prototype.hasOwnProperty.call(
+                response.body,
+                "batchIndex"
+            ),
+            false
+        );
+    }
+);
+test(
     "API preserves batch workflow service statusCode",
     async () => {
         batchService
