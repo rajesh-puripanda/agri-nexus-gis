@@ -1,10 +1,16 @@
-﻿"use strict";
+"use strict";
 
 const assert = require("node:assert/strict");
 const {
     test,
     afterEach
 } = require("node:test");
+
+const {
+    getIndexDefinition
+} = require(
+    "../scientific/remoteSensing/indices/indexRegistry"
+);
 
 const workflowServicePath =
     require.resolve(
@@ -94,7 +100,7 @@ function workflowResult(indexCode) {
         },
         processing: {
             indexCode,
-            indexName: `${indexCode} Test Index`,
+            indexName: getIndexDefinition(indexCode).name,
             classificationMethod:
                 "baseline_qualitative"
         },

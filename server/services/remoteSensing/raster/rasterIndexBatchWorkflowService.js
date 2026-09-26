@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // ============================================================
 // server/services/remoteSensing/raster/rasterIndexBatchWorkflowService.js
@@ -36,6 +36,13 @@ const {
 const {
     processRasterIndexWorkflow
 } = require("./rasterIndexWorkflowService");
+
+const {
+    createRasterIndexBatchWorkflowResultContract
+} = require(
+    "../../../scientific/remoteSensing/raster/" +
+    "rasterIndexBatchWorkflowResultContract"
+);
 
 const BATCH_WORKFLOW_VERSION = "1.0";
 
@@ -107,7 +114,7 @@ async function processRasterIndexBatchWorkflow(request) {
         );
     }
 
-    return {
+    return createRasterIndexBatchWorkflowResultContract({
         batchVersion:
             BATCH_WORKFLOW_VERSION,
 
@@ -119,7 +126,7 @@ async function processRasterIndexBatchWorkflow(request) {
         },
 
         results
-    };
+    });
 }
 
 module.exports = {
