@@ -191,6 +191,8 @@ function buildTemporalIndexObservation({
     processingContext
 }) {
     return createTemporalIndexObservation({
+        contractVersion: "1.0",
+
         observation: {
             observationDate: temporalIdentity.observationDate,
             acquisitionDate: temporalIdentity.acquisitionDate,
