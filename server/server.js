@@ -37,6 +37,7 @@ const historicalContextRoutes = require("./routes/historicalContextRoutes");
 const historicalComparisonRoutes = require("./routes/historicalComparisonRoutes");
 const historicalCandidateRoutes = require("./routes/historicalCandidateRoutes");
 const analyticalReportRoutes = require("./routes/analyticalReportRoutes");
+const rasterIndexWorkflowRoutes = require("./routes/rasterIndexWorkflowRoutes");
 
 // ============================================================
 // APPLICATION
@@ -114,6 +115,15 @@ app.use(
 app.use(
   "/api/reports",
   analyticalReportRoutes,
+);
+
+// ============================================================
+// REMOTE SENSING RASTER INDEX WORKFLOW API
+// ============================================================
+
+app.use(
+  "/api/remote-sensing/raster",
+  rasterIndexWorkflowRoutes,
 );
 
 // ============================================================
