@@ -1913,3 +1913,132 @@ Scientific authority boundary preserved  COMPLETE
 Premature database restructuring avoided  COMPLETE
 
 Phase 0.4 is ready for validation and Git checkpoint.
+
+# Phase 0.5  API Conventions
+
+## Phase 0.5 Status
+
+Phase 0.5 establishes the API conventions for AgriNexus GIS while preserving existing working endpoint contracts.
+
+### 0.5.1  API Namespace
+
+Application APIs use the /api namespace.
+
+The health endpoint remains available at /api/health.
+
+Existing domain endpoints include soil observations, soil analysis, spatial analysis, historical analysis, interpolation, fertility zoning, reporting, and remote-sensing raster workflows.
+
+### 0.5.2  Resource Naming
+
+New API resources use lowercase kebab-case naming.
+
+Existing API resource names are retained during the architectural migration and are not renamed solely for naming consistency.
+
+Existing soil-analysis and soil-prefixed routes remain valid until a deliberate migration is approved.
+
+### 0.5.3  HTTP Method Conventions
+
+GET is used for resource retrieval and read-only analytical queries.
+
+POST is used for analytical operations and workflow execution where structured input is supplied.
+
+PUT and PATCH are reserved for resource-update semantics.
+
+DELETE is reserved for actual resource deletion.
+
+### 0.5.4  API Layer Responsibility
+
+The intended request-processing sequence is:
+
+Route  Controller  Domain Service  Scientific / Repository Layer
+
+Routes define HTTP endpoint mapping.
+
+Controllers handle HTTP request and response orchestration.
+
+Domain services own domain-level workflow orchestration.
+
+Scientific services own authoritative scientific calculations.
+
+Repository modules provide controlled persistence access.
+
+### 0.5.5  Request Validation
+
+Required request parameters and analytical inputs are validated server-side.
+
+Invalid inputs must be rejected before scientific processing.
+
+Query parameters, path parameters, and request bodies remain explicitly defined by individual endpoint contracts.
+
+### 0.5.6  Response Contracts
+
+Each API endpoint must have a defined response contract.
+
+Existing response structures are preserved for backward compatibility.
+
+A common response envelope is not imposed retroactively during Phase 0.5. Where a shared contract is justified, it will be introduced incrementally without silently changing existing consumers.
+
+Analytical responses should preserve the authoritative scientific result produced by the backend.
+
+### 0.5.7  HTTP Status Conventions
+
+Successful operations use appropriate 2xx status codes.
+
+Invalid client requests use appropriate 4xx status codes.
+
+Missing resources use an appropriate 4xx status code.
+
+Unexpected application, scientific, or infrastructure failures use appropriate 5xx status codes.
+
+Scientific failure states must not be silently represented as successful analytical results.
+
+### 0.5.8  Error Handling
+
+API errors must remain distinguishable from valid analytical results.
+
+Controllers translate domain or scientific failures into appropriate HTTP responses.
+
+Responses must not expose unnecessary internal implementation details, database credentials, stack traces, or other sensitive implementation information.
+
+### 0.5.9  API and Scientific Versioning
+
+API versioning is independent from scientific algorithm and analytical-result versioning.
+
+Scientific analytical contracts should expose analysis or algorithm version information where required by the relevant domain contract.
+
+Existing APIs are not given artificial version prefixes during Phase 0.5.
+
+### 0.5.10  Backward Compatibility
+
+Existing working API contracts are preserved.
+
+New API contracts should be introduced incrementally.
+
+Where migration is required, compatibility should be maintained during the transition whenever practical.
+
+The architectural migration principle remains:
+
+Extend  Refactor  Rename
+
+### 0.5.11  Scientific Authority Boundary
+
+The frontend consumes API results for visualization, interaction, and presentation.
+
+The frontend must not become the authority for scientific classification, interpolation, spatial modelling, temporal analysis, or other backend analytical calculations.
+
+Backend domain and scientific services remain the authoritative source of analytical results.
+
+### 0.5.12  Phase 0.5 Completion Criteria
+
+API namespace convention established  COMPLETE
+Resource naming convention established  COMPLETE
+HTTP method conventions established  COMPLETE
+Route/controller/service separation established  COMPLETE
+Request validation principle established  COMPLETE
+Response contract principle established  COMPLETE
+HTTP status and error conventions established  COMPLETE
+API/scientific versioning separation established  COMPLETE
+Backward compatibility principle established  COMPLETE
+Scientific authority boundary preserved  COMPLETE
+
+Phase 0.5 is ready for validation and Git checkpoint.
