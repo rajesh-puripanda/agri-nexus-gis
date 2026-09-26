@@ -147,6 +147,8 @@ function validateRasterIndexBatchWorkflowResult(
 ) {
     const errors = [];
 
+    let normalizedCodes = [];
+
     if (!isPlainObject(result)) {
         return {
             valid: false,
@@ -208,18 +210,11 @@ function validateRasterIndexBatchWorkflowResult(
             )
         );
 
-        const normalizedCodes =
+        normalizedCodes =
             validateBatchIndexCodes(
                 result.input.indexCodes,
                 errors
             );
-
-        if (
-            Array.isArray(result.input.indexCodes)
-        ) {
-            result.input.indexCodes =
-                normalizedCodes;
-        }
     }
 
     if (!Array.isArray(result.results)) {
@@ -259,8 +254,7 @@ function validateRasterIndexBatchWorkflowResult(
             result.results.forEach(
                 (workflowResult, index) => {
                     if (
-                        workflowResult.indexCode !==
-                        result.input.indexCodes[index]
+                        workflowResult.indexCode !== normalizedCodes[index]
                     ) {
                         errors.push(
                             `results[${index}].indexCode must match input.indexCodes[${index}].`
@@ -290,9 +284,20 @@ function createRasterIndexBatchWorkflowResultContract({
     input,
     results
 }) {
+    const normalizedInput =
+        isPlainObject(input)
+            ? {
+                ...input,
+                indexCodes:
+                    normalizeIndexCodes(
+                        input.indexCodes
+                    )
+            }
+            : input;
+
     const result = {
         batchVersion,
-        input,
+        input: normalizedInput,
         results
     };
 

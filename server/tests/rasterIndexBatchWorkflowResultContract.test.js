@@ -146,7 +146,7 @@ test(
 );
 
 test(
-    "batch result normalizes index codes",
+    "batch result validation is side-effect-free",
     () => {
         const result =
             validResult({
@@ -168,6 +168,9 @@ test(
             workflowResult("NDMI")
         ];
 
+        const original =
+            structuredClone(result);
+
         const validation =
             validateRasterIndexBatchWorkflowResult(
                 result
@@ -179,11 +182,16 @@ test(
         );
 
         assert.deepEqual(
+            result,
+            original
+        );
+
+        assert.deepEqual(
             result.input.indexCodes,
             [
-                "NDVI",
-                "EVI",
-                "NDMI"
+                " ndvi ",
+                "evi",
+                "NdMi"
             ]
         );
     }
