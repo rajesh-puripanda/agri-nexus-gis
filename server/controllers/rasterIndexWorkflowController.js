@@ -30,6 +30,13 @@ const {
     "rasterIndexWorkflowRequestContract"
 );
 
+const {
+    validateRasterIndexWorkflowResult
+} = require(
+    "../scientific/remoteSensing/raster/" +
+    "rasterIndexWorkflowContract"
+);
+
 const rasterIndexWorkflowService =
     require(
         "../services/remoteSensing/raster/" +
@@ -78,6 +85,22 @@ async function processRasterIndexWorkflowRequest(
                 .processRasterIndexWorkflow(
                     requestData
                 );
+
+        const resultValidation =
+            validateRasterIndexWorkflowResult(
+                result
+            );
+
+        if (!resultValidation.valid) {
+            const error = new Error(
+                "Raster index workflow returned an invalid result: " +
+                resultValidation.errors.join("; ")
+            );
+
+            error.statusCode = 500;
+
+            throw error;
+        }
 
         return res.status(200).json(result);
     } catch (error) {

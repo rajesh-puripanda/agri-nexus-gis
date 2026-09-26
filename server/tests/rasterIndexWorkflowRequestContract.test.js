@@ -228,6 +228,57 @@ test(
 );
 
 test(
+    "NUL characters in path fields are rejected",
+    () => {
+        const inputPathRequest = validRequest();
+
+        inputPathRequest.inputPath =
+            "D:\\data\\scene.tif" + "\0";
+
+        const inputPathResult =
+            validateRasterIndexWorkflowRequest(
+                inputPathRequest
+            );
+
+        assert.equal(
+            inputPathResult.valid,
+            false
+        );
+
+        assert.ok(
+            inputPathResult.errors.some((error) =>
+                error.includes(
+                    "inputPath must not contain NUL characters"
+                )
+            )
+        );
+
+        const outputDirectoryRequest =
+            validRequest();
+
+        outputDirectoryRequest.outputDirectory =
+            "D:\\data\\output" + "\0";
+
+        const outputDirectoryResult =
+            validateRasterIndexWorkflowRequest(
+                outputDirectoryRequest
+            );
+
+        assert.equal(
+            outputDirectoryResult.valid,
+            false
+        );
+
+        assert.ok(
+            outputDirectoryResult.errors.some((error) =>
+                error.includes(
+                    "outputDirectory must not contain NUL characters"
+                )
+            )
+        );
+    }
+);
+test(
     "invalid optional fields are rejected",
     () => {
         const request = validRequest();

@@ -6,7 +6,7 @@
 //
 // AgriNexus GIS
 //
-// Phase 13.6.2.3.6.3
+// Phase 13.6.2.3.7
 // Raster Index Workflow REST API Controller Regression
 //
 // Responsibilities tested:
@@ -14,9 +14,12 @@
 //   1. Valid request validation
 //   2. Workflow delegation
 //   3. Successful workflow response
-//   4. Invalid request response
-//   5. Validation error preservation
-//   6. Unexpected workflow error handling
+//   4. Optional workflow context
+//   5. Invalid request response
+//   6. Missing request body
+//   7. Invalid service result handling
+//   8. Unexpected workflow error handling
+//   9. Service statusCode preservation
 //
 // Scientific raster processing is tested separately.
 //
@@ -71,6 +74,58 @@ function validRequest() {
     };
 }
 
+function validWorkflowResult(requestData = validRequest()) {
+    return {
+        workflowVersion: "1.0",
+
+        indexCode: "NDVI",
+
+        input: {
+            filePath:
+                requestData.inputPath,
+            width: 4,
+            height: 2,
+            pixelCount: 8
+        },
+
+        processing: {
+            indexCode: "NDVI",
+            indexName:
+                "Normalized Difference Vegetation Index",
+            classificationMethod:
+                "baseline_qualitative"
+        },
+
+        continuousOutput: {
+            outputPath:
+                "D:\\data\\output\\NDVI_index.tif",
+            outputType:
+                "continuous_index",
+            indexCode:
+                "NDVI",
+            dataType:
+                "Float32",
+            width: 4,
+            height: 2,
+            pixelCount: 8
+        },
+
+        classificationOutput: {
+            outputPath:
+                "D:\\data\\output\\NDVI_classification.tif",
+            outputType:
+                "classification",
+            indexCode:
+                "NDVI",
+            dataType:
+                "Uint8",
+            width: 4,
+            height: 2,
+            pixelCount: 8
+        }
+    };
+}
+
 // ============================================================
 // SUCCESS
 // ============================================================
@@ -84,25 +139,10 @@ test(
         const requestData =
             validRequest();
 
-        const expectedResult = {
-            workflowVersion: "1.0",
-
-            indexCode: "NDVI",
-
-            input: {
-                filePath:
-                    requestData.inputPath,
-                width: 4,
-                height: 2,
-                pixelCount: 8
-            },
-
-            processing: {
-                indexCode: "NDVI",
-                indexName: "Normalized Difference Vegetation Index",
-                classificationMethod: "NDVI_STANDARD"
-            }
-        };
+        const expectedResult =
+            validWorkflowResult(
+                requestData
+            );
 
         let receivedRequest = null;
 
@@ -183,10 +223,9 @@ test(
             async (request) => {
                 receivedRequest = request;
 
-                return {
-                    workflowVersion: "1.0",
-                    indexCode: "NDVI"
-                };
+                return validWorkflowResult(
+                    requestData
+                );
             };
 
         try {
@@ -211,6 +250,13 @@ test(
             assert.deepEqual(
                 receivedRequest,
                 requestData
+            );
+
+            assert.deepEqual(
+                res.body,
+                validWorkflowResult(
+                    requestData
+                )
             );
         } finally {
             workflowService
@@ -313,7 +359,7 @@ test(
             async () => {
                 workflowCalled = true;
 
-                return {};
+                return validWorkflowResult();
             };
 
         try {
@@ -346,6 +392,66 @@ test(
             assert.equal(
                 workflowCalled,
                 false
+            );
+        } finally {
+            workflowService
+                .processRasterIndexWorkflow =
+                original;
+        }
+    }
+);
+
+// ============================================================
+// INVALID SERVICE RESULT
+// ============================================================
+
+test(
+    "processRasterIndexWorkflowRequest returns HTTP 500 when workflow service returns invalid result",
+    async () => {
+        const original =
+            workflowService.processRasterIndexWorkflow;
+
+        workflowService.processRasterIndexWorkflow =
+            async () => {
+                return {
+                    workflowVersion: "1.0",
+                    indexCode: "NDVI"
+                };
+            };
+
+        try {
+            const req = {
+                body:
+                    validRequest()
+            };
+
+            const res =
+                createMockResponse();
+
+            await rasterIndexWorkflowController
+                .processRasterIndexWorkflowRequest(
+                    req,
+                    res
+                );
+
+            assert.equal(
+                res.statusCode,
+                500
+            );
+
+            assert.equal(
+                res.body.success,
+                false
+            );
+
+            assert.equal(
+                res.body.code,
+                "RASTER_INDEX_WORKFLOW_ERROR"
+            );
+
+            assert.match(
+                res.body.message,
+                /^Raster index workflow returned an invalid result:/
             );
         } finally {
             workflowService

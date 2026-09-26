@@ -43,6 +43,29 @@ function isPlainObject(value) {
     );
 }
 
+function validatePathString(value, name) {
+    const errors = [];
+
+    if (
+        typeof value !== "string" ||
+        value.trim().length === 0
+    ) {
+        errors.push(
+            `${name} must be a non-empty string.`
+        );
+
+        return errors;
+    }
+
+    if (value.includes("\0")) {
+        errors.push(
+            `${name} must not contain NUL characters.`
+        );
+    }
+
+    return errors;
+}
+
 function validateRasterIndexWorkflowRequest(request) {
     const errors = [];
 
@@ -66,15 +89,12 @@ function validateRasterIndexWorkflowRequest(request) {
         }
     }
 
-    if (
-        request.inputPath !== undefined &&
-        (
-            typeof request.inputPath !== "string" ||
-            request.inputPath.trim().length === 0
-        )
-    ) {
+    if (request.inputPath !== undefined) {
         errors.push(
-            "inputPath must be a non-empty string."
+            ...validatePathString(
+                request.inputPath,
+                "inputPath"
+            )
         );
     }
 
@@ -163,15 +183,12 @@ function validateRasterIndexWorkflowRequest(request) {
         }
     }
 
-    if (
-        request.outputDirectory !== undefined &&
-        (
-            typeof request.outputDirectory !== "string" ||
-            request.outputDirectory.trim().length === 0
-        )
-    ) {
+    if (request.outputDirectory !== undefined) {
         errors.push(
-            "outputDirectory must be a non-empty string."
+            ...validatePathString(
+                request.outputDirectory,
+                "outputDirectory"
+            )
         );
     }
 
