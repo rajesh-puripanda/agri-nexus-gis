@@ -1733,3 +1733,99 @@ The backend remains the scientific authority. The frontend is responsible for vi
 0.2.7 Documentation  COMPLETE
 
 Phase 0.2 is ready for final validation and Git checkpoint.
+
+# Phase 0.3  Domain / Module Boundaries
+
+## Phase 0.3 Status
+
+Phase 0.3 defines the logical domain and module boundaries of AgriNexus GIS based on the implemented repository architecture.
+
+### 0.3.1  Domain Boundary Matrix
+
+1. Soil Intelligence
+Responsibility: Soil observations, soil analysis, classification, management, and recommendations.
+Current implementation: soilController, soilAnalysisController, soilManagementService, soilAnalysisService, soilRecommendationService, and scientific soil classification.
+
+2. Spatial Intelligence
+Responsibility: Spatial queries and spatial analytical operations.
+Current implementation: spatialQueryController, spatialAnalysisController, spatialQueryService, and spatialAnalysisService.
+
+3. Spatial Modelling
+Responsibility: Spatial interpolation, prediction, variogram modelling, kriging, IDW, spline, and related spatial modelling calculations.
+Current implementation: interpolationController, interpolationService, and server/services/interpolation/.
+
+4. Historical Intelligence
+Responsibility: Historical observations, candidate discovery, comparison, compatibility, and historical analytical context.
+Current implementation: historicalCandidate*, historicalComparison*, historicalContext*, and historicalRepository.
+
+5. Temporal Intelligence
+Responsibility: Time-dependent observations, temporal composition, temporal analysis workflows, and temporal change analysis.
+Current implementation includes temporal workflows under server/services/remoteSensing/temporal and the temporal analysis controller.
+
+6. Remote Sensing Intelligence
+Responsibility: Raster-based remote sensing processing, workflows, outputs, validation, and remote-sensing analytical operations.
+Current implementation: server/scientific/remoteSensing and server/services/remoteSensing.
+
+7. Spectral Indices
+Responsibility: Scientific calculation and definition of vegetation, water, and related spectral indices.
+Current implementation: server/scientific/remoteSensing/indices.
+
+8. Agricultural Intelligence
+Responsibility: Agricultural interpretation and crop suitability analysis.
+Current implementation: cropSuitabilityService.
+
+9. Agricultural Zoning
+Responsibility: Spatial agricultural/fertility zoning and zone classification.
+Current implementation: fertilityZoningController and fertilityZoningService.
+
+10. Integrated Reporting
+Responsibility: Aggregation and presentation of authoritative analytical results from multiple domains.
+Current implementation: analyticalReportController, server/services/reports/, and related reporting tests.
+
+11. Scientific Engine
+Responsibility: Authoritative scientific calculations, classification algorithms, spatial models, raster processing, indices, and temporal scientific calculations.
+Current implementation: server/scientific/ and domain-specific scientific services.
+
+12. Data Layer
+Responsibility: Persistence, repositories, database access, and analytical/reference datasets.
+Current implementation: server/repositories/, database/, and data/.
+
+### 0.3.2  Domain Boundary Principles
+
+1. Each domain owns its own business/scientific responsibility.
+2. A domain may consume authoritative results from another domain through defined service or contract boundaries.
+3. A domain must not duplicate another domain's scientific authority.
+4. Cross-domain aggregation belongs in higher-level application/reporting workflows.
+5. Scientific calculations remain backend responsibilities.
+6. Frontend code remains responsible for visualization, interaction, and presentation.
+7. Logical domain boundaries do not require immediate physical directory separation.
+
+### 0.3.3  Cross-Domain Dependency Model
+
+Reporting consumes authoritative analytical results from domains such as Soil, Spatial, Interpolation, Historical, Fertility, and Temporal analysis.
+
+Remote Sensing contains related but separately bounded Raster, Spectral Index, and Temporal capabilities.
+
+The intended dependency direction is:
+
+Frontend  API/Application Layer  Domain Services  Scientific Engine  Data Layer
+
+Cross-domain services should consume authoritative outputs rather than independently reproducing scientific calculations.
+
+### 0.3.4  Physical Structure Decision
+
+No domain is physically relocated or renamed during Phase 0.3.
+
+The existing implementation is retained while domain boundaries are formally established. Future physical restructuring, where justified, will follow the architectural migration principle:
+
+Extend  Refactor  Rename
+
+### 0.3.5  Phase 0.3 Completion Criteria
+
+Domain responsibilities identified  COMPLETE
+Domain-to-implementation mapping established  COMPLETE
+Cross-domain dependency principles established  COMPLETE
+Scientific authority boundary preserved  COMPLETE
+Physical restructuring deferred  COMPLETE
+
+Phase 0.3 is ready for validation and Git checkpoint.
