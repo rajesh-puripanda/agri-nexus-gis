@@ -114,14 +114,42 @@ async function processRasterIndexBatchWorkflowRequest(
                 ? error.statusCode
                 : 500;
 
-        return res.status(statusCode).json({
+        const response = {
             success: false,
             code:
                 "RASTER_INDEX_BATCH_WORKFLOW_ERROR",
             message:
                 error.message ||
                 "Failed to process raster index batch workflow."
-        });
+        };
+
+        if (
+            typeof error.code === "string" &&
+            error.code.trim().length > 0
+        ) {
+            response.errorCode =
+                error.code;
+        }
+
+        if (
+            typeof error.indexCode === "string" &&
+            error.indexCode.trim().length > 0
+        ) {
+            response.indexCode =
+                error.indexCode;
+        }
+
+        if (
+            Number.isInteger(error.batchIndex) &&
+            error.batchIndex >= 0
+        ) {
+            response.batchIndex =
+                error.batchIndex;
+        }
+
+        return res
+            .status(statusCode)
+            .json(response);
     }
 }
 

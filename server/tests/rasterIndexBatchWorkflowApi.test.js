@@ -373,6 +373,75 @@ test(
 );
 
 test(
+    "API propagates delegated batch failure context",
+    async () => {
+        batchService
+            .processRasterIndexBatchWorkflow =
+            async () => {
+                const error =
+                    new Error(
+                        "Simulated EVI workflow failure"
+                    );
+
+                error.code =
+                    "SIMULATED_EVI_FAILURE";
+
+                error.indexCode =
+                    "EVI";
+
+                error.batchIndex =
+                    1;
+
+                throw error;
+            };
+
+        const response =
+            await supertest(app)
+                .post(
+                    "/api/remote-sensing/raster/" +
+                    "index-batch-workflow"
+                )
+                .send(
+                    validRequest()
+                );
+
+        assert.equal(
+            response.status,
+            500
+        );
+
+        assert.equal(
+            response.body.success,
+            false
+        );
+
+        assert.equal(
+            response.body.code,
+            "RASTER_INDEX_BATCH_WORKFLOW_ERROR"
+        );
+
+        assert.equal(
+            response.body.message,
+            "Simulated EVI workflow failure"
+        );
+
+        assert.equal(
+            response.body.errorCode,
+            "SIMULATED_EVI_FAILURE"
+        );
+
+        assert.equal(
+            response.body.indexCode,
+            "EVI"
+        );
+
+        assert.equal(
+            response.body.batchIndex,
+            1
+        );
+    }
+);
+test(
     "API preserves batch workflow service statusCode",
     async () => {
         batchService
