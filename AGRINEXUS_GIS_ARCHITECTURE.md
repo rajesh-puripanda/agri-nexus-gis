@@ -2042,3 +2042,123 @@ Backward compatibility principle established  COMPLETE
 Scientific authority boundary preserved  COMPLETE
 
 Phase 0.5 is ready for validation and Git checkpoint.
+
+# Phase 0.6  Scientific Result Contracts
+
+## Phase 0.6 Status
+
+Phase 0.6 establishes the architectural principles for authoritative scientific result contracts across AgriNexus GIS analytical domains.
+
+### 0.6.1  Contract Architecture
+
+AgriNexus GIS uses explicit scientific and analytical contracts to define the structure, identity, provenance, and interpretation of backend-generated results.
+
+The architecture does not require every analytical domain to use an identical result payload. Domain-specific scientific outputs remain owned by their producing domain.
+
+### 0.6.2  Contract Version
+
+contractVersion identifies the structural version of a defined data or workflow contract.
+
+Contract versioning governs the shape and compatibility expectations of the contract itself.
+
+contractVersion must not be treated as a scientific algorithm version.
+
+### 0.6.3  Analysis Identity
+
+Where applicable, authoritative analytical results identify the scientific operation through analysisType.
+
+analysisType identifies the category of scientific or analytical operation that produced the result.
+
+Examples include remote_sensing_index and other domain-specific analytical types.
+
+### 0.6.4  Scientific / Algorithm Version
+
+Where applicable, analysisVersion identifies the scientific or algorithmic version used to produce the result.
+
+analysisVersion is independent from API versioning and contractVersion.
+
+Changes to scientific algorithms, classification rules, calculation methods, or other scientific behaviour may require an analysisVersion change.
+
+### 0.6.5  Domain-Specific Result Payload
+
+Each scientific domain owns the structure of its authoritative result payload.
+
+Soil results may contain soil-specific analytical information.
+
+Spatial and interpolation results may contain spatial model outputs, predictions, parameters, or validation information.
+
+Historical and temporal results may contain comparison or time-dependent analytical outputs.
+
+Remote-sensing results may contain raster, spectral-index, classification, statistics, and metadata information.
+
+A domain must not distort its scientific output merely to satisfy an unrelated universal payload structure.
+
+### 0.6.6  Common Result Metadata
+
+Where relevant to the analytical domain, scientific results may expose statistics, classification information, and metadata.
+
+These fields remain domain-aware and are included when scientifically meaningful.
+
+Metadata may provide provenance, processing context, source information, units, spatial information, or other supporting information required to interpret the result.
+
+### 0.6.7  Scientific Authority
+
+The backend scientific implementation is authoritative for scientific results.
+
+Frontend components consume and present authoritative results but must not independently redefine scientific classifications, calculations, or algorithmic outputs.
+
+### 0.6.8  Result Contract Validation
+
+Scientific result contracts must validate required fields, data types, structural constraints, and domain-specific invariants where applicable.
+
+Invalid scientific result objects must not be presented as valid analytical results.
+
+Contract validation should occur as close as practical to the boundary where the contract is produced or consumed.
+
+### 0.6.9  Contract Compatibility
+
+Existing validated scientific contracts remain authoritative and are not replaced solely to achieve architectural uniformity.
+
+New common contract structures may be introduced incrementally.
+
+Changes to existing contracts require explicit compatibility consideration and regression validation.
+
+The migration principle remains:
+
+Extend  Refactor  Rename
+
+### 0.6.10  Existing Contract Evidence
+
+The current implementation already contains explicit scientific contract structures within Remote Sensing.
+
+server/scientific/remoteSensing/indices/indexCalculationContract.js defines analytical identity concepts including analysisType and analysisVersion and includes statistics and metadata.
+
+Remote-sensing raster contracts independently use contractVersion and metadata where appropriate.
+
+server/scientific/remoteSensing/raster/rasterIndexClassificationContract.js also defines analysisType, analysisVersion, statistics, and metadata.
+
+These existing contracts provide implementation evidence for the AgriNexus scientific-result contract architecture.
+
+### 0.6.11  Contract Relationship
+
+The relationship between the principal version identifiers is:
+
+API Version  governs HTTP/API compatibility
+contractVersion  governs data-contract structure and compatibility
+analysisVersion  governs scientific or algorithmic behaviour
+
+These versioning dimensions must remain conceptually independent.
+
+### 0.6.12  Phase 0.6 Completion Criteria
+
+Scientific result contract architecture established  COMPLETE
+Contract version and scientific version distinguished  COMPLETE
+Analysis identity principle established  COMPLETE
+Domain-specific result ownership established  COMPLETE
+Statistics and metadata principle established  COMPLETE
+Scientific authority boundary preserved  COMPLETE
+Contract validation principle established  COMPLETE
+Backward compatibility principle established  COMPLETE
+Existing Remote Sensing contract architecture incorporated  COMPLETE
+
+Phase 0.6 is ready for validation and Git checkpoint.
