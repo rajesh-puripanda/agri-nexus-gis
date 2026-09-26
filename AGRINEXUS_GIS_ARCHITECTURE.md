@@ -2162,3 +2162,167 @@ Backward compatibility principle established  COMPLETE
 Existing Remote Sensing contract architecture incorporated  COMPLETE
 
 Phase 0.6 is ready for validation and Git checkpoint.
+
+# Phase 0.7  Testing Architecture
+
+## Phase 0.7 Status
+
+Phase 0.7 establishes the AgriNexus GIS testing architecture based on the existing validated test suite.
+
+### 0.7.1  Existing Test Inventory
+
+The current repository contains 100 test files using the Node.js native test style.
+
+94 test files are located directly under server/tests.
+5 reporting test files are located under server/tests/reports.
+1 scientific test file is located under server/tests/scientific.
+
+The current test suite spans Soil Intelligence, Spatial Intelligence, Spatial Modelling, Historical Intelligence, Remote Sensing, Spectral Indices, Temporal Intelligence, Agricultural Intelligence, Reporting, and Scientific Engine components.
+
+### 0.7.2  Test Runner
+
+The project uses Node.js native test APIs, including test() and Node assertion facilities.
+
+No dedicated test script is currently defined in package.json. Existing tests are executed directly using the Node.js test runner.
+
+This Phase 0 architecture does not require immediate introduction of another test framework.
+
+### 0.7.3  Scientific / Unit Testing
+
+Scientific and unit tests validate individual calculations, algorithms, definitions, mathematical operations, validation rules, and scientific invariants.
+
+Examples in the current repository include spectral-index calculations, variograms, interpolation methods, spline geometry, covariance, kriging matrices, linear-system solving, and soil classification.
+
+Scientific tests must remain independent from frontend presentation.
+
+### 0.7.4  Contract Testing
+
+Contract tests validate the structure, required fields, data types, constraints, and semantic invariants of authoritative analytical contracts.
+
+The existing repository contains explicit request, result, metadata, raster, workflow, temporal, and spectral-index contract tests.
+
+Contract tests protect compatibility between scientific producers, services, controllers, APIs, and downstream consumers.
+
+### 0.7.5  Service Testing
+
+Service tests validate domain and application service behaviour independently of HTTP presentation.
+
+Current coverage includes Soil, Spatial, Interpolation, Historical, Remote Sensing, Temporal, Agricultural, Validation, Acceptance, and Reporting services.
+
+Service tests should verify orchestration, validation, scientific delegation, result construction, error behaviour, and domain invariants as applicable.
+
+### 0.7.6  Controller / API Testing
+
+Controller and API tests validate HTTP-facing behaviour including request handling, validation, status codes, response contracts, controller orchestration, and error translation.
+
+Controllers must not become the primary location for scientific calculations.
+
+### 0.7.7  Integration Testing
+
+Integration tests validate interactions between multiple application, scientific, data, workflow, or API components.
+
+Current examples include raster workflows, comparative validation, temporal workflows, reporting, and other multi-component analytical workflows.
+
+Integration tests may cross service and contract boundaries but must retain deterministic scientific assertions where appropriate.
+
+### 0.7.8  End-to-End Testing
+
+End-to-end tests validate complete analytical workflows across multiple architectural layers.
+
+The current temporal workflow includes an explicit end-to-end integration test.
+
+End-to-end tests are reserved for complete user-relevant or system-level workflows and are not a replacement for lower-level scientific tests.
+
+### 0.7.9  Scientific Acceptance and Validation
+
+Scientific acceptance and validation tests provide additional assurance that analytical methods meet defined scientific expectations.
+
+Current examples include kriging acceptance, cross-validation, prediction diagnostics, comparative validation, and related validation workflows.
+
+Acceptance and validation tests may span multiple services and are not restricted to a single conventional test layer.
+
+### 0.7.10  Regression Testing
+
+Regression testing verifies that established scientific, analytical, API, workflow, and reporting behaviour remains stable after changes.
+
+Existing domain-specific test suites provide regression protection for previously validated functionality.
+
+Any change to scientific algorithms, contracts, workflows, or analytical outputs must consider the appropriate regression suites.
+
+### 0.7.11  Performance Testing
+
+Performance validation is treated as a cross-cutting concern.
+
+Performance tests or execution measurements may apply to scientific calculations, interpolation, raster processing, workflows, APIs, reporting, or other computationally significant components.
+
+Performance validation must not replace correctness validation.
+
+### 0.7.12  Test Layer Relationship
+
+The AgriNexus testing architecture follows a layered model:
+
+Scientific / Unit  Contract  Service  Controller / API  Integration  End-to-End
+
+Scientific acceptance, cross-validation, diagnostics, regression, and performance validation operate across the layers where scientifically or operationally appropriate.
+
+Test filename categories are not required to be mutually exclusive. A test may simultaneously validate service behaviour, acceptance criteria, and integration between components.
+
+### 0.7.13  Scientific Authority in Testing
+
+Tests must validate the same backend scientific authority used by production analytical workflows.
+
+Frontend tests may validate presentation and interaction behaviour but must not be treated as evidence of scientific correctness.
+
+Scientific correctness must be demonstrated through backend scientific and analytical tests.
+
+### 0.7.14  Test Isolation and Determinism
+
+Scientific tests should be deterministic wherever practical.
+
+Tests involving databases, files, raster data, or external workflow dependencies must explicitly control their required inputs and execution conditions.
+
+Tests must avoid depending on uncontrolled frontend state or incidental execution order.
+
+### 0.7.15  Test Failure Classification
+
+Test failures should be classified according to the affected architectural layer, such as scientific calculation, contract, service orchestration, controller/API, integration, workflow, regression, or performance.
+
+A failure must not be hidden by weakening assertions merely to restore a passing test suite.
+
+Scientific failures require investigation of the authoritative calculation or its inputs before changing expected values.
+
+### 0.7.16  Testing Definition of Done
+
+A feature or analytical capability is not considered complete solely because its primary test passes.
+
+Depending on the capability, Definition of Done should include:
+
+Scientific correctness validated
+Relevant contracts validated
+Service behaviour validated
+Controller/API behaviour validated where applicable
+Integration workflow validated where applicable
+End-to-end workflow validated where applicable
+Regression suite evaluated
+Performance evaluated where scientifically or operationally relevant
+Failure and validation paths tested
+Documentation updated
+Git checkpoint created
+
+### 0.7.17  Phase 0.7 Completion Criteria
+
+Existing test inventory documented  COMPLETE
+Existing test runner identified  COMPLETE
+Scientific/unit testing layer defined  COMPLETE
+Contract testing layer defined  COMPLETE
+Service testing layer defined  COMPLETE
+Controller/API testing layer defined  COMPLETE
+Integration testing layer defined  COMPLETE
+End-to-end testing layer defined  COMPLETE
+Scientific acceptance/validation defined  COMPLETE
+Regression strategy defined  COMPLETE
+Performance validation principle defined  COMPLETE
+Scientific authority in testing established  COMPLETE
+Testing Definition of Done established  COMPLETE
+
+Phase 0.7 is ready for validation and Git checkpoint.
