@@ -1829,3 +1829,87 @@ Scientific authority boundary preserved  COMPLETE
 Physical restructuring deferred  COMPLETE
 
 Phase 0.3 is ready for validation and Git checkpoint.
+
+# Phase 0.4  Data Architecture
+
+## Phase 0.4 Status
+
+Phase 0.4 defines the logical data architecture of AgriNexus GIS based on the existing repository, database, repository, and analytical-data structures.
+
+### 0.4.1  Data Architecture Layers
+
+AgriNexus GIS separates data into operational persistence, analytical/reference data, database definitions, repository access, and authoritative analytical results.
+
+Operational persistence is currently provided by MySQL.
+
+Analytical and reference datasets may be maintained separately under the data/ hierarchy where appropriate, including the existing historical datasets.
+
+Database schema and import definitions remain under database/.
+
+Repository modules provide the application boundary for persistence access. Current repository implementations include soilRepository.js and historicalRepository.js.
+
+### 0.4.2  Current Data Domains
+
+1. Soil Observation Data
+Current operational soil observations are persisted through the existing MySQL database and accessed through soilRepository.js.
+
+2. Historical Data
+Historical datasets currently exist under data/historical/ and are accessed through the historical data/repository architecture. Historical data remains logically distinct from current operational soil observations.
+
+3. Scientific / Reference Data
+Scientific thresholds, classification rules, index definitions, and related scientific knowledge remain backend-controlled. They are not owned by the frontend.
+
+4. Remote Sensing Data
+Remote-sensing raster and related analytical data are treated as a distinct future/active AgriNexus data domain. Their storage and workflow contracts remain governed by the Remote Sensing architecture and are not merged into the Soil data model.
+
+### 0.4.3  Data Access Boundary
+
+The intended data-access direction is:
+
+Application / Domain Services  Repository / Data Access  Persistence or Analytical Dataset
+
+Domain services should not bypass repository boundaries when accessing persistent domain data.
+
+Scientific services operate on validated domain inputs and produce authoritative analytical results.
+
+### 0.4.4  Data Processing Flow
+
+Data processing follows the architectural sequence:
+
+Input Data  Validation  Normalization  Scientific Calculation  Classification / Spatial Processing  Analytical Result  API Contract  GIS / Reporting Presentation
+
+Validation and scientific processing remain backend responsibilities.
+
+### 0.4.5  Data Authority Principles
+
+1. Persisted data is authoritative for stored observations within its defined domain.
+2. Repository modules are the controlled application boundary for persistence access.
+3. Scientific engines are authoritative for scientific calculations and classifications.
+4. Domain services orchestrate domain-level analytical processing.
+5. API contracts expose authoritative backend results to consumers.
+6. Frontend code remains responsible for visualization, interaction, and presentation.
+7. Frontend calculations must not replace backend scientific authority.
+
+### 0.4.6  Migration and Expansion Principle
+
+No database rename, mass schema migration, or repository restructuring is performed during Phase 0.4.
+
+New AgriNexus data domains will be introduced through explicit data ownership and contract decisions.
+
+Existing structures will be migrated only when there is a demonstrated architectural benefit and a validated migration path.
+
+The migration principle remains:
+
+Extend  Refactor  Rename
+
+### 0.4.7  Phase 0.4 Completion Criteria
+
+Current operational persistence identified  COMPLETE
+Current repository boundaries identified  COMPLETE
+Historical analytical-data separation identified  COMPLETE
+Database definition location identified  COMPLETE
+Data authority principles established  COMPLETE
+Scientific authority boundary preserved  COMPLETE
+Premature database restructuring avoided  COMPLETE
+
+Phase 0.4 is ready for validation and Git checkpoint.
