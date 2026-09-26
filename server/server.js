@@ -30,6 +30,7 @@ const { testDatabaseConnection } = require("./config/db");
 
 const soilRoutes = require("./routes/soilRoutes");
 const soilAnalysisRoutes = require("./routes/soilAnalysisRoutes");
+const temporalAnalysisRoutes = require("./routes/temporalAnalysisRoutes");
 const interpolationRoutes = require("./routes/interpolationRoutes");
 const fertilityZoningRoutes = require("./routes/fertilityZoningRoutes");
 const spatialAnalysisRoutes = require("./routes/spatialAnalysisRoutes");
@@ -94,6 +95,7 @@ app.use(
 );
 
 app.use("/api/soil-analysis", soilAnalysisRoutes);
+app.use("/api/soil-analysis", temporalAnalysisRoutes);
 
 // ============================================================
 // SOIL INTERPOLATION API
