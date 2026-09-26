@@ -80,38 +80,52 @@ async function processRasterIndexBatchWorkflow(request) {
     const results = [];
 
     for (
-        const indexCode
-        of indexCodes
+        let batchIndex = 0;
+        batchIndex < indexCodes.length;
+        batchIndex++
     ) {
-        const workflowResult =
-            await processRasterIndexWorkflow({
-                inputPath:
-                    request.inputPath,
+        const indexCode =
+            indexCodes[batchIndex];
 
-                indexCode,
+        try {
+            const workflowResult =
+                await processRasterIndexWorkflow({
+                    inputPath:
+                        request.inputPath,
 
-                bandMapping:
-                    request.bandMapping,
+                    indexCode,
 
-                noData:
-                    request.noData,
+                    bandMapping:
+                        request.bandMapping,
 
-                parameters:
-                    request.parameters,
+                    noData:
+                        request.noData,
 
-                processingContext:
-                    request.processingContext,
+                    parameters:
+                        request.parameters,
 
-                spatialContext:
-                    request.spatialContext,
+                    processingContext:
+                        request.processingContext,
 
-                outputDirectory:
-                    request.outputDirectory
-            });
+                    spatialContext:
+                        request.spatialContext,
 
-        results.push(
-            workflowResult
-        );
+                    outputDirectory:
+                        request.outputDirectory
+                });
+
+            results.push(
+                workflowResult
+            );
+        } catch (error) {
+            error.indexCode =
+                indexCode;
+
+            error.batchIndex =
+                batchIndex;
+
+            throw error;
+        }
     }
 
     return createRasterIndexBatchWorkflowResultContract({

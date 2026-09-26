@@ -405,9 +405,15 @@ test(
                         request.indexCode ===
                         "EVI"
                     ) {
-                        throw new Error(
-                            "Simulated EVI workflow failure"
-                        );
+                        const error =
+                            new Error(
+                                "Simulated EVI workflow failure"
+                            );
+
+                        error.code =
+                            "SIMULATED_EVI_FAILURE";
+
+                        throw error;
                     }
 
                     return workflowResult(
@@ -432,6 +438,21 @@ test(
                 assert.equal(
                     error.message,
                     "Simulated EVI workflow failure"
+                );
+
+                assert.equal(
+                    error.code,
+                    "SIMULATED_EVI_FAILURE"
+                );
+
+                assert.equal(
+                    error.indexCode,
+                    "EVI"
+                );
+
+                assert.equal(
+                    error.batchIndex,
+                    1
                 );
 
                 return true;
