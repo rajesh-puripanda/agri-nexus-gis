@@ -2326,3 +2326,303 @@ Scientific authority in testing established  COMPLETE
 Testing Definition of Done established  COMPLETE
 
 Phase 0.7 is ready for validation and Git checkpoint.
+
+# Phase 0.8  Git / Checkpoint & Documentation Strategy
+
+## 0.8.1 Git Repository Strategy
+
+The AgriNexus GIS repository currently uses:
+
+- Primary branch: `master`
+- Remote: `origin`
+- Remote repository: `rajesh-puripanda/agri-nexus-gis`
+- `master` tracks `origin/master`
+
+The current development workflow does not require a feature-branch structure. Existing development history demonstrates phase-oriented commits directly on `master`.
+
+No branch-model migration is required as part of Phase 0.8.
+
+---
+
+## 0.8.2 Phase Checkpoint Strategy
+
+Completed development phases are recorded as explicit Git commits.
+
+The established commit convention is:
+
+``text
+Phase X.Y: <concise description>
+``
+
+Examples from the current repository include:
+
+``text
+Phase 0.2: establish master repository architecture
+Phase 0.3: define domain and module boundaries
+Phase 0.4: establish data architecture
+Phase 0.5: establish API conventions
+Phase 0.6: establish scientific result contracts
+Phase 0.7: establish testing architecture
+``
+
+Each completed architecture phase should produce a clean, identifiable checkpoint.
+
+---
+
+## 0.8.3 Development-to-Checkpoint Lifecycle
+
+The standard development lifecycle is:
+
+``text
+Development
+
+Validation
+
+Relevant Tests
+
+Documentation Update
+
+git diff --check
+
+Commit
+
+Push to origin/master
+
+Verify branch synchronization
+
+Verify clean working tree
+
+Proceed to next phase
+``
+
+A phase is not considered formally checkpointed until the corresponding commit has been created and pushed successfully.
+
+---
+
+## 0.8.4 Documentation Strategy
+
+`AGRINEXUS_GIS_ARCHITECTURE.md` is the authoritative architectural document for AgriNexus GIS.
+
+Architecture decisions established during Phase 0 are recorded in this document before the corresponding phase checkpoint is committed.
+
+Existing project documentation remains preserved:
+
+- `AGRINEXUS_GIS_ARCHITECTURE.md`  authoritative AgriNexus GIS architecture
+- `Soil Analysis GIS.md`  historical / working project documentation
+- `Soil Analysis GIS.pdf`  tracked reference documentation
+
+Existing documentation must not be deleted, renamed, or replaced merely for naming consistency.
+
+Future documentation changes should follow:
+
+``text
+Discover
+
+Decide
+
+Document
+
+Validate
+
+Checkpoint
+``
+
+---
+
+## 0.8.5 Documentation and Source-Code Relationship
+
+Architecture documentation records:
+
+- architectural decisions
+- domain boundaries
+- scientific authority rules
+- API conventions
+- data architecture
+- testing architecture
+- Git/checkpoint strategy
+- migration strategy
+- future architectural direction
+
+Source code remains the executable implementation of those decisions.
+
+Documentation must describe the verified architecture rather than an assumed or intended implementation.
+
+Where existing implementation and future architecture differ, the documented migration direction must explicitly preserve the working implementation until deliberate migration is undertaken.
+
+---
+
+## 0.8.6 Working-Tree Discipline
+
+Before beginning a new architecture phase, the repository should normally be in a clean state.
+
+At the end of a completed phase, the following should be verified:
+
+``text
+git diff --check
+git status --short
+git status -sb
+git branch -vv
+``
+
+The expected final state is:
+
+- no unintended whitespace errors
+- no unintended uncommitted changes
+- local `master` synchronized with `origin/master`
+- no untracked generated artifacts that belong in the repository
+
+Temporary or generated files must follow the existing `.gitignore` policy.
+
+Existing tracked files must not be removed solely because their current names suggest temporary use without a deliberate repository decision.
+
+---
+
+## 0.8.7 Commit Scope
+
+Each phase checkpoint should contain the smallest coherent set of changes required to complete that phase.
+
+For architecture-only phases, the preferred pattern is:
+
+``text
+Architecture discovery
+
+Architecture document update
+
+Validation
+
+Single phase checkpoint
+``
+
+Unrelated source-code changes should not be mixed into an architecture checkpoint.
+
+For implementation phases, source code, tests, and required documentation may be included in the same phase checkpoint when they form one coherent completed change.
+
+---
+
+## 0.8.8 Git Tags and Milestones
+
+The repository currently has no Git tags.
+
+Git tags are therefore not part of the mandatory phase-checkpoint workflow.
+
+Tags may be introduced later for deliberate major milestones, releases, or frozen architectural versions.
+
+The absence of tags must not be interpreted as a missing phase checkpoint because the authoritative checkpoint mechanism is the phase commit itself.
+
+---
+
+## 0.8.9 Remote Synchronization
+
+The authoritative development remote is `origin`.
+
+After a completed phase checkpoint:
+
+``text
+Local commit
+
+Push origin/master
+
+Verify origin/master
+
+Verify clean working tree
+``
+
+A successful phase checkpoint should leave the repository synchronized:
+
+``text
+master...origin/master
+``
+
+with no pending working-tree changes.
+
+---
+
+## 0.8.10 Temporary and Generated Files
+
+The existing `.gitignore` policy excludes:
+
+- `node_modules/`
+- environment and secret files
+- logs
+- operating-system files
+- IDE metadata
+- temporary directories
+- coverage output
+- build output
+
+This policy is retained.
+
+No broad cleanup or automatic removal of existing tracked files is performed as part of Phase 0.8.
+
+In particular, existing tracked documentation or temporary-looking artifacts remain under repository control until an explicit cleanup decision is made.
+
+---
+
+## 0.8.11 Documentation Checkpoint Principle
+
+For every completed AgriNexus GIS development phase:
+
+``text
+Implementation
++
+Validation
++
+Tests
++
+Documentation
+=
+Checkpoint
+``
+
+The documentation checkpoint must represent the verified state of the implementation at the time of the commit.
+
+Architecture decisions must not be silently changed through source-code modifications without updating the authoritative architecture documentation when the change affects architectural policy.
+
+---
+
+## 0.8.12 Phase 0.8 Completion Criteria
+
+Phase 0.8 is complete when:
+
+1. Git branch and remote strategy are documented.
+2. Phase-oriented commit convention is documented.
+3. Development-to-checkpoint lifecycle is documented.
+4. Documentation authority is documented.
+5. Working-tree discipline is documented.
+6. Commit-scope principles are documented.
+7. Git tag policy is documented.
+8. Remote synchronization policy is documented.
+9. Existing `.gitignore` policy is preserved.
+10. Temporary/tracked-file handling is documented.
+11. The architecture document passes `git diff --check`.
+12. The Phase 0.8 checkpoint is committed and pushed.
+13. `master` and `origin/master` are synchronized.
+14. The final working tree is clean.
+
+---
+
+## 0.8.13 Phase 0.8 Decision
+
+AgriNexus GIS adopts a **phase-oriented, documentation-backed Git checkpoint model**.
+
+The repository will use:
+
+``text
+master
+
+Phase development
+
+Validation + tests
+
+Documentation
+
+Phase commit
+
+origin/master
+
+Clean synchronized repository
+``
+
+Git tags remain optional milestone markers rather than mandatory phase identifiers.
+
+This strategy preserves the project's existing development history while providing a formal and repeatable checkpoint process for future AgriNexus GIS development.
