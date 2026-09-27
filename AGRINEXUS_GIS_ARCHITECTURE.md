@@ -1122,9 +1122,239 @@ Define:
 
 ## 0.9 — Soil Analysis GIS → AgriNexus Migration Plan
 
-Map the mature Soil Analysis GIS implementation into the AgriNexus architecture without unnecessary rewrites.
+### 0.9.1 — Migration Objective
 
-**Status: Planned**
+The mature Soil Analysis GIS implementation is the foundation of the AgriNexus GIS Soil Intelligence domain.
+
+Phase 0.9 establishes the controlled migration boundary between the existing implementation and the AgriNexus GIS architecture.
+
+The objective is to integrate the proven implementation into the AgriNexus architecture without unnecessary rewrites, uncontrolled renaming, API breakage, database disruption, or loss of scientific validation.
+
+The governing migration principle remains:
+
+**Extend first. Refactor second. Rename last.**
+
+### 0.9.2 — Current Migration Baseline
+
+The existing Soil Analysis GIS implementation already provides mature functionality that is required by AgriNexus GIS, including:
+
+- Soil sample management and visualization
+- Soil parameter analysis
+- Soil classification
+- Thematic soil mapping
+- Spatial query
+- Spatial analysis
+- IDW interpolation
+- Kriging interpolation
+- Fertility zoning
+- Historical comparison
+- Historical context
+
+These capabilities are treated as the established implementation baseline for the AgriNexus Soil Intelligence domain.
+
+Phase 0.9 does not replace this functionality. It establishes how it is carried forward.
+
+### 0.9.3 — Repository Identity
+
+The Git repository already represents the AgriNexus GIS project.
+
+Current repository:
+
+`rajesh-puripanda/agri-nexus-gis`
+
+No repository rename is required as part of Phase 0.9.
+
+The repository identity therefore remains aligned with the AgriNexus GIS product identity.
+
+### 0.9.4 — Package Identity
+
+The Node.js package currently retains the historical package identity:
+
+`soil-analysis-gis`
+
+This package name is a migration-era identifier and is not treated as the final AgriNexus GIS package identity.
+
+It is intentionally retained during Phase 0.9 to avoid an unnecessary package and lock-file change.
+
+A future package rename must update both:
+
+- `package.json`
+- `package-lock.json`
+
+The rename must be performed deliberately as a separate validated change.
+
+### 0.9.5 — Documentation Identity
+
+The architecture authority for the new system is:
+
+`AGRINEXUS_GIS_ARCHITECTURE.md`
+
+The existing:
+
+`Soil Analysis GIS.md`
+
+remains the historical and working development document for the mature implementation.
+
+The tracked:
+
+`Soil Analysis GIS.pdf`
+
+remains a historical/reference artifact.
+
+These documents are not renamed or deleted solely for branding consistency during Phase 0.9.
+
+The AgriNexus architecture document remains the forward-looking architectural source of truth.
+
+### 0.9.6 — Source-Code Identity
+
+The existing source tree contains historical references to Soil Analysis GIS in comments, diagnostic messages, tests, and implementation documentation.
+
+These references do not by themselves indicate an architectural defect.
+
+Phase 0.9 therefore does not perform a mass textual replacement of:
+
+`Soil Analysis GIS`
+
+or:
+
+`soil-analysis-gis`
+
+within the source tree.
+
+Existing source identity is preserved where changing it provides no functional or architectural benefit.
+
+Future source-level renaming may be performed incrementally when a component is deliberately refactored or migrated.
+
+### 0.9.7 — API Compatibility
+
+Existing working API paths and endpoint contracts are preserved during Phase 0.9.
+
+No API endpoint is renamed solely to make the current implementation appear more consistent with the AgriNexus branding.
+
+Existing clients, controllers, services, tests, and frontend integrations must continue to use validated API contracts.
+
+If an API/resource name requires future replacement, the change must include:
+
+- a defined replacement contract
+- compatibility consideration
+- affected-client identification
+- regression testing
+- documentation update
+- Git checkpoint
+
+API compatibility therefore takes precedence over cosmetic renaming.
+
+### 0.9.8 — Database Compatibility
+
+The existing database schema and persistence model are retained during Phase 0.9.
+
+No mass database rename or migration is performed merely to remove historical Soil Analysis GIS naming.
+
+Existing tables, columns, relationships, and data remain the persistence foundation for the integrated AgriNexus GIS system.
+
+Any future database migration must be justified by architectural value and must include migration safety, validation, rollback consideration, and regression testing.
+
+### 0.9.9 — Scientific Implementation Preservation
+
+The mature scientific implementation is treated as a protected foundation of AgriNexus GIS.
+
+This includes established scientific behavior for:
+
+- spatial calculations
+- distance calculations
+- soil classification
+- thematic analysis
+- spatial analysis
+- IDW interpolation
+- Kriging interpolation
+- fertility zoning
+- historical comparison
+- analytical reporting dependencies
+
+The migration does not change scientific behavior merely to satisfy naming or structural preferences.
+
+Backend scientific services remain the scientific authority.
+
+Frontend code remains responsible for presentation, interaction, and visualization rather than independently reproducing scientific rules.
+
+### 0.9.10 — Test and Regression Preservation
+
+Existing tests and scientific validation are preserved throughout migration.
+
+Migration changes must not remove or weaken existing regression coverage solely because implementation files retain historical names.
+
+Where a component is renamed, refactored, or replaced, its existing behavioral contract must remain covered by appropriate tests.
+
+Phase 0.9 therefore treats the current validated test suite as part of the migration baseline.
+
+### 0.9.11 — Migration Rules
+
+The following rules govern the transition:
+
+1. Preserve working functionality.
+2. Preserve validated scientific behavior.
+3. Preserve API compatibility unless a deliberate replacement is justified.
+4. Preserve database compatibility unless a deliberate migration is justified.
+5. Avoid mass renaming.
+6. Introduce new functionality using AgriNexus domain boundaries.
+7. Refactor incrementally when architectural value is clear.
+8. Rename legacy identities only after the replacement has been validated.
+9. Maintain regression tests throughout migration.
+10. Record significant migration decisions in the architecture documentation.
+11. Create Git checkpoints after meaningful validated changes.
+12. Keep the migration reversible wherever practical.
+
+The governing sequence is:
+
+**Extend → Refactor → Rename**
+
+### 0.9.12 — Future Rename Candidates
+
+The following items are identified as potential future rename candidates, but are not renamed in Phase 0.9:
+
+| Area | Current Identity | Future Consideration |
+|---|---|---|
+| Node package | `soil-analysis-gis` | AgriNexus package identity |
+| Package lock | Historical package identity | Update together with package rename |
+| Source comments | Soil Analysis GIS references | Incremental cleanup |
+| Diagnostic text | Historical application naming | Incremental cleanup |
+| Legacy documentation | `Soil Analysis GIS.md` | Retain as historical/working reference |
+| Reference PDF | `Soil Analysis GIS.pdf` | Retain as historical/reference artifact |
+| API/resource names | Existing working contracts | Rename only if architecturally justified |
+| Database names | Existing schema identity | Change only through deliberate migration |
+
+These are candidates, not commitments.
+
+### 0.9.13 — Migration Definition of Done
+
+Phase 0.9 is complete when:
+
+- The mature Soil Analysis GIS functionality is explicitly mapped into the AgriNexus architecture.
+- Existing working functionality remains operational.
+- Existing API contracts remain compatible.
+- Existing database persistence remains compatible.
+- Scientific implementation remains preserved.
+- Regression coverage remains intact.
+- AgriNexus domain boundaries are established for future development.
+- Legacy naming is retained where removal would provide no immediate architectural benefit.
+- Future rename candidates are explicitly documented.
+- Migration rules are established and documented.
+- The architecture document records the migration decision.
+- The completed phase is validated and checkpointed in Git.
+
+### 0.9.14 — Phase 0.9 Decision
+
+The mature Soil Analysis GIS implementation is formally adopted as the implementation foundation for the AgriNexus GIS Soil Intelligence domain.
+
+No broad rewrite or mass rename is required.
+
+AgriNexus GIS development will continue by extending the established implementation within the new domain architecture.
+
+The migration strategy is therefore:
+
+**Preserve validated functionality → establish AgriNexus boundaries → extend new domains → refactor where justified → rename only when justified and validated.**
+
+**Status: Complete after validation and Git checkpoint.**
 
 ## 0.10 — Freeze Architecture v1.0
 
