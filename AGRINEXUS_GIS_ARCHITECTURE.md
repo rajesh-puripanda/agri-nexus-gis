@@ -2722,6 +2722,118 @@ spatial integration engine is introduced.
 
 ---
 
+### Phase 7.6 — Authoritative Zoning Implementation Boundary
+
+Phase 7.6 verifies which Phase 7 agricultural zoning capabilities
+have an authoritative implementation and establishes the
+implementation boundary for the current architecture.
+
+#### Existing authoritative spatial implementation
+
+Overall soil fertility zoning is already implemented as an
+authoritative backend spatial analytical surface.
+
+The authoritative implementation is:
+
+* `server/services/fertilityZoningService.js`
+
+The implementation provides:
+
+* fertility parameter point preparation
+* common sample-derived spatial extent
+* grid generation
+* backend interpolation
+* backend fertility classification
+* zoning statistics
+* source-point provenance
+* zoning configuration
+* REST service integration
+
+The REST API is exposed through:
+
+* `GET /api/soil-fertility-zoning/config`
+* `POST /api/soil-fertility-zoning`
+
+The controller and route layers delegate to the fertility zoning
+service. Scientific calculation and classification remain in the
+backend service.
+
+#### Implementation boundary
+
+Phase 7.6 does not introduce a second fertility zoning engine or
+duplicate the existing spatial calculation.
+
+The following remain outside the currently authorized spatial
+zoning implementation:
+
+* crop suitability spatialization
+* vegetation zoning
+* moisture zoning
+* risk zoning
+* integrated agricultural zoning
+
+Crop suitability remains a sample-level analytical result until
+an explicit spatialization contract is established.
+
+Remote-sensing index calculation and raster or temporal processing
+remain available as scientific infrastructure, but do not by
+themselves constitute vegetation or moisture zoning.
+
+No authoritative risk zoning implementation has been established.
+
+Integrated agricultural zoning remains governed by the Phase 7.5
+integration contract and is not implemented by Phase 7.6.
+
+#### Scientific boundary
+
+Phase 7.6 introduces no new:
+
+* crop-specific thresholds
+* vegetation thresholds
+* moisture thresholds
+* risk thresholds
+* suitability spatialization formula
+* cross-layer weighting
+* integrated zoning score
+* integrated classification formula
+* agricultural risk score
+
+No analytical layer is spatialized merely because geographic sample
+locations or remote-sensing processing capability exist.
+
+#### Testing boundary
+
+The existing fertility zoning implementation is present and exposed
+through the application API, but no dedicated fertility zoning service
+test suite or dedicated fertility zoning API/controller test suite
+was identified in the repository during the Phase 7.6 audit.
+
+Existing reporting tests may reference fertility-zoning-related
+structures, but they do not establish dedicated service or API
+coverage for the fertility zoning implementation.
+
+This absence of dedicated test coverage does not justify introducing
+new scientific logic. Any future test hardening should validate the
+existing implementation without changing its scientific contract.
+
+#### Phase 7.6 implementation status
+
+Phase 7.6 confirms that the existing overall soil fertility zoning
+surface is the currently authorized Phase 7 spatial zoning
+implementation.
+
+No new agricultural zoning calculation is introduced.
+No crop suitability spatialization, vegetation zoning, moisture
+zoning, risk zoning, or integrated agricultural zoning is implemented
+without the required authoritative scientific and architectural
+contract.
+
+**Status:** Phase 7.6 — Authoritative zoning implementation boundary established
+
+---
+
+---
+
 ### Phase 0.1 Completed
 
 Established:
