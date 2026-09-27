@@ -1526,7 +1526,7 @@ Each index receives:
 * Map visualization
 * Legend
 
-**Status:** Planned
+**Status:** Implemented / audited
 
 ---
 
@@ -1807,7 +1807,7 @@ The progression is:
 | 1     | Soil Intelligence                    | Foundation substantially established |
 | 2     | Integrated Reporting                 | In progress / stabilization          |
 | 3     | Remote-Sensing Foundation            | **Implemented / audited**            |
-| 4     | Spectral Index Engine                | Planned                              |
+| 4     | Spectral Index Engine                | **Implemented / audited**            |
 | 5     | Temporal RS Analysis                 | Planned in master roadmap            |
 | 6     | Crop Intelligence                    | Planned                              |
 | 7     | Agricultural Zoning                  | Planned                              |
@@ -2939,3 +2939,37 @@ including raster reading, validation, normalization, temporal raster
 metadata, and temporal observation metadata.
 
 **Result:** Phase 3 Remote-Sensing Foundation is **Implemented / audited**.
+
+### Phase 4 Audit - Spectral Index Engine
+
+**Date:** 2026-09-27
+
+Phase 4 implementation was audited against the existing AgriNexus GIS architecture.
+
+Verified components include:
+
+* Scientific index definitions and registry
+* NDVI, EVI, NDWI, NDMI, SAVI, GNDVI, and ARVI calculations
+* Index calculation contracts and validation
+* Raster index processing
+* Raster index classification
+* Single-index raster workflow
+* Batch raster-index workflow
+* Workflow and batch API controllers
+* Request/result contracts
+* GeoTIFF integration workflows
+* Error handling and delegated failure context
+
+Validation result:
+
+* Scalar/index tests: **44/44 passed**
+* Raster processing/classification/workflow tests: **99/99 passed**
+* Batch workflow tests: **39/39 passed**
+* Public API/controller/contract tests: **36/36 passed**
+* **Total: 218/218 passed**
+* **Failures: 0**
+* **Skipped: 0**
+
+No source-code changes were required during the Phase 4 audit.
+
+**Status:** Implemented / audited
