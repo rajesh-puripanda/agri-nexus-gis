@@ -1595,21 +1595,193 @@ remote-sensing-derived crop condition.
 
 ## Phase 7 — Agricultural Zoning
 
-Combine analytical layers into management zones.
+Combine authoritative analytical layers into agricultural zoning
+surfaces and, where scientifically justified, integrated management
+zones.
 
-Includes:
+### Phase 7.1 — Agricultural Zoning Architecture & Existing-Layer Contract
 
-* Soil zones
-* Vegetation zones
-* Moisture zones
-* Suitability zones
-* Risk zones
-* Integrated agricultural zones
+Phase 7.1 establishes the architectural boundary between existing
+analytical layers and future agricultural zoning integration.
 
-**Status:** Planned
+The core principle is:
+
+**Existing Analytical Authority → Spatial/Zoning Contract → Integrated Agricultural Intelligence**
+
+#### Existing authoritative analytical layers
+
+##### 1. Overall Soil Fertility Zoning
+
+The existing fertility zoning implementation is an authoritative
+spatial analytical surface.
+
+Source:
+
+* server/services/fertilityZoningService.js
+* server/controllers/fertilityZoningController.js
+
+Existing analytical flow:
+
+**Soil observations → N/P/K/Organic Carbon points → continuous IDW interpolation → existing scientific classifiers → overall fertility assessment → fertility zoning grid**
+
+The fertility zoning service remains the sole scientific authority for:
+
+* fertility parameter interpolation
+* fertility classification
+* overall fertility assessment
+* zoning statistics
+* spatial grid generation
+* fertility zoning configuration
+
+The controller remains an orchestration/API layer and performs no
+scientific interpolation, classification, fertility rules, or GIS
+presentation logic.
+
+Existing fertility zoning must not be duplicated inside a generic
+Phase 7 integration service.
+
+##### 2. Crop Suitability
+
+The existing crop suitability implementation is an authoritative
+sample-level analytical layer.
+
+Source:
+
+* server/services/cropSuitabilityService.js
+
+The existing assessment is based on:
+
+* Soil texture — 40%
+* Soil reaction — 30%
+* Electrical conductivity / salinity — 30%
+
+The service provides:
+
+* crop suitability score
+* suitability classification
+* score breakdown
+* positive factors
+* limiting factors
+* management considerations
+* data completeness
+* assessment confidence
+* fertility context
+* deterministic crop ranking
+
+The existing crop suitability service remains the sole authority for
+its current suitability calculation.
+
+Crop suitability is currently a sample-level analytical result.
+It is not yet an agricultural zoning grid.
+
+No spatialization of crop suitability is introduced by Phase 7.1.
+
+#### Zoning-layer contract boundary
+
+Phase 7 must distinguish between:
+
+* an analytical result
+* a spatial analytical surface
+* a classified zoning surface
+* an integrated agricultural zone
+
+An analytical result must not automatically be treated as a zoning
+surface.
+
+A zoning surface requires an explicit spatial representation,
+provenance, analytical authority, and classification authority.
+
+An integrated agricultural zone additionally requires an explicit
+contract defining its source layers and scientific integration method.
+
+#### Vegetation, moisture, and risk zoning
+
+No authoritative generic vegetation-zone, moisture-zone, or risk-zone
+implementation has been established by the Phase 7.1 discovery.
+
+The existing remote-sensing evidence architecture does not justify
+inventing crop-specific vegetation, moisture, or risk thresholds.
+
+Accordingly, Phase 7.1 introduces no:
+
+* vegetation-zone thresholds
+* moisture-zone thresholds
+* risk scores
+* crop-health scores
+* moisture-stress scores
+* irrigation classifications
+* crop-specific remote-sensing zoning rules
+
+Remote-sensing observations remain evidence unless an authoritative
+calibration and interpretation contract establishes a scientifically
+supported classification.
+
+#### Integrated agricultural zones
+
+An integrated agricultural zone is a future architectural contract.
+
+Phase 7.1 does not define an arbitrary weighted combination of:
+
+* fertility
+* crop suitability
+* vegetation
+* moisture
+* risk
+
+No cross-layer weighting, averaging, scoring, or ranking is introduced
+until the required analytical evidence, spatial contracts, and
+integration method are explicitly established.
+
+The integrated zone must preserve provenance for every contributing
+analytical layer and must identify the scientific authority responsible
+for each calculation and classification.
+
+#### Backend scientific authority
+
+All agricultural zoning calculations and classifications remain
+backend responsibilities.
+
+The frontend may:
+
+* request zoning results
+* select supported analytical surfaces
+* visualize returned zones
+* display legends and provenance
+* present analytical metadata
+
+The frontend must not independently calculate:
+
+* zoning thresholds
+* agricultural classifications
+* suitability scores
+* integrated zone scores
+* scientific weights
+
+#### Phase 7.1 implementation status
+
+Phase 7.1 establishes the architectural contract only.
+
+No new generic agricultural zoning service, database schema, threshold
+configuration, vegetation-zone engine, moisture-zone engine, risk-zone
+engine, or integrated scoring engine is introduced at this stage.
+
+Existing fertility zoning and crop suitability implementations remain
+unchanged.
+
+#### Phase 7 implementation sequence
+
+Planned sequence:
+
+* **7.1 — Agricultural Zoning Architecture & Existing-Layer Contract**
+* **7.2 — Fertility Zoning Spatial Contract**
+* **7.3 — Suitability Spatialization Design**
+* **7.4 — Vegetation / Moisture / Risk Layer Availability Audit**
+* **7.5 — Integrated Agricultural Zone Contract**
+* **7.6 — Implementation only where authoritative inputs exist**
+
+**Status:** Phase 7.1 — Architecture contract established
 
 ---
-
 ## Phase 8 — Integrated Agricultural Intelligence
 
 Combine:
