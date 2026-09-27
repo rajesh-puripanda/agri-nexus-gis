@@ -4271,3 +4271,63 @@ No existing implementation or historical dataset was modified by this phase.
 **Status:** Evidence audit completed / calibration evidence not currently available
 
 The broader Phase 6 remains **Partially implemented / audited** because validated calibration datasets, calibrated crop-condition intelligence, moisture suitability, vegetation-condition analysis, historical performance integration, and other agricultural-context-driven models remain outside the current implementation.
+
+### Phase 7.7 — Fertility Zoning Validation & Test Coverage
+
+**Date:** 2026-09-27
+
+Phase 7.7 completed dedicated automated validation of the authoritative overall soil fertility zoning implementation established in Phase 7.6.
+
+The authoritative implementation remains:
+
+`server/services/fertilityZoningService.js`
+
+The authoritative API boundary remains:
+
+* `GET /api/soil-fertility-zoning/config`
+* `POST /api/soil-fertility-zoning`
+
+Dedicated service-level validation was established in:
+
+`server/tests/fertilityZoningService.test.js`
+
+Dedicated controller/API validation was established in:
+
+`server/tests/fertilityZoningController.test.js`
+
+The service validation covers request validation, invalid parameter handling, fertility point extraction, fertility point construction, grid generation, zoning statistics, source-point provenance, successful zoning orchestration, and empty-dataset handling.
+
+The controller validation covers configuration responses, valid request delegation, missing request-body handling, invalid power and resolution handling, service validation-error propagation, and unexpected internal-error handling.
+
+The tests validate the existing implementation only. No new fertility thresholds, classification rules, interpolation formulas, weighting rules, or scientific parameters were introduced.
+
+The authoritative fertility parameters remain:
+
+* Nitrogen
+* Phosphorus
+* Potassium
+* Organic Carbon
+
+The authoritative overall fertility assessment remains delegated to the existing soil-classification implementation through `assessOverallFertility()`.
+
+Validation completed:
+
+* Fertility zoning service: 10/10 passed
+* Fertility zoning controller: 7/7 passed
+* Crop suitability service regression: 44/44 passed
+* Spatial analysis service regression: 93/93 passed
+* Spatial query service regression: 86/86 passed
+* Consolidated relevant validation: 240/240 passed
+* Failures: 0
+
+The controller tests intentionally exercise error paths; their expected diagnostic log messages do not represent test failures.
+
+No existing scientific implementation was modified by the validation work.
+
+No new scientific thresholds, classification boundaries, interpolation methodology, integrated agricultural scoring, crop suitability spatialization, or remote-sensing zoning logic was introduced.
+
+The backend remains the scientific authority for fertility zoning. Frontend components remain presentation consumers of the authoritative API.
+
+**Status:** Implemented / validated
+
+Phase 7.7 establishes dedicated automated validation coverage for the existing fertility zoning implementation while preserving the scientific architecture and implementation boundaries established in Phases 7.1–7.6.
