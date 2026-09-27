@@ -3112,3 +3112,47 @@ No existing Remote Sensing, Spectral Index, Temporal Analysis, or Crop Suitabili
 **Status:** Implemented / audited
 
 The broader Phase 6 remains **Partially implemented / audited** because additional crop-intelligence capabilities, including calibrated moisture suitability, vegetation-condition analysis, and broader crop-condition intelligence, remain outside the current implementation.
+
+### Phase 6.4.3 Audit - Agricultural Context Contract
+
+**Date:** 2026-09-27
+
+Phase 6.4.3 established the Agricultural Context Contract required for calibrated interpretation of remote-sensing crop-condition evidence.
+
+The contract provides explicit agricultural context for crop-condition intelligence, including crop identity, growth stage, season, observation period, study area, sensor context, and calibration status.
+
+Verified contract components include Agricultural Context Contract v1.0, explicit required and optional fields, crop code and crop name requirements, growth-stage and seasonal context, observation-period boundaries, study-area context, sensor context, calibration status, optional metadata, deterministic validation, and factory normalization.
+
+Calibration status is explicitly limited to:
+* not_available
+* available
+* validated
+
+Scientific boundary: the Agricultural Context Contract does not calculate spectral indices, classify raster pixels, calculate temporal change, define NDVI/NDMI/NDWI thresholds, calculate crop-health scores, calculate moisture-stress scores, determine irrigation requirements, calculate crop suitability, or estimate yield.
+
+The contract establishes context only. It does not claim that remote-sensing evidence is agriculturally calibrated merely because context is present.
+
+Verified evidence architecture:
+
+Remote-Sensing Evidence
+ Crop Condition Evidence
+ Crop Condition Interpretation
+ Agricultural Context
+ Future Calibrated Crop Condition Intelligence
+
+Existing Remote Sensing, Spectral Index, Temporal Analysis, Crop Condition Evidence, Crop Condition Interpretation, and soil-based Crop Suitability implementations remain authoritative for their existing responsibilities.
+
+Validation completed:
+* Agricultural Context Contract: 19/19 passed
+* Crop Condition Evidence Contract: 17/17 passed
+* Crop Condition Interpretation Contract: 22/22 passed
+* Crop Condition Interpretation Service: 10/10 passed
+* Combined Phase 6.4.3 validation: 68/68 passed
+* Failures: 0
+* Skipped: 0
+
+No existing Remote Sensing, Spectral Index, Temporal Analysis, Crop Condition Evidence, Crop Condition Interpretation, or Crop Suitability implementation was modified by this phase.
+
+**Status:** Implemented / audited
+
+The broader Phase 6 remains **Partially implemented / audited** because calibrated crop-condition intelligence, moisture suitability, vegetation-condition analysis, historical performance integration, and other agricultural-context-driven models remain outside the current implementation.
