@@ -1564,7 +1564,32 @@ Includes:
 * Vegetation condition
 * Integrated crop suitability
 
-**Status:** Planned
+**Status:** Partially implemented / audited
+
+The current soil-based Crop Intelligence implementation was audited through
+the Crop Suitability service and its integration with Soil Analysis and
+analytical reporting.
+
+Verified implementation includes:
+
+* Crop-specific soil suitability profiles
+* Weighted texture, soil reaction, and salinity scoring
+* Deterministic suitability classification and ranking
+* Missing-factor handling without automatic score penalty
+* Data completeness and assessment confidence
+* Fertility context and limiting nutrient reporting
+* Positive factors, limiting factors, and management considerations
+* Soil Analysis controller integration
+* Soil Analysis report integration
+* Integrated Analytical GIS report compatibility
+
+Phase 6.3 validation completed with **129/129 tests passing** across the
+Crop Suitability service, Soil Analysis controller, analytical report
+aggregation, and Soil Analysis report service.
+
+The broader Phase 6 scope remains open for future integration of additional
+crop-intelligence evidence such as moisture, vegetation condition, and
+remote-sensing-derived crop condition.
 
 ---
 
@@ -1809,7 +1834,7 @@ The progression is:
 | 3     | Remote-Sensing Foundation            | **Implemented / audited**            |
 | 4     | Spectral Index Engine                | **Implemented / audited**            |
 | 5     | Temporal RS Analysis                 | **Implemented / audited**            |
-| 6     | Crop Intelligence                    | Planned                              |
+| 6     | Crop Intelligence                    | **Partially implemented / audited**  |
 | 7     | Agricultural Zoning                  | Planned                              |
 | 8     | Integrated Agricultural Intelligence | Planned                              |
 | 9     | Advanced Analytics                   | Planned                              |
@@ -3023,3 +3048,42 @@ Validation result:
 No source-code changes were required during the Phase 4 audit.
 
 **Status:** Implemented / audited
+---
+
+### Phase 6.3 Audit - Crop Intelligence Integration
+
+**Date:** 2026-09-27
+
+Phase 6.3 Crop Intelligence implementation was audited against the
+existing AgriNexus GIS architecture.
+
+Verified components include:
+
+* Crop-specific soil suitability profiles
+* Weighted texture, soil reaction, and salinity suitability scoring
+* Suitability classification and deterministic ranking
+* Missing-factor handling and data completeness assessment
+* Assessment confidence reporting
+* Fertility context and limiting nutrient reporting
+* Positive factors and limiting factors
+* Crop management considerations
+* Soil Analysis controller integration
+* Soil Analysis report integration
+* Integrated Analytical GIS report compatibility
+
+Validation result:
+
+* Crop Suitability service tests: **45/45 passed**
+* Soil Analysis controller tests: **18/18 passed**
+* Analytical report aggregation and Soil Analysis report tests: **66/66 passed**
+* **Total: 129/129 passed**
+* **Failures: 0**
+* **Skipped: 0**
+
+No source-code changes were required during the Phase 6.3 audit.
+
+**Status:** Partially implemented / audited
+
+The broader Phase 6 scope remains open for future integration of
+moisture, vegetation condition, and remote-sensing-derived crop
+condition intelligence.
