@@ -2512,6 +2512,89 @@ The existing crop suitability implementation remains unchanged.
 **Status:** Phase 7.3 — Suitability spatialization design contract established
 
 ---
+
+### Phase 7.4 — Vegetation / Moisture / Risk Layer Availability Audit
+
+Phase 7.4 audits the availability of authoritative vegetation, moisture,
+and risk spatial layers for agricultural zoning.
+
+#### Remote-sensing layer evidence
+
+The repository contains authoritative remote-sensing index calculation
+and processing infrastructure for:
+
+* NDVI
+* EVI
+* SAVI
+* GNDVI
+* ARVI
+* NDWI
+* NDMI
+
+The registered indices establish mathematical index calculation and
+remote-sensing processing capability.
+
+They do not, by themselves, establish agricultural zoning classes.
+
+#### Vegetation zoning
+
+Vegetation-related index infrastructure exists, including NDVI, EVI,
+SAVI, GNDVI, and ARVI.
+
+No authoritative vegetation zoning contract, zoning classification,
+crop-specific vegetation threshold, or vegetation-zone spatial surface
+was established by this audit.
+
+#### Moisture zoning
+
+Moisture-related index infrastructure exists, including NDMI and NDWI.
+
+No authoritative moisture zoning contract, zoning classification,
+crop-specific moisture threshold, or moisture-zone spatial surface
+was established by this audit.
+
+#### Risk zoning
+
+No authoritative risk score, risk classification, risk model, or risk
+zoning implementation was identified in the backend repository.
+
+No risk zoning formula or threshold is introduced by Phase 7.4.
+
+#### Scientific boundary
+
+Remote-sensing index calculation, raster processing, and temporal
+processing must not be interpreted as agricultural zoning automatically.
+
+Phase 7.4 introduces no:
+
+* vegetation-zone thresholds
+* moisture-zone thresholds
+* risk thresholds
+* crop-health score
+* moisture-stress score
+* risk score
+* crop-specific remote-sensing classification
+* integrated agricultural zoning formula
+
+Any future vegetation, moisture, or risk zoning requires an explicit
+scientific and architectural contract defining its authoritative inputs,
+classification method, thresholds or calibration evidence, spatial
+representation, validation requirements, and provenance.
+
+#### Phase 7.4 implementation status
+
+Phase 7.4 establishes the availability boundary only.
+
+Existing remote-sensing index and processing implementations remain
+unchanged.
+
+No vegetation zoning, moisture zoning, or risk zoning implementation
+is introduced.
+
+**Status:** Phase 7.4 — Vegetation / moisture / risk layer availability audit established
+
+---
+
 ### Phase 0.1 Completed
 
 Established:
