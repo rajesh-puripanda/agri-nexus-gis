@@ -1,4 +1,4 @@
-# AgriNexus GIS
+﻿# AgriNexus GIS
 
 ## Master Architecture & Development Guide
 
@@ -1780,6 +1780,298 @@ Planned sequence:
 * **7.6 — Implementation only where authoritative inputs exist**
 
 **Status:** Phase 7.1 — Architecture contract established
+
+---
+### Phase 7.2 — Fertility Zoning Spatial Contract
+
+Phase 7.2 formalizes the existing overall soil fertility zoning
+implementation as an authoritative spatial analytical surface.
+
+This phase documents the existing contract only.
+
+No new fertility calculation, classification threshold, interpolation
+method, zoning engine, or database schema is introduced.
+
+#### Fertility zoning scientific authority
+
+The authoritative implementation remains:
+
+* `server/services/fertilityZoningService.js`
+
+The REST orchestration boundary remains:
+
+* `server/controllers/fertilityZoningController.js`
+* `server/routes/fertilityZoningRoutes.js`
+
+The fertility zoning service remains responsible for:
+
+* fertility parameter point extraction
+* spatial extent calculation
+* IDW interpolation
+* grid construction
+* parameter classification
+* overall fertility assessment
+* zoning statistics
+* source-point provenance
+* zoning configuration
+
+Phase 7 must consume this existing authority rather than duplicate it.
+
+#### Spatial extent contract
+
+The fertility zoning surface uses a common spatial extent derived from
+the available fertility parameter points.
+
+The extent is calculated from the available Nitrogen, Phosphorus,
+Potassium, and Organic Carbon interpolation points and is subsequently
+padded by the existing fertility zoning implementation.
+
+The same common extent is used for the complete zoning grid.
+
+The zoning surface therefore remains sample-derived.
+
+Phase 7 does not introduce:
+
+* arbitrary geographic extents
+* fixed agricultural boundaries
+* administrative boundaries
+* user-defined scientific zoning extents
+* independently calculated spatial bounds
+
+unless a future authoritative spatial contract explicitly establishes
+such a capability.
+
+#### Grid contract
+
+The existing fertility zoning grid uses:
+
+* `rows = resolution`
+* `columns = resolution`
+
+Grid orientation is:
+
+* row 0 = north
+* last row = south
+* column 0 = west
+* last column = east
+
+Each grid cell contains:
+
+* row
+* column
+* latitude
+* longitude
+* continuous fertility parameter values
+* parameter classifications
+* overall fertility classification
+
+The grid also exposes:
+
+* row count
+* column count
+* total cell count
+* cell collection
+
+The grid is therefore a classified spatial analytical surface rather
+than a collection of independently classified sample points.
+
+#### Continuous-value and classification contract
+
+The existing scientific sequence is:
+
+**Source observations → fertility parameter points → continuous IDW
+interpolation → parameter classification → overall fertility
+assessment → classified zoning grid**
+
+Continuous values are interpolated first.
+
+Existing backend soil classifiers are then applied to the interpolated
+values.
+
+The existing `assessOverallFertility()` function determines the
+overall fertility class from the resulting parameter classifications.
+
+Category labels are not interpolated directly.
+
+Phase 7.2 introduces no new:
+
+* fertility thresholds
+* classification rules
+* interpolation mathematics
+* parameter weights
+* overall fertility formula
+
+The existing fertility zoning implementation remains the sole
+scientific authority for these calculations.
+
+#### Cell representation contract
+
+Each fertility zoning cell contains the spatial position and
+analytical result for that location.
+
+The continuous values are represented for:
+
+* Nitrogen
+* Phosphorus
+* Potassium
+* Organic Carbon
+
+The cell also contains the corresponding parameter classifications and
+the resulting overall fertility class.
+
+Unavailable continuous values remain unavailable and are not converted
+into invented measurements.
+
+The existing implementation rounds returned numeric values to six
+decimal places for the stable response representation.
+
+#### Zoning classification contract
+
+The existing overall fertility zoning classes are:
+
+* Low
+* Moderate / Good
+* High
+* Unavailable
+
+These classifications originate from the existing backend scientific
+classification and assessment functions.
+
+Phase 7 does not reinterpret these categories or create a second
+fertility classification vocabulary.
+
+#### Statistics contract
+
+The existing fertility zoning response provides:
+
+* total cell count
+* valid cell count
+* insufficient-data cell count
+* zone counts
+* zone percentages
+
+These statistics describe the generated fertility zoning surface.
+
+Phase 7 may consume these statistics for presentation or integrated
+analytical reporting but must not recalculate them independently in the
+frontend or in another zoning engine.
+
+#### Source-point provenance contract
+
+The fertility zoning response preserves the source observations used
+for each fertility parameter through parameter-specific source-point
+summaries.
+
+Each source point may contain:
+
+* source identifier
+* sample code
+* latitude
+* longitude
+* parameter value
+
+Parameter-specific grouping is preserved because different laboratory
+measurements may legitimately be unavailable for different samples.
+
+This provenance must remain available to downstream agricultural zoning
+and reporting layers.
+
+#### Configuration and provenance contract
+
+The existing zoning configuration identifies:
+
+* zoning type
+* zoning label
+* interpolation method
+* interpolation settings
+* spatial extent
+* source sample count
+* parameter point counts
+* fertility parameter metadata
+* calculation authority
+* classification authority
+* presentation authority
+* surface type
+* interpolation/classification sequence
+* spatial extent constraint
+
+This configuration forms part of the authoritative provenance of the
+fertility zoning surface.
+
+#### API contract
+
+The existing REST API exposes:
+
+* `GET /api/soil-fertility-zoning/config`
+* `POST /api/soil-fertility-zoning`
+
+The controller receives requests, performs request-level handling,
+delegates validation and zoning generation to the service, and returns
+the service result.
+
+The route and controller layers do not perform fertility interpolation,
+classification, zoning calculations, or scientific presentation logic.
+
+#### Phase 7 integration boundary
+
+Phase 7 may consume the fertility zoning surface as an authoritative
+classified spatial layer.
+
+Downstream agricultural zoning components may use:
+
+* returned grid geometry
+* overall fertility classes
+* continuous parameter values where explicitly required
+* zoning statistics
+* source-point provenance
+* configuration and analytical metadata
+
+Phase 7 must not:
+
+* duplicate fertility interpolation
+* duplicate fertility classification
+* redefine fertility thresholds
+* recalculate overall fertility classes
+* replace the existing fertility zoning service
+* create a second fertility grid implementation
+* independently calculate fertility statistics
+
+The fertility zoning service remains the sole scientific authority for
+the existing fertility zoning layer.
+
+#### Frontend boundary
+
+The frontend may:
+
+* request fertility zoning results
+* visualize the returned spatial grid
+* display fertility classes
+* display legends
+* display statistics
+* display source and configuration metadata
+* use the returned surface as an input to future agricultural zoning
+  workflows
+
+The frontend must not independently calculate:
+
+* interpolation values
+* fertility classifications
+* fertility thresholds
+* overall fertility classes
+* zoning statistics
+
+#### Phase 7.2 implementation status
+
+Phase 7.2 formalizes the existing fertility zoning spatial contract.
+
+No new generic zoning service, fertility engine, database schema,
+scientific threshold, interpolation method, or classification model is
+introduced.
+
+Existing fertility zoning implementation remains unchanged.
+
+**Status:** Phase 7.2 — Existing fertility zoning spatial contract
+established
 
 ---
 ## Phase 8 — Integrated Agricultural Intelligence
