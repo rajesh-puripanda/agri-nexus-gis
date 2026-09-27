@@ -2595,6 +2595,133 @@ is introduced.
 
 ---
 
+### Phase 7.5 — Integrated Agricultural Zone Contract
+
+Phase 7.5 defines the architectural contract required before multiple
+agricultural analytical layers can be combined into an integrated
+agricultural zoning surface.
+
+No integrated agricultural zoning implementation is introduced by
+Phase 7.5.
+
+#### Authoritative input boundary
+
+The currently established analytical layers have different spatial
+and analytical representations:
+
+* Overall soil fertility zoning is an authoritative spatial surface.
+* Crop suitability is currently an authoritative sample-level result.
+* Remote-sensing infrastructure provides index, raster, and temporal
+  processing capability.
+* Vegetation, moisture, and risk zoning surfaces have not been
+  established as authoritative zoning layers.
+
+Only explicitly established spatial analytical surfaces may participate
+directly in an integrated agricultural zone.
+
+A sample-level result must not be treated as a spatial layer without
+an explicit spatialization contract.
+
+#### Required spatial alignment
+
+Any future integrated agricultural zone must explicitly define:
+
+* common spatial reference
+* spatial extent
+* spatial resolution or geometry
+* alignment between source layers
+* source-data coverage
+* treatment of missing spatial observations
+* treatment of incompatible spatial representations
+
+No implicit spatial alignment is permitted.
+
+#### Combination authority
+
+An integrated agricultural zone must not be produced by arbitrary:
+
+* weighted averages
+* additive scores
+* multiplicative scores
+* rankings
+* layer percentages
+* suitability-fertility weighting
+* remote-sensing weighting
+* manually assigned priority values
+
+Any combination rule must have an explicit scientific and architectural
+basis before implementation.
+
+#### Classification authority
+
+The integrated zone contract must explicitly define:
+
+* input layer classifications
+* integration logic
+* output zone definitions
+* conflict handling
+* unavailable-data handling
+* classification provenance
+* validation requirements
+
+Existing source-layer classifications must not be silently replaced
+or recalculated by the integration layer.
+
+#### Provenance
+
+Every future integrated agricultural zone result must preserve
+provenance for its contributing analytical inputs, including where
+applicable:
+
+* source layer
+* source analytical method
+* source configuration
+* source spatial extent
+* source resolution
+* source observation or raster provenance
+* classification authority
+* integration contract version
+
+#### Scientific validation
+
+An integrated agricultural zone must not be considered scientifically
+established merely because multiple analytical layers can be combined
+technically.
+
+Future implementation requires explicit validation evidence appropriate
+to the intended agricultural interpretation.
+
+No crop-health score, yield prediction, irrigation recommendation,
+risk score, or other unsupported agricultural intelligence is introduced
+by this contract.
+
+#### Backend scientific authority
+
+Integrated agricultural zoning remains a backend scientific
+responsibility.
+
+The frontend may:
+
+* request supported integrated zone results
+* display returned zones
+* display source-layer metadata
+* display provenance and validation status
+
+The frontend must not independently calculate integrated agricultural
+zones or apply scientific combination rules.
+
+#### Phase 7.5 implementation status
+
+Phase 7.5 establishes the integrated agricultural zone contract only.
+
+No integrated agricultural zoning service, API, database schema,
+combination formula, classification threshold, weighting model, or
+spatial integration engine is introduced.
+
+**Status:** Phase 7.5 — Integrated agricultural zone contract established
+
+---
+
 ### Phase 0.1 Completed
 
 Established:
