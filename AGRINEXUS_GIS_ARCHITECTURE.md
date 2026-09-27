@@ -3225,3 +3225,100 @@ No existing Remote Sensing, Spectral Index, Temporal Analysis, Crop Condition Ev
 **Status:** Implemented / audited
 
 The broader Phase 6 remains **Partially implemented / audited** because validated calibration datasets, calibrated crop-condition intelligence, moisture suitability, vegetation-condition analysis, historical performance integration, and other agricultural-context-driven models remain outside the current implementation.
+
+### Phase 6.4.5 Audit - Historical Source-of-Truth Verification
+
+**Date:** 2026-09-27
+
+Phase 6.4.5 completed the authoritative historical-data source-of-truth verification required for agricultural-context and historical-comparison integration.
+
+The live database and repository architecture were verified against the established historical data model:
+
+historical_datasets
+ historical_samples
+ historical_observations
+ historical_exclusions
+
+No historical_sites or historical_site_observations tables are part of the authoritative model.
+
+The authoritative historical datasets remain:
+
+* H1 Paderu 82 Samples - 82 historical soil samples from 2017 containing location, sampling depth, pH, electrical conductivity, nitrogen, phosphorus, and potassium.
+* H2 Visakhapatnam Kharif Rice Soil Fertility Dataset - 60 source observations representing Rice agricultural context, Kharif season context, Before sowing / During growth / After harvesting stages, geographic coordinates, soil measurements, and organic carbon.
+
+Three H2 source observations remain preserved in historical_exclusions because their published coordinates require independent verification. The analytical historical sample count therefore remains 57 for H2 while the original source observation count remains 60.
+
+The historical observation model was verified as a one-to-one relationship with historical samples through historical_sample_id. The six authoritative historical parameters remain pH, nitrogen, phosphorus, potassium, organic carbon, and electrical conductivity.
+
+The historical repository remains responsible for database access. Historical candidate generation remains responsible for nearest historical candidate discovery and eligibility. Historical comparison remains responsible for multi-stage scientific comparison. Historical context remains the sole application entry point for historical analytical context.
+
+H1 records do not contain a site number and no site number is manufactured for H1. H1 candidate identity therefore uses the historical sample code fallback.
+
+H2 site observations are grouped by dataset, mandal, and site number, subject to the authoritative historical exclusion rules.
+
+No historical schema, historical dataset, historical observation, historical exclusion, repository contract, candidate-selection rule, or comparison calculation was modified by this audit.
+
+Validation completed:
+
+* Historical candidate service: 26/26 passed
+* Historical comparison controller: 1/1 passed
+* Historical comparison service: 38/38 passed
+* Historical context service: 20/20 passed
+* Analytical report aggregation service: 49/49 passed
+* Consolidated historical/reporting validation: 134/134 passed
+* Failures: 0
+* Skipped: 0
+
+**Status:** Implemented / audited
+
+The historical data model and historical analytical pathway remain authoritative for their existing responsibilities.
+
+### Phase 6.4.6.5 Audit - Calibration Evidence Availability
+
+**Date:** 2026-09-27
+
+Phase 6.4.6.5 completed the evidence audit required to determine whether AgriNexus GIS currently possesses an authoritative calibration dataset capable of supporting calibrated remote-sensing crop-condition intelligence.
+
+The Phase 6.4.4 Crop Condition Calibration Contract remains the authoritative structural contract for future calibration specifications. The contract provides explicit representation of calibration identity, crop context, growth-stage context, seasonal context, spectral-index and sensor context, study-area context, calibration dataset identity, reference-data context, calibration methodology, validation context, applicability constraints, and calibration lifecycle status.
+
+The repository and database evidence audit found no established empirical crop-condition calibration dataset containing authoritative NDVI, NDMI, or NDWI observations linked to crop-condition ground truth, field observations, validated agronomic measurements, yield, or equivalent crop-performance reference data.
+
+The existing historical datasets were reviewed explicitly:
+
+* H1 Paderu 82 Samples provides historical soil observations and associated spatial and sampling-depth context. It does not provide remote-sensing index observations, crop-condition observations, growth-stage phenology measurements, yield, or crop-performance ground truth.
+* H2 Visakhapatnam Kharif Rice provides Rice agricultural context, Kharif season context, repeated Before sowing / During growth / After harvesting observations, geographic coordinates, soil measurements, and organic carbon. It does not provide NDVI, NDMI, NDWI, vegetation-condition observations, yield, or crop-condition ground truth.
+
+Therefore H1 and H2 remain historical agricultural-context datasets and are not treated as validated NDVI, NDMI, or NDWI calibration datasets.
+
+The distinction between contextual agricultural evidence and calibration evidence remains explicit:
+
+historical agricultural context != remote-sensing calibration evidence
+calibration specification != calibration validation
+calibration status != calibrated crop-condition score
+
+No crop-specific NDVI, NDMI, or NDWI thresholds were introduced by this phase.
+
+No crop-health score, vegetation-condition score, moisture-stress score, irrigation recommendation, crop-suitability calculation, yield estimate, or other calibrated agricultural intelligence was introduced by this phase.
+
+No new calibration database table, calibration dataset, calibration repository, calibration service, or calibration threshold configuration was justified by the available evidence.
+
+The existing Crop Condition Calibration Contract remains a future-facing specification boundary. A future validated calibration implementation requires an identified supporting dataset, reference variable, documented methodology, validation evidence, and explicit applicability constraints before calibrated agricultural interpretation can be established.
+
+The existing Remote Sensing, Spectral Index, Temporal Analysis, Crop Condition Evidence, Crop Condition Interpretation, Agricultural Context, Historical Dataset, Historical Candidate, Historical Comparison, Historical Context, and soil-based Crop Suitability implementations remain authoritative for their existing responsibilities.
+
+Validation completed:
+
+* Repository calibration evidence audit: completed
+* Historical calibration suitability audit: completed
+* Authoritative architecture record verified: completed
+* New calibration implementation introduced: no
+* New calibration database schema introduced: no
+* Scientific threshold introduced: no
+* Failures: 0
+* Skipped: 0
+
+No existing implementation or historical dataset was modified by this phase.
+
+**Status:** Evidence audit completed / calibration evidence not currently available
+
+The broader Phase 6 remains **Partially implemented / audited** because validated calibration datasets, calibrated crop-condition intelligence, moisture suitability, vegetation-condition analysis, historical performance integration, and other agricultural-context-driven models remain outside the current implementation.
