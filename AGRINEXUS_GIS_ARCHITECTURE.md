@@ -2349,6 +2349,169 @@ Established:
 * Migration principle
 * Phase 0 roadmap
 
+### Phase 7.3 — Suitability Spatialization Design
+
+Phase 7.3 defines the architectural boundary for any future spatial
+representation of crop suitability.
+
+This phase documents the existing crop suitability implementation
+and establishes the requirements for future spatialization.
+
+No crop suitability spatialization is implemented by Phase 7.3.
+
+#### Crop suitability scientific authority
+
+The authoritative crop suitability implementation remains:
+
+* `server/services/cropSuitabilityService.js`
+
+The service remains responsible for:
+
+* crop suitability evaluation
+* suitability score calculation
+* suitability classification
+* factor evaluation
+* score breakdown
+* positive and limiting factor interpretation
+* management considerations
+* data completeness
+* assessment confidence
+* crop suitability ranking
+* fertility context associated with the suitability result
+
+The existing suitability calculation remains unchanged.
+
+#### Current suitability representation
+
+Crop suitability is currently a sample-level analytical result.
+
+The current analytical flow is:
+
+**Soil sample → Soil analysis → Crop suitability evaluation → Sample-level suitability result**
+
+The existing result is associated with the source soil sample and its
+analytical inputs.
+
+The existence of sample latitude and longitude does not by itself
+convert the sample-level suitability result into a spatial surface.
+
+#### Existing spatialization evidence
+
+Phase 7.3 evidence audit established that the current implementation
+does not contain an authoritative crop suitability spatialization
+service, suitability interpolation workflow, suitability grid, or
+suitability zoning API.
+
+Existing frontend suitability implementation is presentation logic.
+It displays returned suitability classifications, scores, factors,
+and report information but does not calculate or spatialize suitability.
+
+Existing crop suitability tests validate the sample-level analytical
+service. They do not establish a spatialization contract.
+
+#### Spatialization boundary
+
+A sample-level analytical result must not automatically be treated as
+a spatial analytical surface.
+
+A future suitability spatial surface requires an explicit contract
+defining at minimum:
+
+* spatial source observations
+* spatial extent
+* spatial representation
+* spatial calculation method
+* handling of missing or insufficient observations
+* classification authority
+* provenance of source suitability results
+* validation requirements
+* output geometry and metadata
+* scientific authority responsible for the spatial calculation
+
+No such spatialization contract is established by Phase 7.3.
+
+#### No implicit suitability interpolation
+
+Phase 7.3 does not introduce an interpolation method for crop
+suitability.
+
+In particular, no IDW, kriging, nearest-neighbour, rasterization,
+grid interpolation, smoothing, or other spatial transformation is
+introduced merely because suitability results have geographic sample
+locations.
+
+The existing crop suitability score and classification must not be
+reinterpreted as a spatially continuous variable without an explicit
+scientific and architectural contract.
+
+#### Suitability scoring authority remains unchanged
+
+The existing crop suitability weights, condition scores, crop profiles,
+classification ranges, and factor interpretation remain under the
+authority of `cropSuitabilityService.js`.
+
+Phase 7.3 introduces no:
+
+* new suitability weights
+* new crop-specific thresholds
+* new suitability classes
+* new spatial suitability scores
+* new spatial classification rules
+* cross-layer suitability formula
+* suitability-to-fertility weighting
+* remote-sensing suitability weighting
+* yield prediction
+* irrigation recommendation
+* crop-health calculation
+* crop suitability calibration
+
+#### Backend scientific authority
+
+Any future suitability spatialization must remain a backend scientific
+responsibility.
+
+The frontend may:
+
+* request supported suitability results
+* display sample-level suitability
+* visualize an explicitly supported future suitability surface
+* display returned classifications and metadata
+* display provenance supplied by the backend
+
+The frontend must not independently calculate:
+
+* suitability scores
+* suitability thresholds
+* spatial suitability interpolation
+* spatial suitability classifications
+* scientific spatial weights
+* suitability zoning statistics
+
+#### Relationship to agricultural zoning
+
+Crop suitability may become an input to future agricultural zoning
+only after an explicit spatialization contract establishes a valid
+spatial suitability surface.
+
+The existing sample-level suitability result must not be treated as
+a zoning layer by default.
+
+No integrated agricultural zone formula is introduced by Phase 7.3.
+
+#### Phase 7.3 implementation status
+
+Phase 7.3 establishes the suitability spatialization design boundary
+only.
+
+No crop suitability spatialization service, spatial suitability API,
+database schema, interpolation engine, raster generation workflow,
+zoning classifier, threshold, or scoring formula is introduced.
+
+The existing crop suitability implementation remains unchanged.
+
+**Status:** Phase 7.3 — Suitability spatialization design contract established
+
+---
 ### Phase 0.1 Completed
 
 Established:
