@@ -3156,3 +3156,72 @@ No existing Remote Sensing, Spectral Index, Temporal Analysis, Crop Condition Ev
 **Status:** Implemented / audited
 
 The broader Phase 6 remains **Partially implemented / audited** because calibrated crop-condition intelligence, moisture suitability, vegetation-condition analysis, historical performance integration, and other agricultural-context-driven models remain outside the current implementation.
+
+### Phase 6.4.4 Audit - Crop Condition Calibration Contract
+
+**Date:** 2026-09-27
+
+Phase 6.4.4 established the Crop Condition Calibration Contract required for future calibrated interpretation of remote-sensing crop-condition evidence.
+
+The contract defines the structure required to represent a calibration specification without inventing scientific thresholds or claiming calibration validity without supporting evidence.
+
+Verified contract components include Crop Condition Calibration Contract v1.0, calibration identity, crop context, growth-stage context, seasonal context, index and sensor context, study-area context, calibration dataset identity, reference-data context, calibration methodology, validation context, applicability constraints, calibration lifecycle status, optional metadata, deterministic validation, and factory normalization.
+
+Supported calibration statuses are explicitly limited to:
+* proposed
+* validated
+* retired
+
+Supported reference types are explicitly limited to:
+* field_observation
+* ground_truth
+* laboratory_measurement
+* agronomic_measurement
+* validated_reference_dataset
+
+Supported calibration methods are explicitly limited to:
+* threshold
+* statistical
+* empirical
+* model_based
+
+Historical dataset audit completed during Phase 6.4.4 identified two existing agricultural datasets:
+
+* H1 Paderu 82 Samples - 82 soil observations from 2017 containing location, sampling depth, pH, electrical conductivity, nitrogen, phosphorus, and potassium.
+* H2 Visakhapatnam Kharif Rice 2018 - 60 observations containing Rice agricultural context, Kharif season context, before/during/after stages, observation periods, geographic coordinates, soil measurements, and organic carbon.
+
+The H1 dataset provides historical soil context but does not contain remote-sensing index observations, crop-condition observations, growth-stage phenology measurements, yield, or crop-performance ground truth.
+
+The H2 dataset provides richer agricultural and temporal context for Rice during the Kharif season, including repeated observations across before, during, and after stages. However, it does not contain NDVI, NDMI, NDWI, remote-sensing measurements, vegetation-condition observations, yield, or crop-condition ground truth.
+
+Therefore neither H1 nor H2 is treated as a validated NDVI, NDMI, or NDWI calibration dataset.
+
+Scientific boundary: Phase 6.4.4 does not calculate spectral indices, classify raster pixels, calculate temporal change, invent NDVI/NDMI/NDWI thresholds, calculate crop-health scores, calculate moisture-stress scores, determine irrigation requirements, calculate crop suitability, or estimate yield.
+
+The calibration contract intentionally does not require a threshold value. A future calibration specification must identify its supporting dataset, reference variable, methodology, validation evidence, and applicability constraints before calibrated agricultural interpretation can be established.
+
+The distinction between calibration status, calibration validity, and crop-condition scoring remains explicit:
+
+calibration status != calibration validity != crop condition score
+
+Verified architecture:
+
+Remote-Sensing Evidence
+ Crop Condition Evidence
+ Crop Condition Interpretation
+ Agricultural Context
+ Crop Condition Calibration
+ Future Calibrated Crop Condition Intelligence
+
+Existing Remote Sensing, Spectral Index, Temporal Analysis, Crop Condition Evidence, Crop Condition Interpretation, Agricultural Context, and soil-based Crop Suitability implementations remain authoritative for their existing responsibilities.
+
+Validation completed:
+* Crop Condition Calibration Contract: 25/25 passed
+* Failures: 0
+* Skipped: 0
+
+No existing Remote Sensing, Spectral Index, Temporal Analysis, Crop Condition Evidence, Crop Condition Interpretation, Agricultural Context, Crop Suitability implementation, H1 dataset, or H2 dataset was modified by this phase.
+
+**Status:** Implemented / audited
+
+The broader Phase 6 remains **Partially implemented / audited** because validated calibration datasets, calibrated crop-condition intelligence, moisture suitability, vegetation-condition analysis, historical performance integration, and other agricultural-context-driven models remain outside the current implementation.
