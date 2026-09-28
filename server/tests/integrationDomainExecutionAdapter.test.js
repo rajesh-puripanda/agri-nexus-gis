@@ -933,3 +933,223 @@ test(
         );
     }
 );
+
+// ============================================================
+// PHASE 8.15.19
+// Authoritative Failure Preservation
+// ============================================================
+
+test(
+    "SOIL_INTELLIGENCE preserves authoritative errors unchanged",
+    async () => {
+        const request = {
+            contractVersion:
+                "1.0",
+            requestType:
+                "integration_request",
+            requestedDomains: [
+                "SOIL_INTELLIGENCE"
+            ],
+            inputs: {
+                soilSample: null
+            }
+        };
+
+        await assert.rejects(
+            () =>
+                executeIntegrationDomain(
+                    "SOIL_INTELLIGENCE",
+                    {
+                        sample:
+                            null
+                    }
+                ),
+            error => {
+                assert.equal(
+                    error.name,
+                    "Error"
+                );
+
+                assert.equal(
+                    error.message,
+                    "Soil sample is required"
+                );
+
+                assert.equal(
+                    error.code,
+                    undefined
+                );
+
+                return true;
+            }
+        );
+    }
+);
+
+test(
+    "CROP_SUITABILITY preserves authoritative errors unchanged",
+    async () => {
+        await assert.rejects(
+            () =>
+                executeIntegrationDomain(
+                    "CROP_SUITABILITY",
+                    {
+                        sample:
+                            null,
+                        analysis:
+                            null
+                    }
+                ),
+            error => {
+                assert.equal(
+                    error.name,
+                    "Error"
+                );
+
+                assert.equal(
+                    error.message,
+                    "Soil sample is required"
+                );
+
+                assert.equal(
+                    error.code,
+                    undefined
+                );
+
+                return true;
+            }
+        );
+    }
+);
+
+test(
+    "SPATIAL_INTELLIGENCE preserves authoritative validation errors unchanged",
+    async () => {
+        await assert.rejects(
+            () =>
+                executeIntegrationDomain(
+                    "SPATIAL_INTELLIGENCE",
+                    {
+                        latitude:
+                            "invalid",
+                        longitude:
+                            "invalid"
+                    }
+                ),
+            error => {
+                assert.equal(
+                    error.name,
+                    "Error"
+                );
+
+                assert.equal(
+                    error.statusCode,
+                    400
+                );
+
+                assert.deepEqual(
+                    error.validationErrors,
+                    [
+                        "Latitude must be a valid numeric value.",
+                        "Longitude must be a valid numeric value."
+                    ]
+                );
+
+                assert.equal(
+                    error.code,
+                    undefined
+                );
+
+                assert.equal(
+                    error.message,
+                    "Invalid spatial analytical coordinates."
+                );
+
+                return true;
+            }
+        );
+    }
+);
+
+test(
+    "FERTILITY_ZONING preserves authoritative validation errors unchanged",
+    async () => {
+        await assert.rejects(
+            () =>
+                executeIntegrationDomain(
+                    "FERTILITY_ZONING",
+                    {
+                        options: {
+                            power:
+                                "invalid",
+                            resolution:
+                                "invalid"
+                        }
+                    }
+                ),
+            error => {
+                assert.equal(
+                    error.name,
+                    "Error"
+                );
+
+                assert.equal(
+                    error.statusCode,
+                    400
+                );
+
+                assert.ok(
+                    Array.isArray(
+                        error.validationErrors
+                    )
+                );
+
+                assert.ok(
+                    error.validationErrors.length >= 2
+                );
+
+                assert.equal(
+                    error.code,
+                    undefined
+                );
+
+                return true;
+            }
+        );
+    }
+);
+
+test(
+    "HISTORICAL_CONTEXT preserves authoritative failure results unchanged",
+    async () => {
+        const result =
+            await executeIntegrationDomain(
+                "HISTORICAL_CONTEXT",
+                {
+                    sampleId:
+                        0,
+                    parameter:
+                        ""
+                }
+            );
+
+        assert.equal(
+            result.success,
+            false
+        );
+
+        assert.equal(
+            result.code,
+            "INVALID_REQUEST"
+        );
+
+        assert.equal(
+            result.message,
+            "Invalid historical context request."
+        );
+
+        assert.ok(
+            result.errors
+        );
+    }
+);
