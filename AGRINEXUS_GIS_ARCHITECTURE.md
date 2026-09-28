@@ -4683,3 +4683,65 @@ No new agricultural classification was introduced.
 **Status:** Contract defined / implementation deferred
 
 The next phase may define the explicit integration workflow and its scientific decision rules only after the Integrated Agricultural Intelligence contract has been validated and accepted.
+
+### Phase 8.5  Integration Workflow Boundary Discovery
+
+**Date:** 2026-09-28
+
+Phase 8.5 established the orchestration boundary for future Integrated Agricultural Intelligence.
+
+The existing authoritative domain entry points are:
+
+* Soil Intelligence — `analyzeSample()`
+* Spatial Intelligence — `getSpatialAnalysis()` / `prepareSpatialAnalysis()`
+* Crop Suitability — `generateCropRecommendations()`
+* Fertility Zoning — `prepareFertilityZoning()`
+* Temporal Observation — `processTemporalObservationWorkflow()`
+* Temporal Composition — `processTemporalCompositionWorkflow()`
+* Temporal Analysis — `processTemporalAnalysisWorkflow()`
+* Historical Context — `getHistoricalContext()`
+
+The future Integrated Agricultural Intelligence workflow shall act as an orchestration boundary over these existing domain authorities.
+
+The workflow boundary shall:
+
+* validate the integration workflow request
+* identify requested domains
+* invoke the corresponding authoritative domain services
+* preserve each authoritative domain result without modifying its scientific semantics
+* assign explicit domain availability states
+* preserve domain-specific provenance
+* represent unavailable, incomplete, conflicting, or insufficient evidence explicitly
+* construct the Phase 8.4 Integrated Agricultural Intelligence result contract
+* validate the resulting integration contract
+
+The integration workflow shall remain scientifically thin.
+
+It shall not:
+
+* duplicate domain calculations
+* recalculate domain classifications
+* replace domain thresholds
+* modify crop-suitability weights
+* create an integrated agricultural score
+* create cross-domain weighting or ranking
+* reinterpret temporal evidence as crop-health, moisture-stress, yield, or irrigation intelligence
+* introduce new agricultural classifications
+* introduce new remote-sensing calibration
+* silently convert unavailable evidence into scientific assumptions
+
+The existing `analyticalReportAggregationService` remains an Integrated Analytical GIS reporting and aggregation boundary. It is not repurposed as the Integrated Agricultural Intelligence scientific workflow.
+
+No general-purpose Integrated Agricultural Intelligence workflow service currently exists in the repository.
+
+No Integrated Agricultural Intelligence request contract currently exists.
+
+Phase 8.5 therefore establishes the workflow boundary without creating implementation files or introducing scientific decision rules.
+
+Architectural boundary:
+
+**Authoritative Domain Services -> Integration Workflow -> Phase 8.4 Integration Result Contract**
+
+Scientific decision rules remain explicitly deferred until they are separately defined, validated, and accepted.
+
+**Status:** Workflow boundary discovered / implementation deferred
