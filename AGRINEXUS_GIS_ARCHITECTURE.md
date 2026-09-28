@@ -4387,7 +4387,7 @@ Phase 8.2 completed discovery of the existing result structures exposed by the a
 
 The following existing result boundaries were verified:
 
-* Soil Intelligence returns the authoritative result of nalyzeSample(), including normalized soil measurements, parameter classifications, and overall fertility.
+* Soil Intelligence returns the authoritative result of analyzeSample(), including normalized soil measurements, parameter classifications, and overall fertility.
 * Spatial Intelligence returns the authoritative spatial analysis result, including location, spatial context, interpolated analytical values, sample context, and backend provenance metadata.
 * Crop Suitability returns the authoritative crop suitability result from evaluateCropSuitability(), including scoring methodology, classification ranges, factor basis, fertility context, crop results, data completeness, and assessment confidence.
 * Fertility Zoning returns the authoritative spatial fertility zoning result from prepareFertilityZoning(), including configuration, zone definitions, statistics, source-point provenance, and generated grid.
@@ -4424,3 +4424,262 @@ The future integration layer must consume existing authoritative domain results 
 The next phase must define the structure, required domains, provenance requirements, availability semantics, conflict handling, and validation rules of the Integrated Agricultural Intelligence Result Contract before implementation of any unified agricultural intelligence workflow.
 
 **Status:** Implemented / audited
+
+### Phase 8.3  Integrated Analytical GIS Result and Provenance Boundary
+
+**Date:** 2026-09-27
+
+Phase 8.3 completed discovery of the existing integrated analytical report result and provenance structure.
+
+The existing analytical report aggregation service defines the report contract:
+
+* Contract version: `1.0`
+* Report type: `integrated_analytical_gis`
+
+The existing report envelope contains:
+
+* `contractVersion`
+* `reportType`
+* `status`
+* `generatedAt`
+* `analysisContext`
+* `sections`
+* `provenance`
+* `warnings`
+* `errors`
+
+The existing report status model is:
+
+* `complete`
+* `partial`
+* `error`
+
+The existing section status model is:
+
+* `available`
+* `unavailable`
+* `not_requested`
+* `not_applicable`
+* `error`
+
+The existing report aggregates authoritative domain results without replacing their scientific contracts.
+
+Verified report sections include:
+
+* Sample Summary
+* Thematic Analysis
+* Spatial Analysis
+* Spatial Query
+* Interpolation
+* Fertility Zoning
+* Historical Comparison
+* Overall Summary
+
+The existing provenance envelope establishes:
+
+* scientific authority
+* calculation location
+* classification location
+* section-specific provenance
+
+Section provenance may additionally preserve authoritative metadata including:
+
+* report metadata
+* interpolation location
+* filtering location
+* distance calculation
+* source
+* candidate selection
+
+The integrated report therefore provides an existing cross-domain aggregation and provenance boundary.
+
+The report does not itself introduce:
+
+* an integrated agricultural score
+* cross-domain weighting
+* cross-domain ranking
+* new scientific classification
+* new thresholds
+* crop-health scoring
+* moisture-stress scoring
+* irrigation requirements
+* crop-suitability recalculation
+* remote-sensing threshold combinations
+
+The existing Crop Intelligence contracts remain separate and authoritative within their responsibilities:
+
+* Agricultural Context
+* Crop Condition Evidence
+* Crop Condition Interpretation
+* Crop Condition Calibration
+
+These contracts provide contextual, evidentiary, interpretive, and calibration structures for crop-condition intelligence. They are not replaced by the integrated analytical report envelope.
+
+The architectural distinction established by Phase 8.3 is:
+
+**Existing Domain Result Contracts -> Integrated Analytical GIS Report and Provenance Boundary -> Future Integrated Agricultural Intelligence Contract**
+
+The existing `integrated_analytical_gis` report is therefore an aggregation and reporting contract, not the scientific implementation of unified Integrated Agricultural Intelligence.
+
+No existing domain result contract was modified.
+
+No new scientific integration formula was introduced.
+
+No cross-domain weighting was introduced.
+
+No new classification or threshold was introduced.
+
+No crop-condition score was introduced.
+
+No remote-sensing result was combined with soil, fertility, spatial, or crop-suitability results.
+
+**Status:** Implemented / audited
+
+The future Integrated Agricultural Intelligence layer must consume the established domain results and report/provenance boundary while defining its own explicit scientific integration contract before implementation.
+
+### Phase 8.4  Integrated Agricultural Intelligence Result Contract
+
+**Date:** 2026-09-28
+
+Phase 8.4 completed discovery of the authoritative domain result boundaries required to define the future Integrated Agricultural Intelligence result contract.
+
+The following existing domain results are eligible as authoritative integration inputs:
+
+* Soil Intelligence
+* Spatial Intelligence
+* Crop Suitability
+* Fertility Zoning
+* Temporal Observation
+* Temporal Composition
+* Temporal Analysis
+* Historical Context
+
+Each domain remains scientifically authoritative within its existing responsibility.
+
+The Integrated Agricultural Intelligence result contract shall reference and preserve these domain results without modifying their scientific semantics, thresholds, classifications, calculations, provenance, or validation rules.
+
+The future integration result shall contain the following contract-level components:
+
+* contract version
+* result identity
+* analysis context
+* domain results
+* domain availability status
+* integration provenance
+* warnings
+* errors
+* validation status
+
+### Domain Availability
+
+Each domain result shall explicitly communicate its availability.
+
+Supported availability states are:
+
+* `available`
+* `unavailable`
+* `not_requested`
+* `not_applicable`
+* `error`
+
+Unavailable or missing domain evidence shall not be silently converted into a scientific classification, score, or assumption.
+
+A partial set of available domain results shall remain distinguishable from a complete domain set.
+
+### Domain Result Preservation
+
+The integration contract shall preserve authoritative domain outputs as domain-specific results.
+
+The integration layer shall not:
+
+* recalculate domain classifications
+* replace domain thresholds
+* modify domain scores
+* modify crop-suitability weights
+* reinterpret temporal evidence as a crop-health score
+* convert missing evidence into a negative or positive condition
+* interpolate categorical labels
+* duplicate existing scientific calculations
+
+### Provenance
+
+The integrated result shall preserve provenance identifying, where available:
+
+* scientific authority
+* calculation location
+* classification location
+* source domain
+* source result contract version
+* source generation timestamp
+* spatial context
+* temporal context
+* calibration context
+* source-selection or candidate-selection information where applicable
+
+The integration layer shall not claim scientific authority for calculations performed by an existing domain service.
+
+### Conflict and Insufficient Evidence
+
+Conflicting, incompatible, or insufficient domain evidence shall be explicitly represented.
+
+The integration contract shall not resolve scientific conflicts through arbitrary:
+
+* weighting
+* averaging
+* ranking
+* majority voting
+* additive scoring
+* multiplicative scoring
+* percentage-based layer contribution
+
+Any future scientific conflict-resolution method must be explicitly defined and validated before implementation.
+
+### Validation
+
+The integrated result contract shall validate:
+
+* contract version
+* result identity
+* analysis context
+* domain availability states
+* required domain-result structure
+* source contract versions
+* provenance structure
+* warnings and errors
+* consistency between availability state and supplied result data
+
+Domain-specific validation shall remain the responsibility of the corresponding authoritative domain contract.
+
+### Scientific Boundary
+
+Phase 8.4 does not introduce:
+
+* an integrated agricultural score
+* a crop-health score
+* a moisture-stress score
+* a yield prediction
+* an irrigation recommendation
+* cross-domain weighting
+* cross-domain ranking
+* new agricultural thresholds
+* new classifications
+* new remote-sensing calibration
+* new crop-suitability calculations
+
+The architectural boundary established by Phase 8.4 is:
+
+**Authoritative Domain Results -> Explicit Integration Result Contract -> Future Integrated Agricultural Intelligence**
+
+The integration result contract therefore defines the structure and governance boundary for future Integrated Agricultural Intelligence without yet defining the scientific method by which multiple domain results are interpreted together.
+
+No existing domain result contract was modified.
+
+No existing scientific service was modified.
+
+No new scientific calculation was introduced.
+
+No new agricultural classification was introduced.
+
+**Status:** Contract defined / implementation deferred
+
+The next phase may define the explicit integration workflow and its scientific decision rules only after the Integrated Agricultural Intelligence contract has been validated and accepted.
