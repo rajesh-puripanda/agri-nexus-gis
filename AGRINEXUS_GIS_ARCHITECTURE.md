@@ -5221,3 +5221,274 @@ No existing domain service modified.
 No existing domain result contract modified.
 
 **Status:** Integration execution ordering and orchestration boundary established / implementation deferred
+
+
+
+### Phase 8.14  Integration Contract Implementation & Validation
+**Date:** 2026-09-28
+
+Phase 8.14 implemented and validated the foundational contract boundaries required for the future Integrated Agricultural Intelligence workflow.
+
+The implementation establishes four explicit integration contracts:
+
+1. Integration Request Contract
+2. Integration Domain Resolution Contract
+3. Integration Input Resolution Contract
+4. Integration Execution Result Contract
+
+These contracts formalize the request, dependency, input, and result boundaries without transferring scientific authority from the existing domain services.
+
+#### Integration Request Contract
+
+The Integration Request Contract establishes the top-level request boundary for Integrated Agricultural Intelligence.
+
+The contract defines:
+
+- contract version
+- request type
+- requested authoritative domains
+- optional integration inputs
+- optional integration context
+- optional metadata
+
+The authoritative integration domains are:
+
+```text
+SOIL_INTELLIGENCE
+SPATIAL_INTELLIGENCE
+CROP_SUITABILITY
+FERTILITY_ZONING
+HISTORICAL_CONTEXT
+TEMPORAL_OBSERVATION
+TEMPORAL_COMPOSITION
+TEMPORAL_ANALYSIS
+```
+
+The request contract does not impose domain-specific scientific fields on the generic integration request. Domain-specific request structures remain authoritative within their respective domain contracts.
+
+The Integration Request Contract is implemented at:
+
+```text
+server/scientific/integration/integrationRequestContract.js
+```
+
+#### Integration Domain Resolution Contract
+
+The Integration Domain Resolution Contract establishes the authoritative dependency graph and service-entry-point matrix.
+
+The dependency relationships are:
+
+```text
+SOIL_INTELLIGENCE
+        |
+        v
+CROP_SUITABILITY
+
+TEMPORAL_OBSERVATION
+        |
+        v
+TEMPORAL_COMPOSITION
+        |
+        v
+TEMPORAL_ANALYSIS
+```
+
+The following domains remain independent at the integration dependency level:
+
+```text
+SPATIAL_INTELLIGENCE
+FERTILITY_ZONING
+HISTORICAL_CONTEXT
+```
+
+SOIL_INTELLIGENCE and TEMPORAL_OBSERVATION are prerequisite roots within their respective dependency chains and may also execute independently when explicitly requested.
+
+The contract records the authoritative service path and entry point for each domain.
+
+Dependency resolution is deterministic. Shared prerequisites are resolved only once, and independent domains are not assigned artificial execution priority.
+
+The Integration Domain Resolution Contract is implemented at:
+
+```text
+server/scientific/integration/integrationDomainResolutionContract.js
+```
+
+#### Integration Input Resolution Contract
+
+The Integration Input Resolution Contract establishes the boundary between generic integration inputs and the concrete request arguments required by authoritative domain services.
+
+Input resolution:
+
+- consumes the generic integration request inputs and context
+- resolves domain-specific service arguments
+- consumes validated prerequisite results where required
+- uses existing authoritative domain request factories and validators
+- explicitly represents missing prerequisites
+- does not perform scientific calculations
+- does not reinterpret authoritative domain results
+
+The temporal integration boundaries reuse the existing authoritative temporal workflow request contracts:
+
+```text
+Temporal Observation Workflow Request
+Temporal Composition Workflow Request
+Temporal Analysis Workflow Request
+```
+
+The temporal dependency chain therefore remains:
+
+```text
+Integration Inputs
+       |
+       v
+Temporal Observation Requests
+       |
+       v
+Authoritative Temporal Observation Results
+       |
+       v
+Temporal Composition Request
+       |
+       v
+Authoritative Temporal Composition Result
+       |
+       v
+Temporal Analysis Request
+       |
+       v
+Authoritative Temporal Analysis Result
+```
+
+The Integration Input Resolution Contract is implemented at:
+
+```text
+server/scientific/integration/integrationInputResolutionContract.js
+```
+
+#### Integration Execution Result Contract
+
+The Integration Execution Result Contract establishes the versioned result boundary for the future integration workflow.
+
+It explicitly represents:
+
+- requested domains
+- resolved domains
+- authoritative domain results
+- completed domain execution
+- blocked domain execution
+- failed domain execution
+- missing inputs for blocked domains
+- failure descriptions for failed domains
+- optional execution metadata
+
+A completed domain result must preserve its authoritative result payload.
+
+A blocked domain must explicitly preserve its missing-input state and must not contain a fabricated scientific result.
+
+A failed domain must explicitly preserve its error description.
+
+The contract does not aggregate, weight, rank, score, or reinterpret domain results.
+
+The Integration Execution Result Contract is implemented at:
+
+```text
+server/scientific/integration/integrationExecutionContract.js
+```
+
+#### Phase 8.14 Contract Validation
+
+All four Phase 8.14 integration contracts were independently tested and then validated together through the complete integration contract regression.
+
+```text
+Integration Request Contract           PASS
+Integration Domain Resolution          PASS
+Integration Execution Contract         PASS
+Integration Input Resolution           PASS
+------------------------------------------------------------
+TOTAL                                  85/85 PASS
+FAIL                                    0
+```
+
+The complete regression was executed using the four integration contract test files:
+
+```text
+server/tests/integrationRequestContract.test.js
+server/tests/integrationDomainResolutionContract.test.js
+server/tests/integrationExecutionContract.test.js
+server/tests/integrationInputResolutionContract.test.js
+```
+
+The complete Phase 8.14 contract boundary therefore has a verified regression baseline of **85/85 tests passing**.
+
+#### Architectural Boundary
+
+Phase 8.14 establishes the following implementation boundary:
+
+```text
+Integration Request
+        |
+        v
+Request Contract Validation
+        |
+        v
+Domain Dependency Resolution
+        |
+        v
+Domain Input Resolution
+        |
+        v
+Authoritative Domain Services
+        |
+        v
+Dependency-Aware Result Assembly
+        |
+        v
+Integration Execution Result Contract
+```
+
+The contract layer remains scientifically thin.
+
+Existing authoritative domain services remain responsible for:
+
+- scientific calculations
+- thresholds
+- classifications
+- interpolation
+- temporal calculations
+- domain validation
+- domain provenance
+- domain-specific result semantics
+
+The integration layer does not:
+
+- duplicate scientific calculations
+- duplicate interpolation
+- duplicate classification
+- introduce cross-domain scoring
+- introduce weighting
+- introduce ranking
+- introduce majority voting
+- introduce new thresholds
+- introduce new classifications
+- reinterpret temporal evidence
+- manufacture missing evidence
+- silently substitute missing prerequisites
+- modify authoritative domain semantics
+
+#### Implementation Boundary
+
+Phase 8.14 implements the foundational integration contracts only.
+
+No general Integrated Agricultural Intelligence orchestration service has yet been implemented.
+
+No execution scheduler has been implemented.
+
+No cross-domain scientific calculation has been implemented.
+
+No existing authoritative domain service has been modified.
+
+No existing authoritative domain result contract has been modified.
+
+The next implementation stage may establish the dependency-aware integration workflow service using the validated Phase 8.14 contracts.
+
+**Status:** Integration contract implementation and validation established / general integration workflow implementation remains deferred
