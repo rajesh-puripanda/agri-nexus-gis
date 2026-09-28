@@ -4745,3 +4745,90 @@ Architectural boundary:
 Scientific decision rules remain explicitly deferred until they are separately defined, validated, and accepted.
 
 **Status:** Workflow boundary discovered / implementation deferred
+
+### Phase 8.6  Scientific Integration Decision-Rule Boundary
+**Date:** 2026-09-28
+
+Phase 8.6 audited the existing scientific rules, crop-intelligence interpretation contracts, agricultural context contract, and crop-condition calibration contract to determine whether an authoritative cross-domain scientific decision rule already exists.
+
+Existing authoritative scientific rules remain domain-specific:
+
+- Soil classification remains authoritative within `server/scientific/classification/soilClassification.js`.
+- Crop-condition evidence remains governed by the Crop Condition Evidence Contract.
+- Crop-condition interpretation remains governed by the Crop Condition Interpretation Contract.
+- Agricultural context remains governed by the Agricultural Context Contract.
+- Crop-condition calibration remains governed by the Crop Condition Calibration Contract.
+- Remote-sensing index calculations, classifications, and temporal change remain governed by their existing scientific contracts and services.
+- Crop suitability remains governed by the existing Crop Suitability service and contract boundaries.
+- Fertility zoning remains governed by the existing Fertility Zoning service.
+
+The audit found no authoritative cross-domain scientific rule defining how soil intelligence, spatial intelligence, crop suitability, fertility zoning, remote-sensing interpretation, or historical context should be combined into an integrated agricultural conclusion.
+
+Existing crop-intelligence contracts establish an important evidence boundary:
+
+```text
+Remote-Sensing Evidence
+        |
+        v
+Agricultural Context
+        |
+        v
+Calibration / Validation
+        |
+        v
+Crop-Condition Interpretation
+
+This domain-specific chain does not authorize a general cross-domain agricultural intelligence calculation.
+
+Therefore, the Integrated Agricultural Intelligence workflow must not invent or implicitly apply:
+
+- integrated agricultural scores
+- cross-domain weights
+- weighted averages
+- additive or multiplicative scoring
+- rankings
+- majority voting
+- replacement thresholds
+- new classifications
+- crop-health scores
+- moisture-stress scores
+- yield predictions
+- irrigation recommendations
+- cross-domain reinterpretation of temporal evidence
+- unvalidated crop-condition calibration
+- assumptions derived from missing evidence
+
+A future integrated scientific decision rule must explicitly define, validate, and version:
+
+- required evidence domains
+- required agricultural context
+- evidence sufficiency
+- domain compatibility
+- contextual applicability
+- calibration requirements
+- conflict handling
+- insufficient-evidence handling
+- output semantics
+- provenance requirements
+- validation requirements
+
+Until such a rule is explicitly established and validated, the integration layer remains an evidence-preserving orchestration boundary.
+
+Domain results must retain their existing scientific meaning, classifications, thresholds, provenance, calibration status, and validation status. Missing or unavailable evidence must remain explicitly represented and must not be converted into an inferred classification, score, or assumption.
+
+The Phase 8.4 Integration Result Contract and Phase 8.5 Integration Workflow Boundary therefore remain the authoritative structural boundaries for future integration. Phase 8.6 establishes the scientific decision-rule boundary without implementing a scientific decision rule.
+
+Architectural boundary:
+
+**Authoritative Domain Results -> Explicit Scientific Decision-Rule Boundary -> Future Validated Integrated Agricultural Intelligence**
+
+No existing domain scientific contract modified.
+No existing scientific service modified.
+No integrated score introduced.
+No cross-domain weighting introduced.
+No new agricultural threshold introduced.
+No new classification introduced.
+No new calibration introduced.
+No scientific decision rule implemented.
+
+**Status:** Scientific decision-rule boundary established / implementation deferred
