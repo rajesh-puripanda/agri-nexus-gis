@@ -4378,3 +4378,49 @@ Phase 8.1 therefore establishes the existing analytical contract inventory requi
 **Status:** Implemented / audited
 
 The next phase must define the integration contract itself before implementation of any unified agricultural intelligence workflow.
+
+### Phase 8.2  Integration Result-Contract Discovery
+
+**Date:** 2026-09-27
+
+Phase 8.2 completed discovery of the existing result structures exposed by the authoritative analytical domains identified in Phase 8.1.
+
+The following existing result boundaries were verified:
+
+* Soil Intelligence returns the authoritative result of nalyzeSample(), including normalized soil measurements, parameter classifications, and overall fertility.
+* Spatial Intelligence returns the authoritative spatial analysis result, including location, spatial context, interpolated analytical values, sample context, and backend provenance metadata.
+* Crop Suitability returns the authoritative crop suitability result from evaluateCropSuitability(), including scoring methodology, classification ranges, factor basis, fertility context, crop results, data completeness, and assessment confidence.
+* Fertility Zoning returns the authoritative spatial fertility zoning result from prepareFertilityZoning(), including configuration, zone definitions, statistics, source-point provenance, and generated grid.
+* Temporal Observation uses an explicit versioned workflow result contract containing the observation and validated continuous and classification raster output artifacts.
+* Temporal Composition uses an explicit versioned workflow result contract containing the validated temporal composition.
+* Temporal Analysis uses an explicit versioned workflow result contract containing the analysis identity, analysis type, composition, scientific result payload, and optional metadata.
+
+The remote-sensing temporal subsystem therefore already establishes explicit domain-specific result-contract validation boundaries.
+
+Phase 8.2 confirms that existing analytical domains do not expose one common cross-domain result envelope.
+
+Existing result contracts remain authoritative within their respective scientific responsibilities.
+
+No existing domain result contract was modified.
+
+No generic result adapter was introduced.
+
+No integrated agricultural score was introduced.
+
+No cross-domain weighting was introduced.
+
+No cross-domain ranking was introduced.
+
+No new classification or threshold was introduced.
+
+No remote-sensing result was combined with soil, fertility, spatial, or crop-suitability results.
+
+The architectural boundary established by Phase 8.2 is:
+
+**Existing Domain Result Contracts  Explicit Integration Result Contract  Future Integrated Agricultural Intelligence**
+
+The future integration layer must consume existing authoritative domain results without changing their scientific semantics, provenance, validation rules, or internal contracts.
+
+The next phase must define the structure, required domains, provenance requirements, availability semantics, conflict handling, and validation rules of the Integrated Agricultural Intelligence Result Contract before implementation of any unified agricultural intelligence workflow.
+
+**Status:** Implemented / audited
