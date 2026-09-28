@@ -4927,3 +4927,58 @@ No existing domain contract was modified.
 No existing scientific service was modified.
 
 **Status:** Integration validation boundary discovered / implementation deferred
+
+### Phase 8.8  Integration Request/Input Contract Boundary
+**Date:** 2026-09-28
+
+Phase 8.8 audited existing request contracts and workflow request patterns to determine whether an authoritative cross-domain Integrated Agricultural Intelligence request contract already exists.
+
+The repository contains request contracts for specific remote-sensing and temporal workflows, including raster index batch processing, raster index processing, temporal observation, temporal composition, and temporal analysis.
+
+These contracts establish a reusable structural pattern for request identity, required fields, optional parameters, metadata, nested contract validation, and rejection of invalid request structures.
+
+No general Integrated Agricultural Intelligence request contract currently exists.
+
+The existing Integrated Analytical GIS report request is a separate reporting boundary. Its request fields control report sections such as sample selection, parameter selection, spatial analysis, spatial query, interpolation, fertility zoning, and historical comparison. It shall not be repurposed as the Integrated Agricultural Intelligence request contract.
+
+The future Integrated Agricultural Intelligence request contract shall explicitly define:
+
+- integration request identity
+- requested domain set
+- analysis context
+- domain-specific request inputs
+- spatial context where required
+- temporal context where required
+- agricultural context where required
+- optional metadata
+- structural validation requirements
+
+The request contract shall identify requested domains without inventing scientific conclusions or decision rules.
+
+Domain-specific request structures shall remain authoritative within their existing domain contracts and shall not be duplicated or redefined by the integration request contract.
+
+Request validation shall remain structurally focused. It shall not introduce:
+
+- integrated agricultural scores
+- cross-domain weighting
+- rankings
+- new thresholds
+- new classifications
+- crop-health calculations
+- moisture-stress calculations
+- yield prediction
+- irrigation recommendations
+- new crop-suitability calculations
+
+The integration request contract shall therefore establish the input boundary for future orchestration without becoming a scientific decision-rule boundary.
+
+Architectural boundary:
+
+**Integration Request Contract -> Request Validation -> Integration Workflow -> Authoritative Domain Contracts**
+
+No Integrated Agricultural Intelligence request contract was implemented during Phase 8.8.
+No existing request contract was modified.
+No existing scientific service was modified.
+No scientific decision rule was introduced.
+
+**Status:** Integration request/input contract boundary established / implementation deferred
