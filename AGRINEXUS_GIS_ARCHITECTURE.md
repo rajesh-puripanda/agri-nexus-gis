@@ -4982,3 +4982,121 @@ No existing scientific service was modified.
 No scientific decision rule was introduced.
 
 **Status:** Integration request/input contract boundary established / implementation deferred
+
+### Phase 8.12 Integration Domain Dependency & Context Contract
+**Date:** 2026-09-28
+
+Phase 8.12 established the authoritative execution dependency and context relationships between the existing Integrated Agricultural Intelligence candidate domains.
+
+The verified execution dependency model is:
+
+- Soil Intelligence:
+  - Requires a soil sample.
+  - Authoritative entry point: `analyzeSample(sample)`.
+
+- Spatial Intelligence:
+  - Requires latitude and longitude.
+  - Authoritative entry point: `getSpatialAnalysis(latitude, longitude)`.
+  - Internally uses existing soil samples, IDW interpolation, and soil classification.
+
+- Crop Suitability:
+  - Requires a valid Soil Analysis result.
+  - The original soil sample may additionally be supplied for sample context.
+  - Authoritative entry point: `generateCropRecommendations(sample, analysis)`.
+
+- Fertility Zoning:
+  - Requires fertility-zoning options.
+  - Authoritative entry point: `prepareFertilityZoning(options)`.
+  - Internally retrieves soil samples.
+
+- Historical Context:
+  - Requires `sampleId` and `parameter`.
+  - Authoritative entry point: `getHistoricalContext(request)`.
+
+- Temporal Observation:
+  - Requires temporal identity, raster identity, and workflow request inputs.
+  - Authoritative entry point: `processTemporalObservationWorkflow(request)`.
+
+- Temporal Composition:
+  - Requires supplied observations and validated composition context.
+  - Authoritative entry point: `processTemporalCompositionWorkflow(request)`.
+  - It does not invoke the Temporal Observation workflow.
+
+- Temporal Analysis:
+  - Requires a validated temporal composition, analysis identity, and analysis type.
+  - Authoritative entry point: `processTemporalAnalysisWorkflow(request)`.
+  - It does not invoke the Temporal Composition workflow.
+
+The verified execution relationships are:
+
+``text
+Soil Sample
+    |
+    v
+Soil Analysis
+    |
+    v
+Crop Suitability
+
+
+Latitude + Longitude
+    |
+    v
+Spatial Analysis
+    |
+    +--> Existing Soil Repository
+    +--> Existing IDW Interpolation
+    +--> Existing Soil Classification
+
+
+Zoning Options
+    |
+    v
+Fertility Zoning
+    |
+    +--> Existing Soil Repository
+
+
+Sample ID + Parameter
+    |
+    v
+Historical Context
+
+
+Temporal Observation
+    |
+    v
+Temporal Composition
+    |
+    v
+Temporal Analysis
+``
+
+These arrows represent validated data/result flow. They do not mean that a downstream workflow automatically invokes the upstream workflow.
+
+The integration workflow shall:
+
+1. Determine requested domains.
+2. Resolve required inputs and prerequisite results.
+3. Invoke authoritative domain services.
+4. Pass validated prerequisite results to dependent domains.
+5. Preserve independently executable domain results.
+6. Represent missing prerequisites explicitly.
+7. Never manufacture, infer, or silently substitute missing prerequisites.
+
+The dependency model does not represent scientific weighting, ranking, priority, or importance.
+
+The integration layer shall not duplicate domain calculations, interpolation, soil classification, thresholds, classifications, or domain-specific scientific logic.
+
+No integrated score, cross-domain weighting, ranking, new threshold, new classification, crop-health calculation, moisture-stress calculation, yield prediction, or irrigation recommendation is introduced by Phase 8.12.
+
+Architectural boundary:
+
+**Integration Request -> Domain Selection -> Dependency Resolution -> Authoritative Domain Services -> Preserved Domain Results**
+
+No Integrated Agricultural Intelligence workflow was implemented during Phase 8.12.
+No existing domain service was modified.
+No existing domain contract was modified.
+No scientific decision rule was introduced.
+
+**Status:** Integration domain dependency and context contract established / implementation deferred
