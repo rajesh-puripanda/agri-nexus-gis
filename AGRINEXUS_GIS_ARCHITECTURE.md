@@ -4331,3 +4331,50 @@ The backend remains the scientific authority for fertility zoning. Frontend comp
 **Status:** Implemented / validated
 
 Phase 7.7 establishes dedicated automated validation coverage for the existing fertility zoning implementation while preserving the scientific architecture and implementation boundaries established in Phases 7.1–7.6.
+
+### Phase 8.1  Integrated Agricultural Intelligence Contract Discovery
+
+**Date:** 2026-09-27
+
+Phase 8.1 completed discovery of the existing authoritative analytical service boundaries required for future Integrated Agricultural Intelligence.
+
+The following existing domain entry points were verified:
+
+* Soil Intelligence  `analyzeSample()` and `assessOverallFertility()`
+* Spatial Intelligence  `getSpatialAnalysis()` and `prepareSpatialAnalysis()`
+* Crop Suitability  `generateCropRecommendations()`
+* Fertility Zoning  `prepareFertilityZoning()`
+* Temporal Observation  `processTemporalObservationWorkflow()`
+* Temporal Composition  `processTemporalCompositionWorkflow()`
+* Temporal Analysis  `processTemporalAnalysisWorkflow()`
+
+The existing services remain authoritative within their individual responsibilities.
+
+Phase 8.1 confirms that:
+
+* Soil analysis provides backend-authoritative soil classification and overall fertility assessment.
+* Spatial analysis provides spatially interpolated analytical parameters, source context, and spatial fertility assessment.
+* Crop suitability provides crop-specific suitability evaluation and ranking from soil analysis context.
+* Fertility zoning provides a spatial fertility surface based on authoritative soil fertility parameters.
+* Temporal remote-sensing workflows provide observation processing, temporal composition, and temporal change analysis.
+* These domains currently expose separate contracts and have not been replaced by a unified agricultural intelligence calculation.
+
+No integrated agricultural score was introduced.
+
+No cross-domain weighting was introduced.
+
+No crop-condition calibration was introduced.
+
+No remote-sensing threshold was combined with soil fertility or crop suitability.
+
+No existing service contract was modified.
+
+The architectural principle remains:
+
+**Existing Domain Authority  Explicit Integration Contract  Future Integrated Agricultural Intelligence**
+
+Phase 8.1 therefore establishes the existing analytical contract inventory required before integration design.
+
+**Status:** Implemented / audited
+
+The next phase must define the integration contract itself before implementation of any unified agricultural intelligence workflow.
