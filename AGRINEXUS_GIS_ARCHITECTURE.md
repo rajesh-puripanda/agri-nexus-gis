@@ -4832,3 +4832,98 @@ No new calibration introduced.
 No scientific decision rule implemented.
 
 **Status:** Scientific decision-rule boundary established / implementation deferred
+
+### Phase 8.7  Integration Validation Boundary Discovery
+**Date:** 2026-09-28
+
+Phase 8.7 audited the repository validation infrastructure to determine how the future Integrated Agricultural Intelligence result contract and workflow should be structurally validated without introducing new scientific logic.
+
+The repository already contains an established contract-validation pattern across agricultural context, crop-condition intelligence, raster processing, temporal workflows, and other scientific result boundaries.
+
+Dedicated contract test coverage was identified for:
+
+- Agricultural Context
+- Crop Condition Evidence
+- Crop Condition Interpretation
+- Crop Condition Calibration
+- Raster Processing and Classification
+- Raster Workflow Request and Result Contracts
+- Temporal Observation
+- Temporal Composition
+- Temporal Analysis
+- Temporal Workflow Request and Result Contracts
+- Temporal Change Calculation
+
+The Temporal Analysis Workflow Result Contract provides a representative validation pattern:
+
+- plain-object envelope validation
+- required-field validation
+- exact contract-version validation
+- result identity validation
+- normalized analysis-type validation
+- nested domain-contract validation
+- result-payload structure validation
+- optional metadata structure validation
+- factory-level validation before result creation
+- typed validation errors with validation error details
+
+Existing contract tests consistently validate both successful and invalid contract states, including missing required fields, invalid nested structures, invalid payload types, factory validation, and validation error behavior.
+
+The audit found no executable Integrated Agricultural Intelligence result contract implementation in the repository.
+
+No file matching the Integrated Agricultural Intelligence contract pattern currently exists under server.
+
+No implementation references were found for:
+
+- Integrated Agricultural Intelligence result validation
+- domain availability state validation
+- integration validation status
+- Integrated Agricultural Intelligence contract factories
+
+Therefore, the Phase 8.4 Integrated Agricultural Intelligence Result Contract remains an architectural contract definition rather than an implemented executable contract.
+
+The future Integrated Agricultural Intelligence result contract should reuse the repository's established structural validation philosophy.
+
+Its structural validation boundary should verify, at minimum:
+
+- contract version
+- result identity
+- analysis context
+- domain availability states
+- consistency between availability state and supplied domain result
+- source domain result structure
+- source contract versions
+- integration provenance structure
+- warnings and errors
+- validation status
+
+Domain-specific scientific validation shall remain the responsibility of the authoritative domain contracts and services.
+
+The integration validation boundary shall not introduce or validate an invented scientific conclusion such as:
+
+- integrated agricultural score
+- cross-domain weighting
+- weighted averaging
+- ranking
+- majority voting
+- new agricultural thresholds
+- new classifications
+- crop-health score
+- moisture-stress score
+- yield prediction
+- irrigation recommendation
+- unvalidated crop-condition calibration
+
+Unavailable, incomplete, conflicting, or insufficient evidence must remain explicitly represented and must not be converted into an inferred scientific result.
+
+The existing contract-test architecture establishes the expected future testing boundary:
+
+**Integrated Result Contract -> Structural Validation -> Contract Tests -> Authoritative Domain Validation**
+
+No Integrated Agricultural Intelligence contract implementation was created during Phase 8.7.
+No Integrated Agricultural Intelligence workflow was created.
+No scientific decision rule was introduced.
+No existing domain contract was modified.
+No existing scientific service was modified.
+
+**Status:** Integration validation boundary discovered / implementation deferred
