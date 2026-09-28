@@ -764,7 +764,7 @@ test(
 // ============================================================
 
 test(
-    "TEMPORAL_COMPOSITION dispatches the resolved request",
+    "TEMPORAL_COMPOSITION dispatches the resolved request and preserves authoritative validation errors",
     async () => {
         const request = {
             contractVersion:
@@ -797,7 +797,7 @@ test(
 
             processingContext: {
                 method:
-                    "phase-8.15.12-adapter-test"
+                    "phase-8.15.18-adapter-test"
             }
         };
 
@@ -808,7 +808,35 @@ test(
                     {
                         request
                     }
-                )
+                ),
+            error => {
+                assert.equal(
+                    error.name,
+                    "TypeError"
+                );
+
+                assert.equal(
+                    error.code,
+                    "INVALID_TEMPORAL_COMPOSITION_WORKFLOW_REQUEST"
+                );
+
+                assert.ok(
+                    Array.isArray(
+                        error.validationErrors
+                    )
+                );
+
+                assert.ok(
+                    error.validationErrors.length > 0
+                );
+
+                assert.match(
+                    error.message,
+                    /^Invalid temporal composition workflow request: /
+                );
+
+                return true;
+            }
         );
     }
 );
@@ -818,7 +846,7 @@ test(
 // ============================================================
 
 test(
-    "TEMPORAL_ANALYSIS dispatches the resolved request",
+    "TEMPORAL_ANALYSIS dispatches the resolved request and preserves authoritative validation errors",
     async () => {
         const request = {
             contractVersion:
@@ -861,7 +889,7 @@ test(
 
                 processingContext: {
                     method:
-                        "phase-8.15.12-adapter-test"
+                        "phase-8.15.18-adapter-test"
                 }
             }
         };
@@ -873,7 +901,35 @@ test(
                     {
                         request
                     }
-                )
+                ),
+            error => {
+                assert.equal(
+                    error.name,
+                    "TypeError"
+                );
+
+                assert.equal(
+                    error.code,
+                    "INVALID_TEMPORAL_ANALYSIS_WORKFLOW_REQUEST"
+                );
+
+                assert.ok(
+                    Array.isArray(
+                        error.validationErrors
+                    )
+                );
+
+                assert.ok(
+                    error.validationErrors.length > 0
+                );
+
+                assert.match(
+                    error.message,
+                    /^Invalid temporal analysis workflow request: /
+                );
+
+                return true;
+            }
         );
     }
 );
