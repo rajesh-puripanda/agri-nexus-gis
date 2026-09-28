@@ -5100,3 +5100,124 @@ No existing domain contract was modified.
 No scientific decision rule was introduced.
 
 **Status:** Integration domain dependency and context contract established / implementation deferred
+
+### Phase 8.13 Integration Execution Ordering & Orchestration Boundary
+**Date:** 2026-09-28
+
+Phase 8.13 audited existing service orchestration and workflow execution patterns to establish the execution-order boundary for future Integrated Agricultural Intelligence.
+
+The repository contains multiple domain-specific workflow and orchestration patterns, but no general-purpose cross-domain Integrated Agricultural Intelligence orchestration service.
+
+Existing workflow services establish a consistent thin orchestration pattern:
+
+```text
+Validate Request
+      |
+      v
+Execute or Delegate to Authoritative Processing
+      |
+      v
+Construct Versioned Result Contract
+```
+
+Temporal workflow evidence confirms this pattern:
+
+- Temporal Observation validates the workflow request, performs the authoritative raster/index processing sequence, creates continuous and classification outputs, and returns the observation result.
+- Temporal Composition validates the request, constructs the authoritative temporal composition, and wraps it in the versioned workflow result contract.
+- Temporal Analysis validates the request, normalizes and validates the analysis type, delegates temporal calculation to the authoritative calculation service, and wraps the result in the versioned workflow result contract.
+
+The temporal workflow chain establishes explicit result dependencies:
+
+```text
+Temporal Observation
+        |
+        v
+Temporal Composition
+        |
+        v
+Temporal Analysis
+```
+
+These dependencies represent validated data/result flow. A downstream workflow does not automatically invoke its upstream workflow. Temporal Composition consumes supplied observations, and Temporal Analysis consumes a validated composition.
+
+Phase 8.12 dependency discovery established the corresponding cross-domain dependency relationships:
+
+```text
+Soil Sample
+    |
+    v
+Soil Analysis
+    |
+    v
+Crop Suitability
+
+Latitude + Longitude
+    |
+    v
+Spatial Analysis
+
+Zoning Options
+    |
+    v
+Fertility Zoning
+
+Sample ID + Parameter
+    |
+    v
+Historical Context
+
+Temporal Observation
+    |
+    v
+Temporal Composition
+    |
+    v
+Temporal Analysis
+```
+
+The audit also confirmed that the existing analytical report aggregation service coordinates multiple domain outputs only for reporting purposes. It remains a reporting and aggregation boundary and is not an Integrated Agricultural Intelligence scientific orchestrator.
+
+Therefore, the future integration workflow shall use dependency-aware execution ordering rather than an arbitrary global sequence.
+
+Execution rules:
+
+1. Validate the integration request before domain execution.
+2. Determine the requested domains explicitly.
+3. Determine prerequisite inputs and validated domain-result dependencies.
+4. Execute authoritative prerequisite domains before dependent domains.
+5. Allow independent domains to execute without imposing artificial ordering between them.
+6. Pass validated prerequisite results to dependent authoritative services where required.
+7. Preserve independently produced domain results without recalculation or reinterpretation.
+8. Represent missing prerequisites explicitly as unavailable or otherwise contract-defined states.
+9. Do not silently substitute, infer, or manufacture missing prerequisite results.
+10. Construct the Phase 8.4 Integrated Agricultural Intelligence result only after the requested execution path has completed.
+11. Validate the resulting integration contract before returning it.
+
+The integration workflow must not introduce:
+
+- duplicate scientific calculations
+- duplicate interpolation or classification
+- artificial execution priority between independent domains
+- cross-domain weighting
+- integrated scoring
+- ranking
+- majority voting
+- new thresholds
+- new classifications
+- reinterpretation of temporal evidence
+- silent missing-evidence assumptions
+- modification of authoritative domain semantics
+
+The resulting architectural execution boundary is:
+
+**Integration Request -> Dependency Resolution -> Authoritative Domain Execution -> Dependency-Aware Result Assembly -> Integration Result Contract Validation**
+
+The orchestration layer remains scientifically thin. Existing domain services remain authoritative for their respective calculations, classifications, thresholds, validation, and provenance.
+
+No general integration workflow service implemented.
+No execution scheduler implemented.
+No cross-domain scientific calculation implemented.
+No existing domain service modified.
+No existing domain result contract modified.
+
+**Status:** Integration execution ordering and orchestration boundary established / implementation deferred
