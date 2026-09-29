@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 // ============================================================
 // server/tests/reports/analyticalReportIntegration.test.js
@@ -245,6 +245,7 @@ test(
         "interpolation",
         "fertilityZoning",
         "historicalComparison",
+        "agriculturalRisk",
         "overallSummary",
       ];
 
@@ -320,6 +321,11 @@ test(
         "not_requested",
       );
 
+      assert.equal(
+        report.sections.agriculturalRisk.status,
+        "not_requested",
+      );
+
       // --------------------------------------------------------
       // OVERALL SUMMARY
       // --------------------------------------------------------
@@ -392,6 +398,133 @@ test(
 );
 
 // ============================================================
+// ============================================================
+// AGRICULTURAL RISK HTTP INTEGRATION
+// ============================================================
+
+test(
+  "POST /api/reports/integrated-analytical-gis includes agricultural risk section",
+  async () => {
+    const restoreRepository = stubRepository();
+    const { server, baseUrl } = await startTestServer();
+
+    try {
+      const response = await fetch(
+        `${baseUrl}/api/reports/integrated-analytical-gis`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sampleIds: [1],
+            parameter: "ph",
+            agriculturalRisk: {
+              inputsByObservationId: {
+                "S-001": [
+                  {
+                    parameter: "pH",
+                    unit: "dimensionless",
+                    value: 0.25,
+                    weight: 1,
+                  },
+                ],
+              },
+            },
+          }),
+        },
+      );
+
+      const payload = await response.json();
+
+      assert.equal(response.status, 200);
+      assert.equal(payload.success, true);
+
+      const report = payload.data;
+
+      assert.equal(report.status, "complete");
+
+      // --------------------------------------------------------
+      // AGRICULTURAL RISK SECTION
+      // --------------------------------------------------------
+
+      assert.equal(
+        report.sections.agriculturalRisk.status,
+        "available",
+      );
+
+      const risk =
+        report.sections.agriculturalRisk.data;
+
+      assert.equal(
+        risk.type,
+        "agricultural_risk",
+      );
+
+      assert.equal(
+        risk.version,
+        "1.0",
+      );
+
+      assert.equal(
+        risk.method,
+        "weighted_risk_index",
+      );
+
+      assert.equal(
+        risk.observationCount,
+        1,
+      );
+
+      assert.equal(
+        risk.observations.length,
+        1,
+      );
+
+      assert.equal(
+        risk.observations[0].observationId,
+        "S-001",
+      );
+
+      assert.equal(
+        risk.observations[0].inputs.length,
+        1,
+      );
+
+      assert.equal(
+        risk.observations[0].inputs[0].parameter,
+        "pH",
+      );
+
+      assert.equal(
+        risk.observations[0].inputs[0].unit,
+        "dimensionless",
+      );
+
+      assert.equal(
+        risk.observations[0].inputs[0].value,
+        0.25,
+      );
+
+      assert.equal(
+        risk.observations[0].inputs[0].weight,
+        1,
+      );
+
+      assert.equal(
+        risk.observations[0].riskIndex,
+        0.25,
+      );
+
+      assert.deepEqual(report.errors, []);
+      assert.deepEqual(report.warnings, []);
+    } finally {
+      restoreRepository();
+      await stopTestServer(server);
+    }
+  },
+);
+
 // VALIDATION ERROR HTTP INTEGRATION
 // ============================================================
 

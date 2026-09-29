@@ -1959,7 +1959,7 @@ test(
 
       assert.equal(
         summary.sections.notRequested,
-        3,
+        4,
       );
     } finally {
       restores.restore();
@@ -2706,3 +2706,4 @@ test(
     }
   },
 );
+

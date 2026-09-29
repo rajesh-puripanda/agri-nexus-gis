@@ -37,6 +37,7 @@
 // ============================================================
 
 const soilRepository = require("../../repositories/soilRepository");
+const soilAnalysisService = require("../soilAnalysisService");
 
 const soilAnalysisReportService =  require("../../services/reports/soilAnalysisReportService");
 const spatialAnalysisService = require("../spatialAnalysisService");
@@ -44,6 +45,7 @@ const spatialQueryService = require("../spatialQueryService");
 const interpolationService = require("../interpolationService");
 const fertilityZoningService = require("../fertilityZoningService");
 const historicalContextService = require("../historicalContextService");
+const agriculturalRiskIntegrationService = require("../agriculturalRiskIntegrationService");
 
 // ============================================================
 // CONSTANTS
@@ -184,6 +186,7 @@ function createEmptyReport() {
       interpolation: createSection("not_requested"),
       fertilityZoning: createSection("not_requested"),
       historicalComparison: createSection("not_requested"),
+      agriculturalRisk: createSection("not_requested"),
       overallSummary: createSection("unavailable"),
     },
 
@@ -265,7 +268,29 @@ function validateRequest(request) {
     "historical",
   );
 
-  return true;
+      validateOptionalObject(
+      request.agriculturalRisk,
+      "agriculturalRisk",
+    );
+
+    if (
+      request.agriculturalRisk &&
+      request.agriculturalRisk.inputsByObservationId !== undefined
+    ) {
+      const inputsByObservationId =
+        request.agriculturalRisk.inputsByObservationId;
+
+      if (
+        !inputsByObservationId ||
+        typeof inputsByObservationId !== "object" ||
+        Array.isArray(inputsByObservationId)
+      ) {
+        throw new Error(
+          "agriculturalRisk.inputsByObservationId must be an object.",
+        );
+      }
+    }
+return true;
 }
 
 function validateOptionalObject(value, fieldName) {
@@ -636,6 +661,72 @@ async function buildFertilityZoning(request) {
 //
 // ============================================================
 
+  async function buildAgriculturalRisk(
+    request,
+    selectedSamples,
+  ) {
+    if (!isRequested(request.agriculturalRisk)) {
+      return createSection("not_requested");
+    }
+
+    const agriculturalRisk =
+      request.agriculturalRisk;
+
+    const inputsByObservationId =
+      agriculturalRisk.inputsByObservationId;
+
+    if (
+      !inputsByObservationId ||
+      typeof inputsByObservationId !== "object" ||
+      Array.isArray(inputsByObservationId)
+    ) {
+      return createSection(
+        "error",
+        null,
+        {
+          code:
+            "AGRICULTURAL_RISK_INPUTS_UNAVAILABLE",
+          message:
+            "Agricultural risk requires inputsByObservationId.",
+        },
+      );
+    }
+
+    return executeSection(
+      "agricultural_risk",
+      () => {
+        const observations = [];
+
+        for (const sample of selectedSamples) {
+          const observationId =
+            sample.sample_code !== undefined &&
+            sample.sample_code !== null
+              ? String(sample.sample_code)
+              : String(sample.id);
+
+          const analysis =
+            soilAnalysisService.analyzeSample(sample);
+
+          const riskInputs =
+            inputsByObservationId[observationId];
+
+          observations.push(
+            agriculturalRiskIntegrationService
+              .buildIntegratedRiskObservation(
+                observationId,
+                analysis,
+                riskInputs,
+              ),
+          );
+        }
+
+        return agriculturalRiskIntegrationService
+          .buildIntegratedRiskResult(observations);
+      },
+    );
+  }
+
+
 async function buildHistoricalComparison(request) {
   if (!isRequested(request.historical)) {
     return createSection("not_requested");
@@ -985,6 +1076,7 @@ function buildOverallSummary(report) {
     "interpolation",
     "fertilityZoning",
     "historicalComparison",
+    "agriculturalRisk",
   ];
 
   const counts = {
@@ -1113,6 +1205,7 @@ function finalizeReportStatus(report) {
     "interpolation",
     "fertilityZoning",
     "historicalComparison",
+    "agriculturalRisk",
   ];
 
   const requestedSections =
@@ -1282,7 +1375,17 @@ async function buildIntegratedAnalyticalGISReport(
       );
 
     // --------------------------------------------------------
-    // 11. Build analysis context from established sections.
+    // 11. Agricultural risk.
+    // --------------------------------------------------------
+
+    report.sections.agriculturalRisk =
+      await buildAgriculturalRisk(
+        request,
+        selectedSamples,
+      );
+
+    // --------------------------------------------------------
+    // 12. Build analysis context from established sections.
     // --------------------------------------------------------
 
     buildAnalysisContext(
@@ -1292,25 +1395,25 @@ async function buildIntegratedAnalyticalGISReport(
     );
 
     // --------------------------------------------------------
-    // 12. Preserve section provenance.
+    // 13. Preserve section provenance.
     // --------------------------------------------------------
 
     buildProvenance(report);
 
     // --------------------------------------------------------
-    // 13. Build aggregation-only overall summary.
+    // 14. Build aggregation-only overall summary.
     // --------------------------------------------------------
 
     buildOverallSummary(report);
 
     // --------------------------------------------------------
-    // 14. Collect section errors/warnings.
+    // 15. Collect section errors/warnings.
     // --------------------------------------------------------
 
     collectSectionErrors(report);
 
     // --------------------------------------------------------
-    // 15. Determine final report status.
+    // 16. Determine final report status.
     // --------------------------------------------------------
 
     finalizeReportStatus(report);
@@ -1364,6 +1467,7 @@ module.exports = {
   buildInterpolation,
   buildFertilityZoning,
   buildHistoricalComparison,
+  buildAgriculturalRisk,
 
   buildAnalysisContext,
   buildProvenance,
@@ -1372,3 +1476,8 @@ module.exports = {
 
   buildIntegratedAnalyticalGISReport,
 };
+
+
+
+
+
