@@ -2114,6 +2114,88 @@ These should only be introduced after underlying data and scientific contracts a
 
 **Status:** Planned
 
+### Phase 9.1 — Statistical Analysis Foundation
+
+Phase 9.1 establishes the first controlled Advanced Analytics capability:
+descriptive statistical analysis over authoritative normalized soil observations.
+
+Implemented capability:
+
+* Count
+* Minimum
+* Maximum
+* Mean
+* Median
+* Variance
+* Standard deviation
+
+Statistical calculations use population variance.
+
+The statistical analysis service consumes the authoritative normalized
+`result.values.*.value` structure produced by `soilAnalysisService`.
+It does not validate raw soil measurements or reproduce soil
+classification logic.
+
+Missing or unavailable authoritative parameter values are excluded from
+the corresponding statistical population. When no valid observations are
+available, `count` is `0` and the remaining statistical values are `null`.
+
+Each statistical parameter preserves its authoritative unit:
+
+* pH — pH
+* Nitrogen — kg/ha
+* Phosphorus — kg/ha
+* Potassium — kg/ha
+* Organic Carbon — %
+* Electrical Conductivity — dS/m
+
+Phase 9.1 introduces no:
+
+* Correlation analysis
+* Multivariate analysis
+* Cluster analysis
+* Hotspot analysis
+* Predictive modelling
+* Agricultural risk scoring or modelling
+* Cross-parameter weighting
+* Agricultural interpretation
+
+The statistical result is validated through the
+`statistical_analysis` result contract.
+
+#### Phase 9.1.1 — Authoritative Input Alignment
+
+The statistical analysis boundary is explicitly aligned with the
+authoritative soil-analysis boundary:
+
+```text
+Raw Soil Sample
+      ↓
+soilAnalysisService
+      ↓
+Authoritative normalized result.values
+      ↓
+statisticalAnalysisService
+      ↓
+Descriptive Statistics
+      ↓
+statistical_analysis result contract
+```
+
+No changes were made to the authoritative soil-analysis service or its
+classification rules.
+
+Validation status:
+
+* Statistical analysis tests: 15/15 passing
+* Soil analysis regression tests: 37/37 passing
+* Combined focused validation: 52/52 passing
+* `git diff --check`: passing
+
+**Phase 9.1 Status:** Complete
+
+**Phase 9.1.1 Status:** Complete
+
 ---
 
 ## Phase 10 — Advanced Reporting & Decision Support
