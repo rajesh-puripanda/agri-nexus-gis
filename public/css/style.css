@@ -2563,3 +2563,26 @@ PRINT
 .leaflet-control-attribution:hover {
   opacity: 1;
 }
+
+/* ============================================================
+   PHASE 11.4  WORKSPACE NAVIGATION STATES
+   Workspace navigation controls visibility only.
+   ============================================================ */
+
+.workspace-hidden {
+  display: none !important;
+}
+
+.agri-workspace-nav-item.is-reserved {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.agri-workspace-nav-item.is-reserved:hover {
+  background: transparent;
+  color: #c9ddd5;
+}
+
+.analysis-workspace.workspace-report-focus {
+  scroll-margin-top: 16px;
+}

@@ -418,6 +418,13 @@ async function initializeApplication() {
       await window.restoreAgriNexusWorkspaceState();
     }
 
+    
+    if (
+      typeof window.initializeWorkspaceNavigation ===
+      "function"
+    ) {
+      window.initializeWorkspaceNavigation();
+    }
     console.log("Frontend initialization completed.");
   } catch (error) {
     console.error("Frontend initialization failed:", error);
@@ -2976,7 +2983,7 @@ function setAnalysisPanelState(panel, toggleButton, expanded) {
 
   content.hidden = !expanded;
 
-  toggleButton.textContent = expanded ? "−" : "+";
+  toggleButton.textContent = expanded ? "\u2212" : "+";
 
   toggleButton.setAttribute(
     "aria-label",
