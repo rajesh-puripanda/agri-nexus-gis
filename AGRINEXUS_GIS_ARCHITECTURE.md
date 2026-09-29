@@ -2196,6 +2196,95 @@ Validation status:
 
 **Phase 9.1.1 Status:** Complete
 
+### Phase 9.2 — Correlation Analysis
+
+Phase 9.2 establishes controlled correlation analysis as the second
+Advanced Analytics capability.
+
+The initial implementation is limited to Pearson correlation between two
+explicitly selected soil parameters.
+
+Implemented capability:
+
+* Pearson correlation coefficient
+* Paired observation count
+* Parameter provenance
+* Parameter unit provenance
+
+Correlation analysis consumes the authoritative normalized soil-analysis
+result structure produced by `soilAnalysisService`.
+
+Only observations containing finite authoritative values for both selected
+parameters are included in the correlation population.
+
+The correlation result preserves:
+
+* Parameter A name and unit
+* Parameter B name and unit
+* Number of valid paired observations
+* Pearson correlation coefficient
+
+The Pearson correlation coefficient is returned as `null` when:
+
+* Fewer than two valid paired observations are available
+* Either selected parameter has zero variance
+* The coefficient cannot be calculated as a finite value
+
+No interpretation of correlation strength is produced.
+
+Phase 9.2 introduces no:
+
+* Correlation strength classification
+* Causal inference
+* Agricultural interpretation
+* Agricultural recommendations
+* Cross-parameter weighting
+* Scoring
+* Prediction
+* Predictive modelling
+* Agricultural risk scoring or modelling
+* Risk zoning
+
+#### Phase 9.2 — Authoritative Input Boundary
+
+The correlation analysis boundary is:
+
+```text
+Raw Soil Sample
+      ↓
+soilAnalysisService
+      ↓
+Authoritative normalized result.values.*
+      ↓
+Paired finite observations
+      ↓
+correlationAnalysisService
+      ↓
+Pearson correlation
+      ↓
+correlation_analysis result contract
+```
+
+No raw soil measurement validation or soil classification logic is
+reproduced by the correlation analysis service.
+
+The existing Kriging/interpolation covariance implementation remains
+within the interpolation scientific domain and is not reused as a
+general-purpose correlation implementation.
+
+The correlation result is validated through the
+`correlationAnalysisResultContract`.
+
+Validation status:
+
+* Correlation analysis tests: 17/17 passing
+* Statistical analysis regression tests: 15/15 passing
+* Soil analysis regression tests: 37/37 passing
+* Combined focused validation: 69/69 passing
+* `git diff --check`: passing
+
+**Phase 9.2 Status:** Complete
+
 ---
 
 ## Phase 10 — Advanced Reporting & Decision Support
