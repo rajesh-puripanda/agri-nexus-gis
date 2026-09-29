@@ -67,7 +67,7 @@
     }
 
     navigation
-      .querySelectorAll(".agri-workspace-nav-item")
+      .querySelectorAll("button.agri-workspace-nav-item")
       .forEach((item) => {
         const isActive = item.dataset.workspace === workspace;
 
@@ -89,6 +89,16 @@
       return false;
     }
 
+    const historicalWorkspace =
+      document.getElementById(
+        "historicalReportWorkspace"
+      );
+
+    if (historicalWorkspace) {
+      historicalWorkspace.classList.add(
+        "is-hidden"
+      );
+    }
     const elements = getWorkspaceElements();
 
     if (
@@ -110,7 +120,7 @@
 
     elements.map.classList.toggle(
       "workspace-hidden",
-      isReport
+      false
     );
 
     elements.context.classList.toggle(
@@ -162,6 +172,69 @@
     }
 
     const workspace = button.dataset.workspace;
+    if (workspace === "historical-report") {
+      event.preventDefault();
+
+      const selectedSample =
+        typeof window.getSelectedSoilSample === "function"
+          ? window.getSelectedSoilSample()
+          : null;
+
+      const sampleId =
+        selectedSample?.id ??
+        selectedSample?.sampleId ??
+        null;
+
+      if (!sampleId) {
+        console.warn(
+          "Historical Report requires a selected soil sample."
+        );
+
+        return;
+      }
+
+      if (
+        typeof window.saveAgriNexusWorkspaceState ===
+        "function"
+      ) {
+        window.saveAgriNexusWorkspaceState();
+      }
+
+      const historicalWorkspace =
+        document.getElementById(
+          "historicalReportWorkspace"
+        );
+
+      const historicalFrame =
+        document.getElementById(
+          "historicalReportFrame"
+        );
+
+      if (!historicalWorkspace || !historicalFrame) {
+        console.error(
+          "Historical Report workspace elements are missing."
+        );
+
+        return;
+      }
+
+      historicalWorkspace.classList.remove(
+        "is-hidden"
+      );
+
+      const historicalUrl =
+        "/historical-analysis.html?sampleId=" +
+        encodeURIComponent(String(sampleId));
+
+      historicalFrame.src = historicalUrl;
+
+      historicalWorkspace.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      return;
+    }
 
     if (!workspace || !WORKSPACES[workspace]) {
       return;
@@ -188,7 +261,7 @@
     );
 
     navigation
-      .querySelectorAll(".agri-workspace-nav-item")
+      .querySelectorAll("button.agri-workspace-nav-item")
       .forEach((button) => {
         const workspace = button.dataset.workspace;
         const definition = WORKSPACES[workspace];

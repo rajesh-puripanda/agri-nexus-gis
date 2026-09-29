@@ -2612,3 +2612,87 @@ PRINT
   margin-left: 0;
   margin-right: 0;
 }
+
+/* ============================================================
+   PHASE 11.7.2  HISTORICAL REPORT WORKSPACE
+   Full-width section below the primary GIS workspace.
+   ============================================================ */
+
+.historical-report-workspace {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin: 24px 0 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.historical-report-workspace-header {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 18px 22px;
+  background: #102a24;
+  border: 1px solid rgba(164, 211, 191, 0.18);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+}
+
+.historical-report-workspace-kicker {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8fbfae;
+}
+
+.historical-report-workspace-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f1f7f4;
+}
+
+.historical-report-workspace-content {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 22px;
+  background: #f7faf8;
+  border: 1px solid rgba(164, 211, 191, 0.18);
+  border-radius: 0 0 10px 10px;
+}
+
+.historical-report-workspace-content
+.analysis-empty-state {
+  margin: 0;
+  padding: 28px 16px;
+  text-align: center;
+}
+
+/* ============================================================
+   PHASE 11.7.3  HISTORICAL REPORT EMBED
+   Existing historical-analysis.html rendered full-width.
+   ============================================================ */
+
+.historical-report-frame {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 900px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+  border-radius: 6px;
+}
+
+/* ============================================================
+   PHASE 11.7.6  HISTORICAL REPORT DEFAULT VISIBILITY
+   Historical Report opens only through the workspace rail.
+   ============================================================ */
+
+.historical-report-workspace.is-hidden {
+  display: none;
+}

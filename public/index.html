@@ -124,6 +124,12 @@
           <span class="agri-workspace-nav-icon"></span>
           <span>Report</span>
         </button>
+        <a href="/historical-analysis.html"
+           class="agri-workspace-nav-item agri-workspace-nav-link"
+           data-workspace="historical-report">
+          <span class="agri-workspace-nav-icon"></span>
+          <span>Historical Report</span>
+        </a>
 
       </nav>
 
@@ -136,7 +142,7 @@
     <section class="agri-map-workspace">
 <section class="map-section">
         <!-- =================================================
-             PHASE 9.6 — MAP OPERATIONAL CONTROL LANE
+             PHASE 9.6 ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â MAP OPERATIONAL CONTROL LANE
              ================================================= -->
 
         <div class="map-operational-controls" aria-label="Map controls">
@@ -308,6 +314,31 @@
     </aside>
 
   </div>
+
+  <!-- ===================================================
+       PHASE 11.7  HISTORICAL REPORT WORKSPACE
+       Full-width historical analysis below the GIS workspace.
+       Existing historical-analysis.html is reused.
+       =================================================== -->
+
+  <section
+    id="historicalReportWorkspace"
+    class="historical-report-workspace is-hidden"
+    aria-labelledby="historicalReportWorkspaceTitle"
+  >
+<div
+      id="historicalReportWorkspaceContent"
+      class="historical-report-workspace-content"
+    >
+      <iframe
+        id="historicalReportFrame"
+        class="historical-report-frame"
+        title="Historical Soil Analysis"
+        src="about:blank"
+        loading="lazy"
+      ></iframe>
+    </div>
+  </section>
 
   <!-- Existing analysis panels retained during Phase 11 migration -->
   <div class="analysis-workspace">
