@@ -2586,3 +2586,29 @@ PRINT
 .analysis-workspace.workspace-report-focus {
   scroll-margin-top: 16px;
 }
+
+/* ============================================================
+   PHASE 11.5.4  PANEL SIZE CORRECTION
+   Workspace content wrappers control visibility only.
+   Existing analysis panels retain full workspace width.
+   ============================================================ */
+
+.analysis-workspace {
+  display: block;
+}
+
+.workspace-analyze-content,
+.workspace-report-content {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.workspace-analyze-content .analysis-panel,
+.workspace-report-content .analysis-panel {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
