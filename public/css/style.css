@@ -2173,11 +2173,215 @@ PRINT
     display: none;
   }
 }
+/* ============================================================
+   PHASE 11.1  AGRINEXUS GIS APPLICATION WORKSPACE
+   Primary application shell.
+   Scientific logic and existing GIS behavior unchanged.
+   ============================================================ */
+
+.agri-workspace {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) 320px;
+  gap: 16px;
+
+  width: 100%;
+  min-height: 720px;
+}
 
 /* ============================================================
-   PHASE 11  AGRINEXUS ANALYSIS WORKSPACE
-   Workspace layout only.
-   Scientific logic and existing panel behavior unchanged.
+   WORKSPACE NAVIGATION RAIL
+   ============================================================ */
+
+.agri-workspace-rail {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  padding: 18px 10px;
+
+  background: #123c2f;
+  border: 1px solid #0d3026;
+  border-radius: 14px;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.agri-workspace-rail-title {
+  padding: 4px 0 16px;
+
+  color: #dcebe5;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-align: center;
+}
+
+.agri-workspace-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agri-workspace-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  width: 100%;
+  min-height: 66px;
+  padding: 8px 4px;
+
+  border: 1px solid transparent;
+  border-radius: 10px;
+
+  background: transparent;
+  color: #c9ddd5;
+
+  cursor: pointer;
+
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.agri-workspace-nav-item:hover {
+  background: #1b4f40;
+  color: #ffffff;
+}
+
+.agri-workspace-nav-item:active {
+  transform: translateY(1px);
+}
+
+.agri-workspace-nav-item.active {
+  background: #e7f1ec;
+  border-color: #d4e5dd;
+  color: #123c2f;
+}
+
+.agri-workspace-nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 26px;
+  height: 26px;
+
+  border-radius: 7px;
+
+  font-size: 17px;
+  line-height: 1;
+}
+
+/* ============================================================
+   PRIMARY MAP WORKSPACE
+   ============================================================ */
+
+.agri-map-workspace {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  overflow: hidden;
+
+  background: #ffffff;
+  border: 1px solid #dce5e0;
+  border-radius: 14px;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================================
+   MAP SECTION INSIDE PRIMARY WORKSPACE
+   ============================================================ */
+
+.agri-map-workspace .map-section {
+  display: flex;
+  flex-direction: column;
+
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.agri-map-workspace .map-container {
+  flex: 1;
+  min-height: 620px;
+  border-radius: 0;
+}
+
+/* ============================================================
+   CONTEXT WORKSPACE
+   ============================================================ */
+
+.agri-context-workspace {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  overflow: hidden;
+
+  background: #ffffff;
+  border: 1px solid #dce5e0;
+  border-radius: 14px;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.agri-context-header {
+  padding: 18px;
+
+  border-bottom: 1px solid #e2e9e5;
+  background: #f8faf9;
+}
+
+.agri-context-kicker {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #5c7b6d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+
+.agri-context-header h2 {
+  margin: 0;
+
+  color: #163d31;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.agri-context-content {
+  flex: 1;
+  padding: 18px;
+}
+
+.agri-context-empty {
+  margin: 0;
+
+  color: #718079;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   EXISTING ANALYSIS WORKSPACE
+   Temporarily retained during Phase 11 migration.
    ============================================================ */
 
 .analysis-workspace {
@@ -2186,6 +2390,7 @@ PRINT
   gap: 16px;
 
   width: 100%;
+  margin-top: 16px;
 }
 
 .analysis-workspace .analysis-panel {
@@ -2194,12 +2399,167 @@ PRINT
 }
 
 /* ============================================================
-   PHASE 11  RESPONSIVE WORKSPACE
+   PHASE 11.1 RESPONSIVE WORKSPACE
    ============================================================ */
 
+@media (max-width: 1200px) {
+  .agri-workspace {
+    grid-template-columns: 82px minmax(0, 1fr);
+  }
+
+  .agri-context-workspace {
+    display: none;
+  }
+}
+
 @media (max-width: 900px) {
+  .agri-workspace {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .agri-workspace-rail {
+    padding: 10px;
+  }
+
+  .agri-workspace-nav {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .agri-workspace-nav-item {
+    flex: 0 0 76px;
+    min-height: 58px;
+  }
+
+  .agri-map-workspace .map-container {
+    min-height: 520px;
+  }
+
   .analysis-workspace {
     grid-template-columns: 1fr;
   }
 }
 
+/* ============================================================
+   PHASE 11.2  CONTEXTUAL ANALYSIS WORKSPACE
+   Existing analysis panels remain functionally unchanged.
+   Presentation/layout only.
+   ============================================================ */
+
+.agri-context-workspace {
+  min-height: 0;
+}
+
+.agri-context-content {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+}/* Preserve every existing analysis panel. */
+.agri-context-content .analysis-panel {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+/* Compact contextual presentation. */
+.agri-context-content .analysis-panel-header {
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
+.agri-context-content .analysis-panel-header h2 {
+  font-size: 13px;
+}
+
+.agri-context-content .analysis-panel-content {
+  padding: 12px;
+}
+
+/* Keep the contextual workspace usable when panels expand. */
+.agri-context-content .analysis-panel.is-collapsed .analysis-panel-content {
+  display: none;
+}
+
+/* ============================================================
+   PHASE 11.2  SELECTED ELEMENT CONTEXT
+   Only contextual selected-element information belongs here.
+   ============================================================ */
+
+.agri-context-content {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+}
+
+.agri-context-content .analysis-panel {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.agri-context-content .analysis-panel-header {
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
+.agri-context-content .analysis-panel-header h2 {
+  font-size: 14px;
+}
+
+.agri-context-content .analysis-panel-content {
+  padding: 12px;
+}
+
+/* ============================================================
+   PHASE 11.2  ANALYSIS WORKSPACE TWO-COLUMN LAYOUT
+   Integrated report uses the full available width.
+   ============================================================ */
+
+.analysis-workspace {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.analysis-workspace .analysis-panel {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+/* Integrated Analytical GIS Report spans both columns. */
+.analysis-workspace .analysis-panel:last-child {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+  .analysis-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-workspace .analysis-panel:last-child {
+    grid-column: auto;
+  }
+}
+
+/* ============================================================
+   PHASE 11.3.1  COMPACT MAP ATTRIBUTION
+   Keep provider attribution visible while minimizing visual weight.
+   ============================================================ */
+
+.leaflet-control-attribution {
+  font-size: 9px;
+  line-height: 14px;
+  padding: 2px 5px;
+  opacity: 0.72;
+}
+
+.leaflet-control-attribution a {
+  font-size: 9px;
+}
+
+.leaflet-control-attribution:hover {
+  opacity: 1;
+}

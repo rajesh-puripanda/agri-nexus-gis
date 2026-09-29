@@ -61,11 +61,80 @@
          ===================================================== -->
 
     <main class="dashboard">
-      <!-- ===================================================
-           MAP
-           =================================================== -->
 
-      <section class="map-section">
+  <div class="agri-workspace">
+
+    <!-- ===================================================
+         PHASE 11.1  WORKSPACE NAVIGATION
+         =================================================== -->
+
+    <aside class="agri-workspace-rail" aria-label="AgriNexus workspace">
+
+      <div class="agri-workspace-rail-title">
+        <span>WORKSPACE</span>
+      </div>
+
+      <nav class="agri-workspace-nav">
+
+        <button type="button"
+                class="agri-workspace-nav-item active"
+                data-workspace="map">
+          <span class="agri-workspace-nav-icon"></span>
+          <span>Map</span>
+        </button>
+
+        <button type="button"
+                class="agri-workspace-nav-item"
+                data-workspace="analyze">
+          <span class="agri-workspace-nav-icon"></span>
+          <span>Analyze</span>
+        </button>
+
+        <button type="button"
+                class="agri-workspace-nav-item"
+                data-workspace="remote">
+          <span class="agri-workspace-nav-icon"></span>
+          <span>Remote</span>
+        </button>
+
+        <button type="button"
+                class="agri-workspace-nav-item"
+                data-workspace="crop">
+          <span class="agri-workspace-nav-icon"></span>
+          <span>Crop</span>
+        </button>
+
+        <button type="button"
+                class="agri-workspace-nav-item"
+                data-workspace="trends">
+          <span class="agri-workspace-nav-icon"></span>
+          <span>Trends</span>
+        </button>
+
+        <button type="button"
+                class="agri-workspace-nav-item"
+                data-workspace="risk">
+          <span class="agri-workspace-nav-icon"></span>
+          <span>Risk</span>
+        </button>
+
+        <button type="button"
+                class="agri-workspace-nav-item"
+                data-workspace="report">
+          <span class="agri-workspace-nav-icon"></span>
+          <span>Report</span>
+        </button>
+
+      </nav>
+
+    </aside>
+
+    <!-- ===================================================
+         PHASE 11.1  PRIMARY GIS WORKSPACE
+         =================================================== -->
+
+    <section class="agri-map-workspace">
+<section class="map-section">
         <!-- =================================================
              PHASE 9.6 — MAP OPERATIONAL CONTROL LANE
              ================================================= -->
@@ -196,12 +265,22 @@
         <div id="map" class="map-container"></div>
       </section>
 
-      <!-- ===================================================
-           SELECTED SOIL SAMPLE
-           =================================================== -->
+    </section>
 
-      <div class="analysis-workspace">
-      <section class="analysis-panel">
+    <!-- ===================================================
+         PHASE 11.1  CONTEXT WORKSPACE
+         =================================================== -->
+
+    <aside class="agri-context-workspace"
+           aria-label="Analysis context">
+
+      <div class="agri-context-header">
+        <span class="agri-context-kicker">SELECTED ELEMENT</span>
+        <h2>Selected Soil Sample</h2>
+      </div>
+
+      <div class="agri-context-content">
+<section class="analysis-panel">
         <div class="analysis-panel-header">
           <h2>Selected Soil Sample</h2>
 
@@ -224,6 +303,15 @@
           </div>
         </div>
       </section>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- Existing analysis panels retained during Phase 11 migration -->
+  <div class="analysis-workspace">
+      
 
       <!-- ===================================================
            SOIL ANALYSIS
@@ -963,7 +1051,8 @@
     <script src="/js/map-ui-spatial-analysis.js"></script>
     <script src="/js/spatial-query.js"></script>
     <script src="/js/map-fertility.js"></script>
-    <script src="/js/map.js"></script>
+    <script src="/js/map-ui-base-layers.js"></script>
+<script src="/js/map.js"></script>
     <script src="/js/integrated-report.js"></script>
     <script src="/js/app.js"></script>
   </body>
