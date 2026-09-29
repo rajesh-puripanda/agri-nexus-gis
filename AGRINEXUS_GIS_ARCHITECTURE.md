@@ -5493,7 +5493,8 @@ The dependency-aware integration execution boundary was implemented in Phase 8.1
 
 **Status:** Integration contract implementation and validation established / implementation advanced in Phase 8.15
 
-### Phase 8.15.11 — Integration Domain Execution Adapter
+
+### Phase 8.15.11  Integration Domain Execution Adapter
 **Date:** 2026-09-28
 
 Phase 8.15.11 implements and validates the deterministic execution adapter that bridges resolved integration-domain service arguments to the existing authoritative domain entry points.
@@ -5511,3 +5512,173 @@ Authoritative Domain Entry Point
         |
         v
 Authoritative Domain Result
+```
+
+The authoritative dispatch table explicitly binds:
+
+- SOIL_INTELLIGENCE -> soilAnalysisService.analyzeSample
+- SPATIAL_INTELLIGENCE -> spatialAnalysisService.getSpatialAnalysis
+- CROP_SUITABILITY -> cropSuitabilityService.generateCropRecommendations
+- FERTILITY_ZONING -> fertilityZoningService.prepareFertilityZoning
+- HISTORICAL_CONTEXT -> historicalContextService.getHistoricalContext
+- TEMPORAL_OBSERVATION -> temporalObservationWorkflowService.processTemporalObservationWorkflow
+- TEMPORAL_COMPOSITION -> temporalCompositionWorkflowService.processTemporalCompositionWorkflow
+- TEMPORAL_ANALYSIS -> temporalAnalysisWorkflowService.processTemporalAnalysisWorkflow
+
+Temporal observation requests are validated as a non-empty collection and executed sequentially. Authoritative temporal observation results are preserved without transformation.
+
+The adapter performs no scientific calculation, classification, ranking, scoring, weighting, prerequisite resolution, input resolution, missing-value inference, temporal reinterpretation, or result transformation.
+
+### Phase 8.15.14  Integration Execution Orchestrator
+**Date:** 2026-09-28
+
+Phase 8.15.14 implements and validates the dependency-aware integration execution orchestrator.
+
+```text
+Integration Request
+        |
+        v
+Request Contract
+        |
+        v
+Domain Resolution
+        |
+        v
+Domain Input Resolution
+        |
+        v
+Input Validation
+        |
+   +----+----+
+   |         |
+BLOCKED    READY
+   |         |
+   |         v
+   |     Execution Adapter
+   |         |
+   |         v
+   |   Authoritative Result
+   |         |
+   +----+----+
+        |
+        v
+Integration Execution Contract
+```
+
+The orchestrator is responsible for:
+
+- creating canonical integration request
+- resolving requested domains
+- resolving domain inputs
+- validating resolved inputs
+- preserving blocked-domain states
+- executing ready domains through adapter
+- propagating completed prerequisite results
+- preserving authoritative execution failures
+- assembling canonical execution result
+
+The orchestrator performs no scientific calculation, thresholding, classification, interpolation, scoring, ranking, weighting, or scientific aggregation.
+
+### Dependency-Aware Execution
+
+Domains are processed in dependency order established by Phase 8.14 resolution contracts.
+
+Completed prerequisite results are supplied to subsequent dependent-domain input resolution.
+
+Unavailable prerequisites do not produce substitute scientific values.
+
+Dependent domains with unavailable prerequisites are recorded as `status: blocked`.
+
+Independent domains remain independently executable.
+
+### Execution Failure Boundary
+
+When an authoritative entry point throws, the orchestrator records `status: failed` with the error description and does not fabricate a result.
+
+### Canonical Execution Result
+
+All outcomes are assembled through `server/scientific/integration/integrationExecutionContract.js`.
+
+The canonical result preserves:
+
+- requested domains
+- resolved domains
+- prerequisites
+- completed results
+- blocked results
+- failed results
+- missing inputs
+- failure descriptions
+- optional execution metadata
+
+Authoritative payloads are preserved without reinterpretation.
+### Phase 8.15 Validation
+
+Regression test:
+
+`server/tests/integrationExecutionOrchestrator.test.js`
+
+Result:
+
+- 9 PASS
+- 0 FAIL
+- 0 CANCELLED
+- 0 SKIPPED
+
+Tests cover metadata, single-domain execution, missing input handling, dependency-aware crop suitability, prerequisite propagation, blocked prerequisites, independent domains, execution failure preservation, and canonical result assembly.
+
+### Phase 8.15 Architectural Boundary
+
+The complete execution flow is:
+
+```text
+Integration Request
+        |
+        v
+Request Contract
+        |
+        v
+Domain Resolution
+        |
+        v
+Input Resolution
+        |
+        v
+Input Validation
+        |
+        v
+Execution Orchestrator
+        |
+        v
+Execution Adapter
+        |
+        v
+Authoritative Entry Points
+        |
+        v
+Authoritative Results
+        |
+        v
+Execution Result Contract
+```
+
+The Phase 8.15 execution boundary consists of:
+
+- Integration Request Contract
+- Integration Domain Resolution Contract
+- Integration Input Resolution Contract
+- Integration Domain Execution Adapter
+- Integration Execution Orchestrator
+- Integration Execution Contract
+
+No new cross-domain scientific logic is introduced.
+
+### Phase 8.15 Completion Status
+
+**Status:** Execution boundary implemented, validated, and documented.
+
+- No general-purpose scientific integration service introduced.
+- No existing authoritative scientific service modified.
+- No existing authoritative result contract modified.
+- No cross-domain scoring, ranking, weighting, aggregation, or new scientific calculation introduced.
+- Phase 8.16 is not defined by the current architecture and therefore is not implemented.
