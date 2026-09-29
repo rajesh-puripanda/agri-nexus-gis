@@ -2173,3 +2173,33 @@ PRINT
     display: none;
   }
 }
+
+/* ============================================================
+   PHASE 11  AGRINEXUS ANALYSIS WORKSPACE
+   Workspace layout only.
+   Scientific logic and existing panel behavior unchanged.
+   ============================================================ */
+
+.analysis-workspace {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+
+  width: 100%;
+}
+
+.analysis-workspace .analysis-panel {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+/* ============================================================
+   PHASE 11  RESPONSIVE WORKSPACE
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .analysis-workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
