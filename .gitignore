@@ -29,3 +29,7 @@ coverage/
 # Build output
 dist/
 build/
+
+# Local remote-sensing data / tooling
+/data/remote-sensing/
+/tools/
