@@ -1,9 +1,9 @@
-﻿# AgriNexus GIS
+# AgriNexus GIS
 
 ## Master Architecture & Development Guide
 
-**Version:** 1.0 — Foundation Architecture
-**Status:** Phase 0 — Architecture & Foundation Frozen — v1.0
+**Version:** 1.0 � Foundation Architecture
+**Status:** Phase 0 � Architecture & Foundation Frozen � v1.0
 **Concept:** Integrated Agricultural Intelligence through GIS
 **Repository:** `agri-nexus-gis`
 
@@ -51,21 +51,21 @@ The existing Soil Analysis GIS document remains the working documentation for th
 
 ## 2.2 Official Descriptive Name
 
-**AgriNexus GIS — Integrated Agricultural Intelligence through GIS**
+**AgriNexus GIS � Integrated Agricultural Intelligence through GIS**
 
 ## 2.3 Core Concept
 
-**Observation → Analysis → Intelligence**
+**Observation ? Analysis ? Intelligence**
 
 ## 2.4 Architectural Motto
 
 **AgriNexus GIS**
 
-**Observe → Analyze → Understand → Act**
+**Observe ? Analyze ? Understand ? Act**
 
 Scientific foundation:
 
-**Data → Science → Spatial Intelligence → Agricultural Intelligence**
+**Data ? Science ? Spatial Intelligence ? Agricultural Intelligence**
 
 ## 2.5 Primary Purpose
 
@@ -151,26 +151,26 @@ All scientific processing should follow:
 
 ```text
 Input
-  │
-  ▼
+  �
+  ?
 Validation
-  │
-  ▼
+  �
+  ?
 Normalization
-  │
-  ▼
+  �
+  ?
 Scientific Calculation
-  │
-  ▼
+  �
+  ?
 Classification
-  │
-  ▼
+  �
+  ?
 Spatial Processing
-  │
-  ▼
+  �
+  ?
 Analytical Result
-  │
-  ▼
+  �
+  ?
 Visualization / Reporting
 ```
 
@@ -186,7 +186,7 @@ Every major scientific service should have:
 
 ---
 
-# 4. Observation → Analysis → Intelligence
+# 4. Observation ? Analysis ? Intelligence
 
 AgriNexus distinguishes three levels of information.
 
@@ -242,21 +242,21 @@ AgriNexus GIS is organized into major intelligence domains.
 
 ```text
 AgriNexus GIS
-│
-├── Soil Intelligence
-├── Spatial Intelligence
-├── Remote Sensing
-├── Spectral Intelligence
-├── Temporal Intelligence
-├── Crop Intelligence
-├── Agricultural Zoning
-├── Agricultural Risk
-└── Integrated Reporting
+�
++-- Soil Intelligence
++-- Spatial Intelligence
++-- Remote Sensing
++-- Spectral Intelligence
++-- Temporal Intelligence
++-- Crop Intelligence
++-- Agricultural Zoning
++-- Agricultural Risk
++-- Integrated Reporting
 ```
 
 ---
 
-# 6. Domain A — Soil Intelligence
+# 6. Domain A � Soil Intelligence
 
 The existing Soil Analysis GIS becomes the foundation of AgriNexus Soil Intelligence.
 
@@ -303,7 +303,7 @@ Existing mature functionality should be preserved and migrated incrementally rat
 
 ---
 
-# 7. Domain B — Remote Sensing Intelligence
+# 7. Domain B � Remote Sensing Intelligence
 
 Remote sensing is the second major scientific subsystem.
 
@@ -313,16 +313,16 @@ AgriNexus should use a common index engine rather than implementing each index a
 
 ### Vegetation
 
-* NDVI — Normalized Difference Vegetation Index
-* EVI — Enhanced Vegetation Index
-* SAVI — Soil Adjusted Vegetation Index
-* GNDVI — Green Normalized Difference Vegetation Index
-* ARVI — Atmospherically Resistant Vegetation Index
+* NDVI � Normalized Difference Vegetation Index
+* EVI � Enhanced Vegetation Index
+* SAVI � Soil Adjusted Vegetation Index
+* GNDVI � Green Normalized Difference Vegetation Index
+* ARVI � Atmospherically Resistant Vegetation Index
 
 ### Water / Moisture
 
-* NDWI — Normalized Difference Water Index
-* NDMI — Normalized Difference Moisture Index
+* NDWI � Normalized Difference Water Index
+* NDMI � Normalized Difference Moisture Index
 
 ### Future Indices
 
@@ -340,29 +340,29 @@ Each spectral index should be represented as a scientific definition.
 
 ```text
 Index
- │
- ├── Code
- ├── Name
- ├── Description
- ├── Formula
- ├── Required Bands
- ├── Sensor Compatibility
- ├── Valid Range
- ├── Interpretation
- ├── Classification Rules
- └── Visualization Rules
+ �
+ +-- Code
+ +-- Name
+ +-- Description
+ +-- Formula
+ +-- Required Bands
+ +-- Sensor Compatibility
+ +-- Valid Range
+ +-- Interpretation
+ +-- Classification Rules
+ +-- Visualization Rules
 ```
 
 Example:
 
 ```text
 NDVI
- │
- ├── Formula: (NIR - Red) / (NIR + Red)
- ├── Inputs: NIR, Red
- ├── Output: continuous raster/value
- ├── Classification: configurable
- └── Interpretation: vegetation condition
+ �
+ +-- Formula: (NIR - Red) / (NIR + Red)
+ +-- Inputs: NIR, Red
+ +-- Output: continuous raster/value
+ +-- Classification: configurable
+ +-- Interpretation: vegetation condition
 ```
 
 The index engine calculates the scientific result.
@@ -371,7 +371,7 @@ The visualization layer only presents the result.
 
 ---
 
-# 9. Domain C — Agricultural Intelligence
+# 9. Domain C � Agricultural Intelligence
 
 This domain converts soil and remote-sensing information into agricultural information.
 
@@ -411,7 +411,7 @@ Potential future indicators:
 
 ---
 
-# 10. Domain D — Spatial Intelligence
+# 10. Domain D � Spatial Intelligence
 
 Spatial Intelligence provides reusable GIS capabilities to all domains.
 
@@ -435,7 +435,7 @@ Spatial functionality should become reusable platform infrastructure rather than
 
 ---
 
-# 11. Domain E — Temporal Intelligence
+# 11. Domain E � Temporal Intelligence
 
 Agriculture is inherently temporal.
 
@@ -467,7 +467,7 @@ Historical soil datasets and satellite observations should progressively use the
 
 ---
 
-# 12. Domain F — Agricultural Zoning
+# 12. Domain F � Agricultural Zoning
 
 Zoning converts continuous analytical results into meaningful spatial regions.
 
@@ -499,7 +499,7 @@ Zoning converts continuous analytical results into meaningful spatial regions.
 
 ---
 
-# 13. Domain G — Integrated Analytical Reporting
+# 13. Domain G � Integrated Analytical Reporting
 
 Reporting is a platform-level capability.
 
@@ -636,26 +636,26 @@ Recommended long-term organization:
 
 ```text
 server/
-│
-├── controllers/
-├── routes/
-├── services/
-│   ├── soil/
-│   ├── spatial/
-│   ├── interpolation/
-│   ├── historical/
-│   ├── fertility/
-│   ├── remoteSensing/
-│   ├── indices/
-│   ├── crop/
-│   ├── zoning/
-│   └── reporting/
-│
-├── repositories/
-├── validators/
-├── models/
-├── utils/
-└── tests/
+�
++-- controllers/
++-- routes/
++-- services/
+�   +-- soil/
+�   +-- spatial/
+�   +-- interpolation/
+�   +-- historical/
+�   +-- fertility/
+�   +-- remoteSensing/
+�   +-- indices/
+�   +-- crop/
+�   +-- zoning/
+�   +-- reporting/
+�
++-- repositories/
++-- validators/
++-- models/
++-- utils/
++-- tests/
 ```
 
 Existing working services do not need to be physically moved immediately.
@@ -672,36 +672,36 @@ The frontend is the GIS workspace and presentation layer.
 
 ```text
 AgriNexus GIS Frontend
-│
-├── GIS Workspace
-│   ├── Map
-│   ├── Layer Management
-│   ├── Spatial Interaction
-│   └── Map Controls
-│
-├── Analytical Workspace
-│   ├── Soil Intelligence
-│   ├── Spatial Intelligence
-│   ├── Interpolation
-│   ├── Historical / Temporal
-│   ├── Remote Sensing
-│   ├── Spectral Indices
-│   ├── Crop Intelligence
-│   └── Agricultural Zoning
-│
-├── Reporting Workspace
-│   ├── Integrated Reports
-│   ├── Tables
-│   ├── Charts
-│   ├── Statistics
-│   └── Export
-│
-└── Common UI
-    ├── Notifications
-    ├── Loading / Progress
-    ├── Error Handling
-    ├── Legends
-    └── Metadata / Information
+�
++-- GIS Workspace
+�   +-- Map
+�   +-- Layer Management
+�   +-- Spatial Interaction
+�   +-- Map Controls
+�
++-- Analytical Workspace
+�   +-- Soil Intelligence
+�   +-- Spatial Intelligence
+�   +-- Interpolation
+�   +-- Historical / Temporal
+�   +-- Remote Sensing
+�   +-- Spectral Indices
+�   +-- Crop Intelligence
+�   +-- Agricultural Zoning
+�
++-- Reporting Workspace
+�   +-- Integrated Reports
+�   +-- Tables
+�   +-- Charts
+�   +-- Statistics
+�   +-- Export
+�
++-- Common UI
+    +-- Notifications
+    +-- Loading / Progress
+    +-- Error Handling
+    +-- Legends
+    +-- Metadata / Information
 ```
 
 ## 18.2 Frontend Architectural Rule
@@ -712,14 +712,14 @@ The intended flow is:
 
 ```text
 Frontend
-   │
-   ▼
+   �
+   ?
 API
-   │
-   ▼
+   �
+   ?
 Scientific Service
-   │
-   ▼
+   �
+   ?
 Repository / Data Source
 ```
 
@@ -727,8 +727,8 @@ Never:
 
 ```text
 Frontend
-   │
-   ▼
+   �
+   ?
 Scientific Formula
 ```
 
@@ -760,7 +760,7 @@ The major workspace redesign is deliberately a **late-stage activity**.
 
 Target:
 
-**Phase 11 — AgriNexus Workspace**
+**Phase 11 � AgriNexus Workspace**
 
 Until then, working UI functionality should be preserved and improved only where necessary for active scientific development.
 
@@ -901,17 +901,17 @@ Every scientific module should progressively have multiple testing levels.
 
 ```text
 Unit Tests
-    ↓
+    ?
 Service Tests
-    ↓
+    ?
 Controller Tests
-    ↓
+    ?
 API Tests
-    ↓
+    ?
 Integration Tests
-    ↓
+    ?
 Regression Tests
-    ↓
+    ?
 Performance Tests
 ```
 
@@ -921,13 +921,13 @@ Example for NDVI:
 
 ```text
 NDVI
- ├── Normal vegetation
- ├── Bare soil
- ├── Water
- ├── Zero denominator
- ├── Invalid band
- ├── Missing data
- └── Boundary values
+ +-- Normal vegetation
+ +-- Bare soil
+ +-- Water
+ +-- Zero denominator
+ +-- Invalid band
+ +-- Missing data
+ +-- Boundary values
 ```
 
 Existing mature test suites must be preserved during migration.
@@ -940,15 +940,15 @@ Development proceeds through controlled checkpoints.
 
 ```text
 Phase completed
-      ↓
+      ?
 Tests pass
-      ↓
+      ?
 Documentation updated
-      ↓
+      ?
 Git checkpoint
-      ↓
+      ?
 Tag / milestone where appropriate
-      ↓
+      ?
 Next phase
 ```
 
@@ -984,23 +984,23 @@ The transition from Soil Analysis GIS to AgriNexus GIS follows:
 
 ```text
 Existing Soil Analysis GIS
-          │
-          ▼
+          �
+          ?
 Freeze working functionality
-          │
-          ▼
+          �
+          ?
 Establish AgriNexus architecture
-          │
-          ▼
+          �
+          ?
 Add new domain services
-          │
-          ▼
+          �
+          ?
 Integrate existing soil services
-          │
-          ▼
+          �
+          ?
 Gradually refactor
-          │
-          ▼
+          �
+          ?
 Rename / migrate where justified
 ```
 
@@ -1008,11 +1008,11 @@ This protects the substantial scientific and testing work already completed.
 
 ---
 
-# 29. Phase 0 — Architecture & Foundation
+# 29. Phase 0 � Architecture & Foundation
 
 Phase 0 establishes the architectural foundation before large-scale restructuring.
 
-## 0.1 — AgriNexus Project Identity & Naming
+## 0.1 � AgriNexus Project Identity & Naming
 
 Establish:
 
@@ -1026,7 +1026,7 @@ Establish:
 
 **Status: Complete**
 
-## 0.2 — Master Repository Architecture
+## 0.2 � Master Repository Architecture
 
 Establish:
 
@@ -1045,7 +1045,7 @@ The current frontend is preserved while its architectural boundaries are documen
 
 The final UI redesign is deferred to Phase 11.
 
-## 0.3 — Domain / Module Boundaries
+## 0.3 � Domain / Module Boundaries
 
 Define:
 
@@ -1061,7 +1061,7 @@ Define:
 
 **Status: Complete**
 
-## 0.4 — Data Architecture
+## 0.4 � Data Architecture
 
 Define:
 
@@ -1074,7 +1074,7 @@ Define:
 
 **Status: Complete**
 
-## 0.5 — API Conventions
+## 0.5 � API Conventions
 
 Define:
 
@@ -1087,13 +1087,13 @@ Define:
 
 **Status: Complete**
 
-## 0.6 — Scientific Result Contracts
+## 0.6 � Scientific Result Contracts
 
 Define common analytical result structures and scientific metadata.
 
 **Status: Complete**
 
-## 0.7 — Testing Architecture
+## 0.7 � Testing Architecture
 
 Define:
 
@@ -1107,7 +1107,7 @@ Define:
 
 **Status: Complete**
 
-## 0.8 — Git / Checkpoint & Documentation Strategy
+## 0.8 � Git / Checkpoint & Documentation Strategy
 
 Define:
 
@@ -1120,9 +1120,9 @@ Define:
 
 **Status: Complete**
 
-## 0.9 — Soil Analysis GIS → AgriNexus Migration Plan
+## 0.9 � Soil Analysis GIS ? AgriNexus Migration Plan
 
-### 0.9.1 — Migration Objective
+### 0.9.1 � Migration Objective
 
 The mature Soil Analysis GIS implementation is the foundation of the AgriNexus GIS Soil Intelligence domain.
 
@@ -1134,7 +1134,7 @@ The governing migration principle remains:
 
 **Extend first. Refactor second. Rename last.**
 
-### 0.9.2 — Current Migration Baseline
+### 0.9.2 � Current Migration Baseline
 
 The existing Soil Analysis GIS implementation already provides mature functionality that is required by AgriNexus GIS, including:
 
@@ -1154,7 +1154,7 @@ These capabilities are treated as the established implementation baseline for th
 
 Phase 0.9 does not replace this functionality. It establishes how it is carried forward.
 
-### 0.9.3 — Repository Identity
+### 0.9.3 � Repository Identity
 
 The Git repository already represents the AgriNexus GIS project.
 
@@ -1166,7 +1166,7 @@ No repository rename is required as part of Phase 0.9.
 
 The repository identity therefore remains aligned with the AgriNexus GIS product identity.
 
-### 0.9.4 — Package Identity
+### 0.9.4 � Package Identity
 
 The Node.js package currently retains the historical package identity:
 
@@ -1183,7 +1183,7 @@ A future package rename must update both:
 
 The rename must be performed deliberately as a separate validated change.
 
-### 0.9.5 — Documentation Identity
+### 0.9.5 � Documentation Identity
 
 The architecture authority for the new system is:
 
@@ -1205,7 +1205,7 @@ These documents are not renamed or deleted solely for branding consistency durin
 
 The AgriNexus architecture document remains the forward-looking architectural source of truth.
 
-### 0.9.6 — Source-Code Identity
+### 0.9.6 � Source-Code Identity
 
 The existing source tree contains historical references to Soil Analysis GIS in comments, diagnostic messages, tests, and implementation documentation.
 
@@ -1225,7 +1225,7 @@ Existing source identity is preserved where changing it provides no functional o
 
 Future source-level renaming may be performed incrementally when a component is deliberately refactored or migrated.
 
-### 0.9.7 — API Compatibility
+### 0.9.7 � API Compatibility
 
 Existing working API paths and endpoint contracts are preserved during Phase 0.9.
 
@@ -1244,7 +1244,7 @@ If an API/resource name requires future replacement, the change must include:
 
 API compatibility therefore takes precedence over cosmetic renaming.
 
-### 0.9.8 — Database Compatibility
+### 0.9.8 � Database Compatibility
 
 The existing database schema and persistence model are retained during Phase 0.9.
 
@@ -1254,7 +1254,7 @@ Existing tables, columns, relationships, and data remain the persistence foundat
 
 Any future database migration must be justified by architectural value and must include migration safety, validation, rollback consideration, and regression testing.
 
-### 0.9.9 — Scientific Implementation Preservation
+### 0.9.9 � Scientific Implementation Preservation
 
 The mature scientific implementation is treated as a protected foundation of AgriNexus GIS.
 
@@ -1277,7 +1277,7 @@ Backend scientific services remain the scientific authority.
 
 Frontend code remains responsible for presentation, interaction, and visualization rather than independently reproducing scientific rules.
 
-### 0.9.10 — Test and Regression Preservation
+### 0.9.10 � Test and Regression Preservation
 
 Existing tests and scientific validation are preserved throughout migration.
 
@@ -1287,7 +1287,7 @@ Where a component is renamed, refactored, or replaced, its existing behavioral c
 
 Phase 0.9 therefore treats the current validated test suite as part of the migration baseline.
 
-### 0.9.11 — Migration Rules
+### 0.9.11 � Migration Rules
 
 The following rules govern the transition:
 
@@ -1306,9 +1306,9 @@ The following rules govern the transition:
 
 The governing sequence is:
 
-**Extend → Refactor → Rename**
+**Extend ? Refactor ? Rename**
 
-### 0.9.12 — Future Rename Candidates
+### 0.9.12 � Future Rename Candidates
 
 The following items are identified as potential future rename candidates, but are not renamed in Phase 0.9:
 
@@ -1325,7 +1325,7 @@ The following items are identified as potential future rename candidates, but ar
 
 These are candidates, not commitments.
 
-### 0.9.13 — Migration Definition of Done
+### 0.9.13 � Migration Definition of Done
 
 Phase 0.9 is complete when:
 
@@ -1342,7 +1342,7 @@ Phase 0.9 is complete when:
 - The architecture document records the migration decision.
 - The completed phase is validated and checkpointed in Git.
 
-### 0.9.14 — Phase 0.9 Decision
+### 0.9.14 � Phase 0.9 Decision
 
 The mature Soil Analysis GIS implementation is formally adopted as the implementation foundation for the AgriNexus GIS Soil Intelligence domain.
 
@@ -1352,17 +1352,17 @@ AgriNexus GIS development will continue by extending the established implementat
 
 The migration strategy is therefore:
 
-**Preserve validated functionality → establish AgriNexus boundaries → extend new domains → refactor where justified → rename only when justified and validated.**
+**Preserve validated functionality ? establish AgriNexus boundaries ? extend new domains ? refactor where justified ? rename only when justified and validated.**
 
 **Status: Complete after validation and Git checkpoint.**
 
-## 0.10 — Freeze Architecture v1.0
+## 0.10 � Freeze Architecture v1.0
 
-Phase 0.10 reviews and freezes the Phase 0 architectural foundation established through Phases 0.1–0.9.
+Phase 0.10 reviews and freezes the Phase 0 architectural foundation established through Phases 0.1�0.9.
 
 The freeze establishes Architecture v1.0 as the baseline for subsequent AgriNexus GIS development.
 
-### 0.10.1 — Architecture Freeze Scope
+### 0.10.1 � Architecture Freeze Scope
 
 The frozen Phase 0 architecture includes:
 
@@ -1378,11 +1378,11 @@ The frozen Phase 0 architecture includes:
 
 These areas constitute the approved architectural foundation for continued development.
 
-### 0.10.2 — Frozen Architectural Principles
+### 0.10.2 � Frozen Architectural Principles
 
 The following principles are frozen as Architecture v1.0:
 
-- Observation → Analysis → Intelligence
+- Observation ? Analysis ? Intelligence
 - Backend scientific authority; frontend presentation and interaction
 - Domain-oriented architecture
 - Explicit analytical contracts
@@ -1391,7 +1391,7 @@ The following principles are frozen as Architecture v1.0:
 - Controlled Git checkpoints
 - Extend first. Refactor second. Rename last.
 
-### 0.10.3 — Freeze Boundary
+### 0.10.3 � Freeze Boundary
 
 Architecture v1.0 freezes the established architectural direction. It does not freeze implementation development.
 
@@ -1399,7 +1399,7 @@ Future implementation work may continue within the frozen architecture.
 
 Architectural changes that materially alter the frozen foundation must be explicitly documented, reviewed, validated, and checkpointed in Git.
 
-### 0.10.4 — Post-Freeze Change Control
+### 0.10.4 � Post-Freeze Change Control
 
 After Architecture v1.0 is frozen:
 
@@ -1413,7 +1413,7 @@ After Architecture v1.0 is frozen:
 
 The purpose of change control is to preserve architectural coherence while allowing the platform to evolve.
 
-### 0.10.5 — Architecture v1.0 Freeze Decision
+### 0.10.5 � Architecture v1.0 Freeze Decision
 
 The Phase 0 architecture is formally frozen as Architecture v1.0.
 
@@ -1421,15 +1421,15 @@ The established architecture becomes the baseline for subsequent AgriNexus GIS d
 
 The freeze confirms that the platform foundation is sufficiently defined to proceed from architecture establishment into controlled implementation and domain development.
 
-The governing principle remains: **Extend → Refactor → Rename**.
+The governing principle remains: **Extend ? Refactor ? Rename**.
 
-**Status: Complete — Architecture v1.0 Frozen**
+**Status: Complete � Architecture v1.0 Frozen**
 
 ---
 
 # 30. Master Development Roadmap
 
-## Phase 0 — Architecture & Foundation
+## Phase 0 � Architecture & Foundation
 
 **Status: Current**
 
@@ -1439,7 +1439,7 @@ Deliverable:
 
 ---
 
-## Phase 1 — Soil Intelligence Foundation
+## Phase 1 � Soil Intelligence Foundation
 
 Migrate/freeze mature Soil Analysis GIS functionality.
 
@@ -1461,7 +1461,7 @@ Includes:
 
 ---
 
-## Phase 2 — Integrated Analytical Reporting
+## Phase 2 � Integrated Analytical Reporting
 
 Complete and stabilize integrated reporting.
 
@@ -1482,7 +1482,7 @@ Includes:
 
 ---
 
-## Phase 3 — Remote-Sensing Foundation
+## Phase 3 � Remote-Sensing Foundation
 
 Introduce the remote-sensing data model.
 
@@ -1500,7 +1500,7 @@ Includes:
 
 ---
 
-## Phase 4 — Spectral Index Engine
+## Phase 4 � Spectral Index Engine
 
 Implement a reusable index framework.
 
@@ -1530,7 +1530,7 @@ Each index receives:
 
 ---
 
-## Phase 5 — Temporal Remote-Sensing Analysis
+## Phase 5 � Temporal Remote-Sensing Analysis
 
 Add time-series intelligence.
 
@@ -1549,7 +1549,7 @@ The existing temporal remote-sensing implementation was audited against the Phas
 
 ---
 
-## Phase 6 — Crop Intelligence
+## Phase 6 � Crop Intelligence
 
 Build crop-specific analytical models.
 
@@ -1593,20 +1593,20 @@ remote-sensing-derived crop condition.
 
 ---
 
-## Phase 7 — Agricultural Zoning
+## Phase 7 � Agricultural Zoning
 
 Combine authoritative analytical layers into agricultural zoning
 surfaces and, where scientifically justified, integrated management
 zones.
 
-### Phase 7.1 — Agricultural Zoning Architecture & Existing-Layer Contract
+### Phase 7.1 � Agricultural Zoning Architecture & Existing-Layer Contract
 
 Phase 7.1 establishes the architectural boundary between existing
 analytical layers and future agricultural zoning integration.
 
 The core principle is:
 
-**Existing Analytical Authority → Spatial/Zoning Contract → Integrated Agricultural Intelligence**
+**Existing Analytical Authority ? Spatial/Zoning Contract ? Integrated Agricultural Intelligence**
 
 #### Existing authoritative analytical layers
 
@@ -1622,7 +1622,7 @@ Source:
 
 Existing analytical flow:
 
-**Soil observations → N/P/K/Organic Carbon points → continuous IDW interpolation → existing scientific classifiers → overall fertility assessment → fertility zoning grid**
+**Soil observations ? N/P/K/Organic Carbon points ? continuous IDW interpolation ? existing scientific classifiers ? overall fertility assessment ? fertility zoning grid**
 
 The fertility zoning service remains the sole scientific authority for:
 
@@ -1651,9 +1651,9 @@ Source:
 
 The existing assessment is based on:
 
-* Soil texture — 40%
-* Soil reaction — 30%
-* Electrical conductivity / salinity — 30%
+* Soil texture � 40%
+* Soil reaction � 30%
+* Electrical conductivity / salinity � 30%
 
 The service provides:
 
@@ -1772,17 +1772,17 @@ unchanged.
 
 Planned sequence:
 
-* **7.1 — Agricultural Zoning Architecture & Existing-Layer Contract**
-* **7.2 — Fertility Zoning Spatial Contract**
-* **7.3 — Suitability Spatialization Design**
-* **7.4 — Vegetation / Moisture / Risk Layer Availability Audit**
-* **7.5 — Integrated Agricultural Zone Contract**
-* **7.6 — Implementation only where authoritative inputs exist**
+* **7.1 � Agricultural Zoning Architecture & Existing-Layer Contract**
+* **7.2 � Fertility Zoning Spatial Contract**
+* **7.3 � Suitability Spatialization Design**
+* **7.4 � Vegetation / Moisture / Risk Layer Availability Audit**
+* **7.5 � Integrated Agricultural Zone Contract**
+* **7.6 � Implementation only where authoritative inputs exist**
 
-**Status:** Phase 7.1 — Architecture contract established
+**Status:** Phase 7.1 � Architecture contract established
 
 ---
-### Phase 7.2 — Fertility Zoning Spatial Contract
+### Phase 7.2 � Fertility Zoning Spatial Contract
 
 Phase 7.2 formalizes the existing overall soil fertility zoning
 implementation as an authoritative spatial analytical surface.
@@ -1879,9 +1879,9 @@ than a collection of independently classified sample points.
 
 The existing scientific sequence is:
 
-**Source observations → fertility parameter points → continuous IDW
-interpolation → parameter classification → overall fertility
-assessment → classified zoning grid**
+**Source observations ? fertility parameter points ? continuous IDW
+interpolation ? parameter classification ? overall fertility
+assessment ? classified zoning grid**
 
 Continuous values are interpolated first.
 
@@ -2070,11 +2070,11 @@ introduced.
 
 Existing fertility zoning implementation remains unchanged.
 
-**Status:** Phase 7.2 — Existing fertility zoning spatial contract
+**Status:** Phase 7.2 � Existing fertility zoning spatial contract
 established
 
 ---
-## Phase 8 — Integrated Agricultural Intelligence
+## Phase 8 � Integrated Agricultural Intelligence
 
 Combine:
 
@@ -2098,7 +2098,7 @@ into a unified analytical framework.
 
 ---
 
-## Phase 9 — Advanced Analytics
+## Phase 9 � Advanced Analytics
 
 Potential capabilities:
 
@@ -2114,7 +2114,7 @@ These should only be introduced after underlying data and scientific contracts a
 
 **Status:** Planned
 
-### Phase 9.1 — Statistical Analysis Foundation
+### Phase 9.1 � Statistical Analysis Foundation
 
 Phase 9.1 establishes the first controlled Advanced Analytics capability:
 descriptive statistical analysis over authoritative normalized soil observations.
@@ -2142,12 +2142,12 @@ available, `count` is `0` and the remaining statistical values are `null`.
 
 Each statistical parameter preserves its authoritative unit:
 
-* pH — pH
-* Nitrogen — kg/ha
-* Phosphorus — kg/ha
-* Potassium — kg/ha
-* Organic Carbon — %
-* Electrical Conductivity — dS/m
+* pH � pH
+* Nitrogen � kg/ha
+* Phosphorus � kg/ha
+* Potassium � kg/ha
+* Organic Carbon � %
+* Electrical Conductivity � dS/m
 
 Phase 9.1 introduces no:
 
@@ -2163,22 +2163,22 @@ Phase 9.1 introduces no:
 The statistical result is validated through the
 `statistical_analysis` result contract.
 
-#### Phase 9.1.1 — Authoritative Input Alignment
+#### Phase 9.1.1 � Authoritative Input Alignment
 
 The statistical analysis boundary is explicitly aligned with the
 authoritative soil-analysis boundary:
 
 ```text
 Raw Soil Sample
-      ↓
+      ?
 soilAnalysisService
-      ↓
+      ?
 Authoritative normalized result.values
-      ↓
+      ?
 statisticalAnalysisService
-      ↓
+      ?
 Descriptive Statistics
-      ↓
+      ?
 statistical_analysis result contract
 ```
 
@@ -2196,7 +2196,7 @@ Validation status:
 
 **Phase 9.1.1 Status:** Complete
 
-### Phase 9.2 — Correlation Analysis
+### Phase 9.2 � Correlation Analysis
 
 Phase 9.2 establishes controlled correlation analysis as the second
 Advanced Analytics capability.
@@ -2245,23 +2245,23 @@ Phase 9.2 introduces no:
 * Agricultural risk scoring or modelling
 * Risk zoning
 
-#### Phase 9.2 — Authoritative Input Boundary
+#### Phase 9.2 � Authoritative Input Boundary
 
 The correlation analysis boundary is:
 
 ```text
 Raw Soil Sample
-      ↓
+      ?
 soilAnalysisService
-      ↓
+      ?
 Authoritative normalized result.values.*
-      ↓
+      ?
 Paired finite observations
-      ↓
+      ?
 correlationAnalysisService
-      ↓
+      ?
 Pearson correlation
-      ↓
+      ?
 correlation_analysis result contract
 ```
 
@@ -2287,7 +2287,7 @@ Validation status:
 
 ---
 
-## Phase 10 — Advanced Reporting & Decision Support
+## Phase 10 � Advanced Reporting & Decision Support
 
 Reports evolve from soil reports into agricultural intelligence reports.
 
@@ -2311,11 +2311,10 @@ Possible sections:
 * Statistics
 * Metadata
 
-**Status:** Planned
-
+**Status:** Implemented / audited
 ---
 
-## Phase 11 — AgriNexus Workspace
+## Phase 11 � AgriNexus Workspace
 
 Only after the analytical architecture stabilizes:
 
@@ -2329,11 +2328,10 @@ Only after the analytical architecture stabilizes:
 * Layer management
 * Report workspace
 
-**Status:** Planned / final UI stage
-
+**Status:** Implemented / audited
 ---
 
-## Phase 12 — Production Hardening
+## Phase 12 � Production Hardening
 
 Includes:
 
@@ -2359,31 +2357,31 @@ The overall progression is:
 
 ```text
 SOIL
-  ↓
+  ?
 SPATIAL
-  ↓
+  ?
 INTERPOLATION
-  ↓
+  ?
 HISTORICAL
-  ↓
+  ?
 REPORTING
-  ↓
+  ?
 REMOTE SENSING
-  ↓
+  ?
 SPECTRAL INDICES
-  ↓
+  ?
 TEMPORAL ANALYSIS
-  ↓
+  ?
 CROP INTELLIGENCE
-  ↓
+  ?
 ZONING
-  ↓
+  ?
 INTEGRATED AGRICULTURAL INTELLIGENCE
-  ↓
+  ?
 ADVANCED REPORTING
-  ↓
+  ?
 FINAL UI WORKSPACE
-  ↓
+  ?
 PRODUCTION HARDENING
 ```
 
@@ -2394,22 +2392,22 @@ PRODUCTION HARDENING
 The final platform consists conceptually of five major layers.
 
 ```text
-┌───────────────────────────────────────────────────┐
-│                 USER EXPERIENCE                   │
-│       Map • Dashboard • Analysis • Reports        │
-├───────────────────────────────────────────────────┤
-│             AGRICULTURAL INTELLIGENCE             │
-│ Crop • Fertility • Risk • Suitability • Zoning   │
-├───────────────────────────────────────────────────┤
-│                 SCIENTIFIC ENGINE                 │
-│ Soil • Interpolation • Indices • Statistics      │
-├───────────────────────────────────────────────────┤
-│                  SPATIAL ENGINE                   │
-│ Query • Distance • Geometry • Raster • Zonal     │
-├───────────────────────────────────────────────────┤
-│                    DATA LAYER                     │
-│ Soil • Satellite • Boundaries • Crops • History  │
-└───────────────────────────────────────────────────┘
++---------------------------------------------------+
+�                 USER EXPERIENCE                   �
+�       Map � Dashboard � Analysis � Reports        �
++---------------------------------------------------�
+�             AGRICULTURAL INTELLIGENCE             �
+� Crop � Fertility � Risk � Suitability � Zoning   �
++---------------------------------------------------�
+�                 SCIENTIFIC ENGINE                 �
+� Soil � Interpolation � Indices � Statistics      �
++---------------------------------------------------�
+�                  SPATIAL ENGINE                   �
+� Query � Distance � Geometry � Raster � Zonal     �
++---------------------------------------------------�
+�                    DATA LAYER                     �
+� Soil � Satellite � Boundaries � Crops � History  �
++---------------------------------------------------+
 ```
 
 ---
@@ -2418,7 +2416,7 @@ The final platform consists conceptually of five major layers.
 
 AgriNexus GIS should ultimately answer three levels of questions.
 
-## Level 1 — What is there?
+## Level 1 � What is there?
 
 **Observation**
 
@@ -2429,7 +2427,7 @@ Examples:
 * What is soil nitrogen?
 * Where are the samples?
 
-## Level 2 — What is happening?
+## Level 2 � What is happening?
 
 **Analysis**
 
@@ -2441,7 +2439,7 @@ Examples:
 * How has the soil changed?
 * Where are spatial patterns occurring?
 
-## Level 3 — What does it mean agriculturally?
+## Level 3 � What does it mean agriculturally?
 
 **Intelligence**
 
@@ -2455,7 +2453,7 @@ Examples:
 
 The progression is:
 
-**Observation → Analysis → Intelligence**
+**Observation ? Analysis ? Intelligence**
 
 ---
 
@@ -2473,8 +2471,8 @@ The progression is:
 | 7     | Agricultural Zoning                  | Planned                              |
 | 8     | Integrated Agricultural Intelligence | **Execution boundary implemented / audited** |
 | 9     | Advanced Analytics                   | Planned                              |
-| 10    | Advanced Reporting                   | Planned                              |
-| 11    | AgriNexus Workspace                  | Planned / final UI stage             |
+| 10    | Advanced Reporting                   | **Implemented / audited**            |
+| 11    | AgriNexus Workspace                  | **Implemented / audited**            |
 | 12    | Production Hardening                 | Planned                              |
 
 ---
@@ -2491,7 +2489,7 @@ The progression is:
 | 0.6   | Scientific Result Contracts     | Planned         |
 | 0.7   | Testing Architecture            | Planned         |
 | 0.8   | Git / Documentation Strategy    | Planned         |
-| 0.9   | Soil → AgriNexus Migration Plan | Planned         |
+| 0.9   | Soil ? AgriNexus Migration Plan | Planned         |
 | 0.10  | Freeze Architecture v1.0        | Planned         |
 
 ---
@@ -2506,7 +2504,7 @@ Established:
 
 * AgriNexus GIS identity
 * Integrated Agricultural Intelligence concept
-* Observation → Analysis → Intelligence model
+* Observation ? Analysis ? Intelligence model
 * Major platform domains
 * Scientific/backend authority principle
 * Frontend presentation principle
@@ -2520,7 +2518,7 @@ Established:
 * Migration principle
 * Phase 0 roadmap
 
-### Phase 7.3 — Suitability Spatialization Design
+### Phase 7.3 � Suitability Spatialization Design
 
 Phase 7.3 defines the architectural boundary for any future spatial
 representation of crop suitability.
@@ -2558,7 +2556,7 @@ Crop suitability is currently a sample-level analytical result.
 
 The current analytical flow is:
 
-**Soil sample → Soil analysis → Crop suitability evaluation → Sample-level suitability result**
+**Soil sample ? Soil analysis ? Crop suitability evaluation ? Sample-level suitability result**
 
 The existing result is associated with the source soil sample and its
 analytical inputs.
@@ -2680,11 +2678,11 @@ zoning classifier, threshold, or scoring formula is introduced.
 
 The existing crop suitability implementation remains unchanged.
 
-**Status:** Phase 7.3 — Suitability spatialization design contract established
+**Status:** Phase 7.3 � Suitability spatialization design contract established
 
 ---
 
-### Phase 7.4 — Vegetation / Moisture / Risk Layer Availability Audit
+### Phase 7.4 � Vegetation / Moisture / Risk Layer Availability Audit
 
 Phase 7.4 audits the availability of authoritative vegetation, moisture,
 and risk spatial layers for agricultural zoning.
@@ -2762,11 +2760,11 @@ unchanged.
 No vegetation zoning, moisture zoning, or risk zoning implementation
 is introduced.
 
-**Status:** Phase 7.4 — Vegetation / moisture / risk layer availability audit established
+**Status:** Phase 7.4 � Vegetation / moisture / risk layer availability audit established
 
 ---
 
-### Phase 7.5 — Integrated Agricultural Zone Contract
+### Phase 7.5 � Integrated Agricultural Zone Contract
 
 Phase 7.5 defines the architectural contract required before multiple
 agricultural analytical layers can be combined into an integrated
@@ -2889,11 +2887,11 @@ No integrated agricultural zoning service, API, database schema,
 combination formula, classification threshold, weighting model, or
 spatial integration engine is introduced.
 
-**Status:** Phase 7.5 — Integrated agricultural zone contract established
+**Status:** Phase 7.5 � Integrated agricultural zone contract established
 
 ---
 
-### Phase 7.6 — Authoritative Zoning Implementation Boundary
+### Phase 7.6 � Authoritative Zoning Implementation Boundary
 
 Phase 7.6 verifies which Phase 7 agricultural zoning capabilities
 have an authoritative implementation and establishes the
@@ -2999,7 +2997,7 @@ zoning, risk zoning, or integrated agricultural zoning is implemented
 without the required authoritative scientific and architectural
 contract.
 
-**Status:** Phase 7.6 — Authoritative zoning implementation boundary established
+**Status:** Phase 7.6 � Authoritative zoning implementation boundary established
 
 ---
 
@@ -3010,12 +3008,12 @@ contract.
 Established:
 
 * Official product name: **AgriNexus GIS**
-* Descriptive name: **AgriNexus GIS — Integrated Agricultural Intelligence through GIS**
+* Descriptive name: **AgriNexus GIS � Integrated Agricultural Intelligence through GIS**
 * Domain terminology
 * Scientific naming distinction
 * Naming conventions
 * Software/scientific version separation
-* **Extend first → Refactor second → Rename last** migration principle
+* **Extend first ? Refactor second ? Rename last** migration principle
 
 ### Phase 0.2 Started
 
@@ -3031,29 +3029,29 @@ The major UI/workspace redesign remains deferred to **Phase 11**.
 
 The following rules apply throughout AgriNexus development.
 
-### Rule 1 — Do not rewrite working scientific functionality without architectural justification.
+### Rule 1 � Do not rewrite working scientific functionality without architectural justification.
 
-### Rule 2 — Scientific authority remains in the backend.
+### Rule 2 � Scientific authority remains in the backend.
 
-### Rule 3 — Frontend calculations must not become an independent scientific authority.
+### Rule 3 � Frontend calculations must not become an independent scientific authority.
 
-### Rule 4 — Existing working API contracts should not be broken merely for naming consistency.
+### Rule 4 � Existing working API contracts should not be broken merely for naming consistency.
 
-### Rule 5 — New architecture should be introduced incrementally.
+### Rule 5 � New architecture should be introduced incrementally.
 
-### Rule 6 — Scientific algorithms and classifications must be versioned.
+### Rule 6 � Scientific algorithms and classifications must be versioned.
 
-### Rule 7 — Every significant scientific module requires automated tests.
+### Rule 7 � Every significant scientific module requires automated tests.
 
-### Rule 8 — Architectural changes must be documented.
+### Rule 8 � Architectural changes must be documented.
 
-### Rule 9 — Completed phases require a Git checkpoint.
+### Rule 9 � Completed phases require a Git checkpoint.
 
-### Rule 10 — The final UI redesign is intentionally deferred until the analytical foundations are stable.
+### Rule 10 � The final UI redesign is intentionally deferred until the analytical foundations are stable.
 
-### Rule 11 — Existing `Soil Analysis GIS.md` remains the Soil Analysis GIS development document.
+### Rule 11 � Existing `Soil Analysis GIS.md` remains the Soil Analysis GIS development document.
 
-### Rule 12 — Remote-sensing and broader AgriNexus architecture are documented in this file.
+### Rule 12 � Remote-sensing and broader AgriNexus architecture are documented in this file.
 
 ---
 
@@ -3063,21 +3061,21 @@ AgriNexus development should follow:
 
 ```text
 DISCOVER
-   ↓
+   ?
 DEFINE
-   ↓
+   ?
 CONTRACT
-   ↓
+   ?
 IMPLEMENT
-   ↓
+   ?
 TEST
-   ↓
+   ?
 INTEGRATE
-   ↓
+   ?
 REGRESS
-   ↓
+   ?
 DOCUMENT
-   ↓
+   ?
 CHECKPOINT
 ```
 
@@ -3091,11 +3089,11 @@ The existing scientific implementation is valuable and should be migrated throug
 
 **AgriNexus GIS**
 
-## Observe → Analyze → Understand → Act
+## Observe ? Analyze ? Understand ? Act
 
 with the scientific foundation:
 
-## Data → Science → Spatial Intelligence → Agricultural Intelligence
+## Data ? Science ? Spatial Intelligence ? Agricultural Intelligence
 # Phase 0.2  Master Repository Architecture
 
 ## Phase 0.2 Status
@@ -4107,7 +4105,7 @@ Validation result:
 * **Todo: 0**
 
 The end-to-end integration test successfully validates the complete
-observation → composition → analysis → change-calculation path.
+observation ? composition ? analysis ? change-calculation path.
 
 No source-code changes were required for the Phase 5 audit.
 
@@ -4443,7 +4441,7 @@ No existing implementation or historical dataset was modified by this phase.
 
 The broader Phase 6 remains **Partially implemented / audited** because validated calibration datasets, calibrated crop-condition intelligence, moisture suitability, vegetation-condition analysis, historical performance integration, and other agricultural-context-driven models remain outside the current implementation.
 
-### Phase 7.7 — Fertility Zoning Validation & Test Coverage
+### Phase 7.7 � Fertility Zoning Validation & Test Coverage
 
 **Date:** 2026-09-27
 
@@ -4501,7 +4499,7 @@ The backend remains the scientific authority for fertility zoning. Frontend comp
 
 **Status:** Implemented / validated
 
-Phase 7.7 establishes dedicated automated validation coverage for the existing fertility zoning implementation while preserving the scientific architecture and implementation boundaries established in Phases 7.1–7.6.
+Phase 7.7 establishes dedicated automated validation coverage for the existing fertility zoning implementation while preserving the scientific architecture and implementation boundaries established in Phases 7.1�7.6.
 
 ### Phase 8.1  Integrated Agricultural Intelligence Contract Discovery
 
@@ -4863,14 +4861,14 @@ Phase 8.5 established the orchestration boundary for future Integrated Agricultu
 
 The existing authoritative domain entry points are:
 
-* Soil Intelligence — `analyzeSample()`
-* Spatial Intelligence — `getSpatialAnalysis()` / `prepareSpatialAnalysis()`
-* Crop Suitability — `generateCropRecommendations()`
-* Fertility Zoning — `prepareFertilityZoning()`
-* Temporal Observation — `processTemporalObservationWorkflow()`
-* Temporal Composition — `processTemporalCompositionWorkflow()`
-* Temporal Analysis — `processTemporalAnalysisWorkflow()`
-* Historical Context — `getHistoricalContext()`
+* Soil Intelligence � `analyzeSample()`
+* Spatial Intelligence � `getSpatialAnalysis()` / `prepareSpatialAnalysis()`
+* Crop Suitability � `generateCropRecommendations()`
+* Fertility Zoning � `prepareFertilityZoning()`
+* Temporal Observation � `processTemporalObservationWorkflow()`
+* Temporal Composition � `processTemporalCompositionWorkflow()`
+* Temporal Analysis � `processTemporalAnalysisWorkflow()`
+* Historical Context � `getHistoricalContext()`
 
 The future Integrated Agricultural Intelligence workflow shall act as an orchestration boundary over these existing domain authorities.
 
@@ -5853,3 +5851,4 @@ No new cross-domain scientific logic is introduced.
 - No existing authoritative result contract modified.
 - No cross-domain scoring, ranking, weighting, aggregation, or new scientific calculation introduced.
 - Phase 8.16 is not defined by the current architecture and therefore is not implemented.
+
