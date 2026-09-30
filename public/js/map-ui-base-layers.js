@@ -12,7 +12,7 @@
   let activeBaseMap = null;
   let control = null;
 
-  function initializeBaseMapControl() {
+  async function initializeBaseMapControl() {
     if (typeof L === "undefined") {
       console.error("Leaflet is not available for base-map control.");
       return false;
@@ -34,49 +34,102 @@
       return true;
     }
 
+    let rasterConfiguration;
+
+    try {
+      const response = await fetch(
+        "/api/raster-layers/config"
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Raster configuration request failed: ${response.status}`
+        );
+      }
+
+      rasterConfiguration = await response.json();
+    } catch (error) {
+      console.error(
+        "Failed to load raster layer configuration:",
+        error
+      );
+
+      return false;
+    }
+
+    if (
+      !rasterConfiguration ||
+      rasterConfiguration.success !== true ||
+      !rasterConfiguration.layers
+    ) {
+      console.error(
+        "Invalid raster layer configuration response."
+      );
+
+      return false;
+    }
+
+    const layers = rasterConfiguration.layers;
+
     const openStreetMap = L.tileLayer(
       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
         maxZoom: 19,
-        attribution: "&copy; OpenStreetMap contributors"
+        attribution:
+          "&copy; OpenStreetMap contributors"
       }
     );
+
+    const satelliteConfig = layers.satellite;
 
     const satellite = L.tileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      satelliteConfig.url,
       {
-        maxZoom: 19,
-        attribution:
-          "Tiles &copy; Esri"
+        maxZoom: satelliteConfig.maxZoom,
+        attribution: satelliteConfig.attribution
       }
     );
 
+    const satelliteLabelsConfig =
+      layers.satelliteLabels;
+
     const satelliteLabels = L.layerGroup([
-      satellite,
       L.tileLayer(
-        "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+        satelliteConfig.url,
         {
-          maxZoom: 19,
+          maxZoom: satelliteConfig.maxZoom,
           attribution:
-            "Labels &copy; Esri"
+            satelliteConfig.attribution
+        }
+      ),
+
+      L.tileLayer(
+        satelliteLabelsConfig.labelUrl,
+        {
+          maxZoom:
+            satelliteLabelsConfig.maxZoom,
+          attribution:
+            satelliteLabelsConfig.attribution
         }
       )
     ]);
 
+    const terrainConfig = layers.terrain;
+
     const terrain = L.tileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+      terrainConfig.url,
       {
-        maxZoom: 19,
-        attribution:
-          "Tiles &copy; Esri"
+        maxZoom: terrainConfig.maxZoom,
+        attribution: terrainConfig.attribution
       }
     );
 
     baseMaps = {
       "Street": openStreetMap,
-      "Satellite": satellite,
-      "Satellite + Labels": satelliteLabels,
-      "Terrain": terrain
+      [satelliteConfig.name]: satellite,
+      [satelliteLabelsConfig.name]:
+        satelliteLabels,
+      [terrainConfig.name]: terrain
     };
 
     activeBaseMap = openStreetMap;
@@ -115,7 +168,12 @@
     return { ...baseMaps };
   }
 
-  window.initializeBaseMapControl = initializeBaseMapControl;
-  window.getActiveBaseMap = getActiveBaseMap;
-  window.getBaseMaps = getBaseMaps;
+  window.initializeBaseMapControl =
+    initializeBaseMapControl;
+
+  window.getActiveBaseMap =
+    getActiveBaseMap;
+
+  window.getBaseMaps =
+    getBaseMaps;
 })();

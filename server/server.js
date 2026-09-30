@@ -41,6 +41,8 @@ const analyticalReportRoutes = require("./routes/analyticalReportRoutes");
 const rasterIndexWorkflowRoutes = require("./routes/rasterIndexWorkflowRoutes");
 const rasterIndexBatchWorkflowRoutes = require("./routes/rasterIndexBatchWorkflowRoutes");
 const rasterOutputRoutes = require("./routes/rasterOutputRoutes");
+const rasterLayerConfigRoutes = require("./routes/rasterLayerConfigRoutes");
+const vectorLayerConfigRoutes = require("./routes/vectorLayerConfigRoutes");
 
 // ============================================================
 // APPLICATION
@@ -138,6 +140,24 @@ app.use(
 app.use(
     "/api/remote-sensing/raster",
     rasterOutputRoutes
+);
+
+// ============================================================
+// RASTER LAYER CONFIGURATION API
+// ============================================================
+
+app.use(
+  "/api/raster-layers",
+  rasterLayerConfigRoutes,
+);
+
+// ============================================================
+// VECTOR LAYER CONFIGURATION API
+// ============================================================
+
+app.use(
+  "/api/vector-layers",
+  vectorLayerConfigRoutes,
 );
 
 // ============================================================

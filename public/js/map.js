@@ -557,7 +557,12 @@ function initializeMap() {
     });
     historicalContextLayerGroup = L.layerGroup().addTo(map);
 
-    initializeBaseMapControl();
+    initializeBaseMapControl().catch((error) => {
+      console.error(
+        "Base map control initialization failed:",
+        error
+      );
+    });
 
     map.on("click", handleMapClick);
 
