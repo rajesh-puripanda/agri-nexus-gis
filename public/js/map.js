@@ -2042,34 +2042,6 @@ function clearHistoricalContextLayer() {
 
 // ============================================================
 // PHASE 10.6 — HISTORICAL GIS CONTEXT
-// ============================================================
-
-function ensureHistoricalContextLayerGroup() {
-  if (!map) {
-    return null;
-  }
-
-  if (!historicalContextLayerGroup) {
-    historicalContextLayerGroup = L.layerGroup();
-  }
-
-  return historicalContextLayerGroup;
-}
-
-function clearHistoricalContextLayer() {
-  const layerGroup = ensureHistoricalContextLayerGroup();
-
-  if (!layerGroup) {
-    return;
-  }
-
-  layerGroup.clearLayers();
-
-  if (!map.hasLayer(layerGroup)) {
-    layerGroup.addTo(map);
-  }
-}
-
 function renderHistoricalContextLayer(
   historicalContext,
   queryLatitude,
