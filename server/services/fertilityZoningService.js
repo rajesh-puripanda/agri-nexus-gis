@@ -283,7 +283,16 @@ function extractParameterPoints(samples, parameter) {
 
     const longitude = Number(sample.longitude);
 
-    const value = Number(sample[parameter.field]);
+    const rawValue = sample[parameter.field];
+
+    // Missing measurements remain unavailable.
+    // Do not allow JavaScript coercion of null or empty
+    // values into the scientific value 0.
+    if (rawValue === null || rawValue === undefined || rawValue === "") {
+      continue;
+    }
+
+    const value = Number(rawValue);
 
     if (!Number.isFinite(latitude)) {
       continue;

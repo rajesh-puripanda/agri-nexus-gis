@@ -74,11 +74,13 @@ test("extractParameterPoints filters invalid coordinates", () => {
       parameter,
     );
 
-  assert.equal(points.length, 2);
+  // Only the sample with valid coordinates and an available
+  // nitrogen measurement participates in interpolation.
+  assert.equal(points.length, 1);
   assert.equal(points[0].id, 1);
   assert.equal(points[0].value, 200);
-  assert.equal(points[1].id, 3);
-  assert.equal(points[1].value, 0);
+
+
 });
 
 test("buildFertilityPoints creates all supported parameter collections", () => {
