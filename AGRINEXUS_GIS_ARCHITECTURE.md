@@ -2351,6 +2351,199 @@ Includes:
 
 ---
 
+## Phase 12 - Production Hardening
+
+**Status:** Application hardening validated / deployment operations pending
+
+Phase 12 validates the application against the production-hardening requirements defined by the AgriNexus GIS architecture. Application-level performance, security, API behavior, error handling, database access, large-dataset processing, raster performance, caching, and logging have been reviewed and validated. Backup operations and production deployment infrastructure remain deployment/operations responsibilities.
+
+### Phase 12 Validation Record
+
+|  # | Architecture Item       | Status                      |
+| -: | ----------------------- | --------------------------- |
+|  1 | Performance testing     | PASS                        |
+|  2 | Security review         | PASS                        |
+|  3 | API validation          | PASS                        |
+|  4 | Error handling          | PASS                        |
+|  5 | Database optimization   | PASS                        |
+|  6 | Large dataset testing   | PASS                        |
+|  7 | Raster performance      | PASS                        |
+|  8 | Caching                 | PASS                        |
+|  9 | Logging                 | PASS                        |
+| 10 | Backup strategy         | Deployment / Operations Gap |
+| 11 | Deployment architecture | Deployment / Operations Gap |
+
+### Performance Testing
+
+Application-level performance baselines were established for the principal analytical services.
+
+Spatial analysis and spatial query tests used 30 iterations with a four-row fixture:
+
+* `spatialAnalysis.prepareSpatialAnalysis`: average 0.008 ms
+* `spatialQuery.querySamples.attribute`: average 0.006 ms
+* Radius query: average 0.003 ms
+* Bounding-box query: average 0.004 ms
+
+Interpolation tests used 10 iterations on a 20 ? 20 grid with four samples:
+
+* IDW: average 0.019 ms
+* SPLINE: average 0.008 ms
+
+Fertility zoning used 10 iterations on a 20 ? 20 grid with four samples:
+
+* Average: 0.927 ms
+
+Historical comparison:
+
+* `calculateChange`: average 0.004 ms
+* `buildClassificationTransition`: average 0.002 ms
+
+API boundary testing used 20 iterations with three warmups:
+
+* `GET /api/health`: average 6.019 ms
+* `GET /api/raster-layers/config`: average 4.926 ms
+* `GET /api/vector-layers/config`: average 4.934 ms
+
+These API measurements represent the Supertest/Express application boundary and are not real network-latency measurements.
+
+### Security Review
+
+Application configuration was reviewed for basic security controls.
+
+* Database connection values are supplied through environment variables: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME`.
+* The MySQL connection pool uses controlled connection management with `waitForConnections: true`, `connectionLimit: 10`, and `queueLimit: 0`.
+* Repository database operations use parameterized `pool.execute()` statements.
+* No embedded database credentials were identified in the reviewed application configuration.
+* Production middleware such as CORS policy, security headers, and request-rate limiting remains dependent on the final deployment environment.
+
+### API Validation
+
+The principal API routes were reviewed against their established contracts.
+
+Validated boundaries include health, soil, soil analysis, spatial analysis, historical analysis, temporal processing, interpolation, fertility zoning, reporting, raster workflows, raster output, and raster/vector layer configuration.
+
+The established invalid interpolation request contract returns HTTP 200 with the existing `{ success: false, error: undefined }` structure. This behavior is retained as part of the current API contract.
+
+Unknown API routes return HTTP 404 using the established API error structure.
+
+### Error Handling
+
+Controllers use controlled `try/catch` handling with explicit response status behavior.
+
+* Interpolation controllers use HTTP 500 by default and respect an available `error.statusCode`.
+* Startup database failures are handled through the application startup path.
+* The API includes an explicit 404 handler for unknown routes.
+* No additional global error middleware is required solely for completion of the Phase 12 validation checklist.
+
+### Database Optimization
+
+Database access was reviewed for production-readiness at the application layer.
+
+* Connection pooling is enabled.
+* Queries use parameterized execution.
+* Queries select explicit columns where appropriate.
+* Filtering and ordering are applied at the database layer.
+* `LIMIT 1` is used where a single record is required.
+* No speculative database tuning was introduced without representative production workload measurements.
+
+### Large Dataset Testing
+
+Raster processing was validated using the complete raster workflow rather than isolated helper functions.
+
+Large synthetic raster baselines:
+
+| Raster      |    Pixels | Average Runtime |
+| ----------- | --------: | --------------: |
+| 256 ? 256   |    65,536 |      201.614 ms |
+| 512 ? 512   |   262,144 |      708.261 ms |
+| 1024 ? 1024 | 1,048,576 |     2730.568 ms |
+
+Pixel count increased 16 ? between 256 ? 256 and 1024 ? 1024, while average runtime increased approximately 13.55 ?. The observed scaling is approximately linear with pixel count for this local synthetic workload.
+
+This validation is limited to local synthetic GeoTIFF processing and does not represent concurrent production traffic, network transfer, or production Sentinel-2 acquisition workloads.
+
+### Raster Performance
+
+Complete raster processing was measured from workflow entry through output generation.
+
+Raster scaling results:
+
+| Raster    | Pixels | Average Runtime |
+| --------- | -----: | --------------: |
+| 4 ? 2     |      8 |        6.488 ms |
+| 32 ? 32   |  1,024 |        8.829 ms |
+| 64 ? 64   |  4,096 |       17.343 ms |
+| 128 ? 128 | 16,384 |       53.421 ms |
+
+Raster output generation was also measured independently:
+
+| Raster    | Continuous Float32 | Classification Uint8 |
+| --------- | -----------------: | -------------------: |
+| 32 ? 32   |           3.281 ms |             3.060 ms |
+| 64 ? 64   |           5.915 ms |             5.992 ms |
+| 128 ? 128 |          18.121 ms |            17.446 ms |
+
+Measurements are local filesystem/service measurements.
+
+### Caching
+
+No application-level Redis, TTL, or general-purpose memoization layer is currently required by the validated application workload.
+
+Caching remains an optional production optimization if measured production workloads demonstrate repeated expensive requests or other measurable cache opportunities.
+
+No speculative caching layer was introduced during Phase 12.
+
+### Logging
+
+The application currently uses console-based logging across controllers, database startup, services, and server initialization.
+
+This is sufficient for the current application and validation environment.
+
+Production deployment may introduce structured logging, centralized log collection, retention policies, and monitoring according to the selected infrastructure.
+
+### Backup Strategy
+
+Automated operational database backup and recovery procedures are not currently implemented within the application.
+
+Existing SQL schema/import scripts are development and database-management artifacts and should not be treated as production backups.
+
+Production operations should establish:
+
+* Scheduled MySQL backups
+* Backup retention policies
+* Separate backup storage
+* Backup integrity verification
+* Periodic restore testing
+* Documented recovery procedures
+* Protection and recovery procedures for important raster and remote-sensing data
+
+Therefore this item remains a deployment/operations requirement rather than an application defect.
+
+### Deployment Architecture
+
+The application contains the required application-layer components for deployment, including Node.js/Express services, environment-based database configuration, static frontend assets, and remote-sensing processing dependencies.
+
+A production infrastructure architecture has not been prescribed because the final hosting environment has not been selected.
+
+The deployment decision should define the required combination of application process management, reverse proxy, HTTPS termination, database hosting, environment/secrets management, monitoring, logging, backup, and data storage according to the actual production environment.
+
+Therefore this item remains a deployment/operations requirement.
+
+### Phase 12 Overall Status
+
+**Application Hardening Validated / Deployment Operations Pending**
+
+Application-level Phase 12 requirements have been validated through targeted tests, performance baselines, configuration review, API boundary verification, error-handling review, database-access review, raster scaling tests, and operational assessment.
+
+The remaining work is outside the application hardening boundary:
+
+1. Production backup and recovery strategy
+2. Production deployment and infrastructure architecture
+
+These items should be completed when the production hosting and operational environment is defined.
+
+---
+
 # 31. Strategic Development Order
 
 The overall progression is:
