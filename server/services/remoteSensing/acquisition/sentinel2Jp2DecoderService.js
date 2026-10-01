@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 // ============================================================
 // AgriNexus GIS
@@ -141,12 +141,14 @@ function normalizeDecodedSamples(
     const bytes =
         decoded.decodedBuffer;
 
-    const samples =
+    const samples = new Uint16Array(pixelCount);
+    samples.set(
         new Uint16Array(
             bytes.buffer,
             bytes.byteOffset,
             pixelCount
-        );
+        )
+    );
 
     return {
         width,

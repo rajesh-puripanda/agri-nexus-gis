@@ -47,10 +47,17 @@ function calculateNormalizedDifference(
     numeratorBand + denominatorBand;
 
   if (denominator === 0) {
-    throw new Error(
-      `Cannot calculate normalized difference: ` +
-      `${numeratorName} + ${denominatorName} equals zero.`
-    );
+    const error =
+      new Error(
+        `Cannot calculate normalized difference: ` +
+        `${numeratorName} + ${denominatorName} equals zero.`
+      );
+
+    error.code = "INDEX_ZERO_DENOMINATOR";
+    error.numeratorBand = numeratorName;
+    error.denominatorBand = denominatorName;
+
+    throw error;
   }
 
   return (
@@ -255,11 +262,22 @@ function calculateScalarIndex({
   } = definition.validRange;
 
   if (value < min || value > max) {
-    throw new Error(
-      `${definition.code} calculation result ${value} ` +
-      `is outside the registered valid range [${min}, ${max}].`
-    );
-  }
+    const error =
+        new RangeError(
+            `${definition.code} calculation result ${value} ` +
+            `is outside the registered valid range [${min}, ${max}].`
+        );
+
+    error.code = "INDEX_RESULT_OUT_OF_RANGE";
+    error.indexCode = definition.code;
+    error.value = value;
+    error.validRange = {
+        min,
+        max
+    };
+
+    throw error;
+}
 
   return value;
 }

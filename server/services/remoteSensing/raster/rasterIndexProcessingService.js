@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 // ============================================================
 // server/services/remoteSensing/raster/rasterIndexProcessingService.js
@@ -192,11 +192,32 @@ function processRasterIndex(request) {
             continue;
         }
 
-        const value = calculatePixelIndex({
-            indexCode,
-            bandValues: inputs,
-            parameters
-        });
+        let value;
+
+        try {
+            value = calculatePixelIndex({
+                indexCode,
+                bandValues: inputs,
+                parameters
+            });
+        } catch (error) {
+            if (
+                error &&
+                (
+                    error.code === "INDEX_RESULT_OUT_OF_RANGE" ||
+                    error.code === "INDEX_ZERO_DENOMINATOR"
+                )
+            ) {
+                output[pixelIndex] =
+                    noData !== null && noData !== undefined
+                        ? noData
+                        : NaN;
+
+                continue;
+            }
+
+            throw error;
+        }
 
         if (!Number.isFinite(value)) {
             output[pixelIndex] =

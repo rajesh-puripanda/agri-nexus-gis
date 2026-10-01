@@ -359,3 +359,32 @@ test("handles an all-NoData raster", () => {
     assert.equal(result.statistics.max, null);
     assert.equal(result.statistics.mean, null);
 });
+
+test("converts out-of-range index pixels to NoData", () => {
+    const result = processRasterIndex({
+        indexCode: "NDVI",
+        raster: createRaster({
+            bands: {
+                Red: new Float32Array([
+                    -0.0999,
+                    0.2,
+                    0.3,
+                    0.4
+                ]),
+                NIR: new Float32Array([
+                    0.3835,
+                    0.6,
+                    0.7,
+                    0.8
+                ])
+            }
+        })
+    });
+
+    const output =
+        result.results.raster.bands.NDVI.data;
+
+    assert.equal(output[0], -9999);
+    assert.equal(result.statistics.validPixelCount, 3);
+    assert.equal(result.statistics.noDataPixelCount, 1);
+});
