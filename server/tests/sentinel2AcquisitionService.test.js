@@ -49,7 +49,11 @@ test(
                                     0,
                                     -10,
                                     2000040
-                                ]
+                                ],
+                                "nodata": 0,
+                                "data_type": "uint16",
+                                "raster:scale": 0.0001,
+                                "raster:offset": -0.1
                             },
 
                             B08_10m: {
@@ -73,7 +77,11 @@ test(
                                     0,
                                     -10,
                                     2000040
-                                ]
+                                ],
+                                "nodata": 0,
+                                "data_type": "uint16",
+                                "raster:scale": 0.0001,
+                                "raster:offset": -0.1
                             }
                         }
                     }
@@ -234,3 +242,5 @@ test(
         );
     }
 );
+
+

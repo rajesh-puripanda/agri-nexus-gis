@@ -98,6 +98,93 @@ function validateMatchingSpatialReference(redAsset, nirAsset) {
     return redSpatialReference;
 }
 
+function buildRadiometricMetadataFromAsset(asset) {
+    const scale = asset?.["raster:scale"];
+    const offset = asset?.["raster:offset"];
+    const noData = asset?.nodata;
+    const dataType = asset?.data_type;
+
+    if (!Number.isFinite(scale)) {
+        throw new Error(
+            "Sentinel-2 asset is missing a valid raster scale."
+        );
+    }
+
+    if (!Number.isFinite(offset)) {
+        throw new Error(
+            "Sentinel-2 asset is missing a valid raster offset."
+        );
+    }
+
+    if (!Number.isFinite(noData)) {
+        throw new Error(
+            "Sentinel-2 asset is missing a valid NoData value."
+        );
+    }
+
+    if (typeof dataType !== "string") {
+        throw new Error(
+            "Sentinel-2 asset is missing a valid data type."
+        );
+    }
+
+    return {
+        scale,
+        offset,
+        noData,
+        sourceDataType: dataType.toUpperCase()
+    };
+}
+
+function validateMatchingRadiometricMetadata(
+    redAsset,
+    nirAsset
+) {
+    const redRadiometry =
+        buildRadiometricMetadataFromAsset(redAsset);
+
+    const nirRadiometry =
+        buildRadiometricMetadataFromAsset(nirAsset);
+
+    if (
+        redRadiometry.scale !==
+        nirRadiometry.scale
+    ) {
+        throw new Error(
+            "Sentinel-2 Red and NIR assets use different radiometric scales."
+        );
+    }
+
+    if (
+        redRadiometry.offset !==
+        nirRadiometry.offset
+    ) {
+        throw new Error(
+            "Sentinel-2 Red and NIR assets use different radiometric offsets."
+        );
+    }
+
+    if (
+        redRadiometry.noData !==
+        nirRadiometry.noData
+    ) {
+        throw new Error(
+            "Sentinel-2 Red and NIR assets use different NoData values."
+        );
+    }
+
+    if (
+        redRadiometry.sourceDataType !==
+        nirRadiometry.sourceDataType
+    ) {
+        throw new Error(
+            "Sentinel-2 Red and NIR assets use different source data types."
+        );
+    }
+
+    return redRadiometry;
+}
+
 async function acquireNDVIBands({
     request,
     outputDirectory,
@@ -133,6 +220,18 @@ async function acquireNDVIBands({
             "Required Sentinel-2 NDVI assets are missing."
         );
     }
+
+    const spatialReference =
+        validateMatchingSpatialReference(
+            redAsset,
+            nirAsset
+        );
+
+    const radiometry =
+        validateMatchingRadiometricMetadata(
+            redAsset,
+            nirAsset
+        );
 
     const accessToken =
         await getAccessTokenImpl({
@@ -171,11 +270,9 @@ async function acquireNDVIBands({
         acquisitionDate:
             item.properties?.datetime,
 
-        spatialReference:
-            validateMatchingSpatialReference(
-                redAsset,
-                nirAsset
-            ),
+        spatialReference,
+
+        radiometry,
 
         red: {
             assetKey: "B04_10m",
@@ -190,5 +287,9 @@ async function acquireNDVIBands({
 }
 
 module.exports = {
-    acquireNDVIBands
+    acquireNDVIBands,
+    buildSpatialReferenceFromAsset,
+    validateMatchingSpatialReference,
+    buildRadiometricMetadataFromAsset,
+    validateMatchingRadiometricMetadata
 };
