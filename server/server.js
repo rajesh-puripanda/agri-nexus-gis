@@ -40,6 +40,7 @@ const historicalCandidateRoutes = require("./routes/historicalCandidateRoutes");
 const analyticalReportRoutes = require("./routes/analyticalReportRoutes");
 const rasterIndexWorkflowRoutes = require("./routes/rasterIndexWorkflowRoutes");
 const rasterIndexBatchWorkflowRoutes = require("./routes/rasterIndexBatchWorkflowRoutes");
+const remoteSensingIndexCatalogRoutes = require("./routes/remoteSensingIndexCatalogRoutes");
 const rasterOutputRoutes = require("./routes/rasterOutputRoutes");
 const rasterLayerConfigRoutes = require("./routes/rasterLayerConfigRoutes");
 const vectorLayerConfigRoutes = require("./routes/vectorLayerConfigRoutes");
@@ -140,6 +141,11 @@ app.use(
 app.use(
     "/api/remote-sensing/raster",
     rasterOutputRoutes
+);
+
+app.use(
+    "/api/remote-sensing/indices",
+    remoteSensingIndexCatalogRoutes
 );
 
 // ============================================================

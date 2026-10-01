@@ -508,11 +508,14 @@ function initializeCursorCoordinateControl() {
 
     container.textContent =
       `Lat: ${latitude}  |  Lng: ${longitude}`;
+
+    container.style.visibility =
+      "visible";
   });
 
   map.on("mouseout", () => {
-    container.textContent =
-      "Lat: --.------  |  Lng: --.------";
+    container.style.visibility =
+      "hidden";
   });
 
   console.log(

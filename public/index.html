@@ -142,7 +142,7 @@
     <section class="agri-map-workspace">
 <section class="map-section">
         <!-- =================================================
-             PHASE 9.6 ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â MAP OPERATIONAL CONTROL LANE
+             PHASE 9.6 - MAP OPERATIONAL CONTROL LANE
              ================================================= -->
 
         <div class="map-operational-controls" aria-label="Map controls">
@@ -267,6 +267,24 @@
               <path d="M4 16l8 5 8-5"></path>
             </svg>
           </button>
+
+          <button
+            type="button"
+            id="remoteSensingToggle"
+            class="map-operational-button map-icon-button remote-sensing-toggle"
+            title="Remote Sensing"
+            aria-label="Remote Sensing"
+            aria-expanded="false"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 14a8 8 0 0 1 16 0"></path>
+              <path d="M7 14a5 5 0 0 1 10 0"></path>
+              <path d="M10 14a2 2 0 0 1 4 0"></path>
+              <path d="M12 14v7"></path>
+              <path d="M9 21h6"></path>
+            </svg>
+          </button>
+
         </div>
         <div id="map" class="map-container"></div>
       </section>
@@ -286,6 +304,57 @@
       </div>
 
       <div class="agri-context-content">
+
+        <!-- =================================================
+             PHASE 11.8  REMOTE SENSING INTELLIGENCE RAIL
+             ================================================= -->
+
+        <section
+          id="remoteSensingRail"
+          class="agri-intelligence-panel is-hidden"
+          aria-labelledby="remoteSensingRailTitle"
+        >
+          <div class="agri-intelligence-panel-header">
+            <div>
+              <span class="agri-context-kicker">REMOTE SENSING</span>
+              <h2 id="remoteSensingRailTitle">
+                Spectral Indices
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              id="remoteSensingRailClose"
+              class="agri-intelligence-panel-close"
+              title="Close Remote Sensing"
+              aria-label="Close Remote Sensing"
+            >
+              &times;
+            </button>
+          </div>
+
+          <div
+            id="remoteSensingRailContent"
+            class="agri-intelligence-panel-content"
+          >
+            <div
+              id="remoteSensingIndexGrid"
+              class="remote-sensing-index-grid"
+              aria-label="Remote sensing spectral indices"
+            ></div>
+
+            <div
+              id="remoteSensingRailStatus"
+              class="remote-sensing-rail-status"
+              role="status"
+              aria-live="polite"
+            >
+              Loading spectral indices...
+            </div>
+          </div>
+        </section>
+
+        <section class="analysis-panel">
 <section class="analysis-panel">
         <div class="analysis-panel-header">
           <h2>Selected Soil Sample</h2>
@@ -567,8 +636,7 @@
   </div>
 
       </div>
-
-    </main>
+</main>
 
     <!-- =====================================================
          ADD SOIL SAMPLE MODAL
@@ -1092,6 +1160,7 @@
     <script src="/js/map-fertility.js"></script>
     <script src="/js/map-ui-base-layers.js"></script>
 <script src="/js/map.js"></script>
+    <script src="/js/remote-sensing-workspace.js"></script>
     <script src="/js/workspace-navigation.js"></script>
     <script src="/js/integrated-report.js"></script>
     <script src="/js/app.js"></script>

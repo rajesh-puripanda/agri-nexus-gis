@@ -28,7 +28,7 @@ let analysisPanelsInitialized = false;
 // ============================================================
 
 /* ============================================================
-   AGRINEXUS GIS — MAP WORKSPACE STATE
+   AGRINEXUS GIS â€” MAP WORKSPACE STATE
    ------------------------------------------------------------
    Preserves the analytical map state when navigating to
    Historical Analysis and returning to the main map.
@@ -424,6 +424,13 @@ async function initializeApplication() {
       "function"
     ) {
       window.initializeWorkspaceNavigation();
+    }
+
+    if (
+      typeof window.initializeRemoteSensingTool ===
+      "function"
+    ) {
+      window.initializeRemoteSensingTool();
     }
     console.log("Frontend initialization completed.");
   } catch (error) {
@@ -1122,33 +1129,33 @@ function renderSelectedSoilSample(sample) {
 
   const sampleCode = escapeHtml(sample.sample_code || "Unnamed Sample");
 
-  const sampleDate = escapeHtml(sample.sample_date || "—");
+  const sampleDate = escapeHtml(sample.sample_date || "â€”");
 
-  const depthFrom = escapeHtml(sample.depth_from_cm ?? "—");
+  const depthFrom = escapeHtml(sample.depth_from_cm ?? "â€”");
 
-  const depthTo = escapeHtml(sample.depth_to_cm ?? "—");
+  const depthTo = escapeHtml(sample.depth_to_cm ?? "â€”");
 
-  const ph = escapeHtml(sample.ph ?? "—");
+  const ph = escapeHtml(sample.ph ?? "â€”");
 
-  const nitrogen = escapeHtml(sample.nitrogen ?? "—");
+  const nitrogen = escapeHtml(sample.nitrogen ?? "â€”");
 
-  const phosphorus = escapeHtml(sample.phosphorus ?? "—");
+  const phosphorus = escapeHtml(sample.phosphorus ?? "â€”");
 
-  const potassium = escapeHtml(sample.potassium ?? "—");
+  const potassium = escapeHtml(sample.potassium ?? "â€”");
 
-  const organicCarbon = escapeHtml(sample.organic_carbon ?? "—");
+  const organicCarbon = escapeHtml(sample.organic_carbon ?? "â€”");
 
-  const ec = escapeHtml(sample.electrical_conductivity ?? "—");
+  const ec = escapeHtml(sample.electrical_conductivity ?? "â€”");
 
-  const texture = escapeHtml(sample.soil_texture || "—");
+  const texture = escapeHtml(sample.soil_texture || "â€”");
 
   const formattedLatitude = Number.isFinite(latitude)
     ? latitude.toFixed(7)
-    : "—";
+    : "â€”";
 
   const formattedLongitude = Number.isFinite(longitude)
     ? longitude.toFixed(7)
-    : "—";
+    : "â€”";
 
   container.innerHTML = `
     <div class="selected-sample-card">
@@ -1163,7 +1170,7 @@ function renderSelectedSoilSample(sample) {
 
           <p>
             Soil Sample ID:
-            ${escapeHtml(sample.id ?? "—")}
+            ${escapeHtml(sample.id ?? "â€”")}
           </p>
 
         </div>

@@ -6,19 +6,19 @@
    Phase 10.4
    Spatial Query Controls & Result Layer
    Built on:
-     Phase 7.2  — Thematic Marker Symbology
-     Phase 7.3  — Thematic Map & Legend
-     Phase 7.6  — Dashboard / UI Refinement
-     Phase 7.6.1 — Map UI HTML Extraction
-     Phase 7.7  — Map UI Refinement
-     Phase 8.2  — IDW Interpolation Frontend Integration
-     Phase 8.5  — Interpolation Controls / Surface
-     Phase 8.6  — Dynamic Interpolation Legend
-     Phase 9.4  — Fertility Zoning Surface
-     Phase 9.5  — Fertility Zoning Controls & UI
-     Phase 9.6  — Map Operational Control Lane
-     Phase 10.2.5 — Spatial Analysis Popup
-     Phase 10.4 — Spatial Query Controls & Result Layer
+     Phase 7.2  â€” Thematic Marker Symbology
+     Phase 7.3  â€” Thematic Map & Legend
+     Phase 7.6  â€” Dashboard / UI Refinement
+     Phase 7.6.1 â€” Map UI HTML Extraction
+     Phase 7.7  â€” Map UI Refinement
+     Phase 8.2  â€” IDW Interpolation Frontend Integration
+     Phase 8.5  â€” Interpolation Controls / Surface
+     Phase 8.6  â€” Dynamic Interpolation Legend
+     Phase 9.4  â€” Fertility Zoning Surface
+     Phase 9.5  â€” Fertility Zoning Controls & UI
+     Phase 9.6  â€” Map Operational Control Lane
+     Phase 10.2.5 â€” Spatial Analysis Popup
+     Phase 10.4 â€” Spatial Query Controls & Result Layer
    IMPORTANT:
    Scientific classification thresholds are NOT defined here.
    ============================================================ */
@@ -76,7 +76,7 @@
 }
 
 /* ============================================================
-   PHASE 9.6 — EXTERNAL MAP OPERATIONAL CONTROL LANE
+   PHASE 9.6 â€” EXTERNAL MAP OPERATIONAL CONTROL LANE
    ============================================================ */
 
 .map-operational-controls {
@@ -89,7 +89,7 @@
 }
 
 /* ============================================================
-   PHASE 10.6 — COMPACT ICON TOOLBAR
+   PHASE 10.6 â€” COMPACT ICON TOOLBAR
    ============================================================ */
 
 .map-operational-controls {
@@ -662,7 +662,7 @@
 }
 
 /* ============================================================
-   PHASE 8.2 — INTERPOLATION CONTROL
+   PHASE 8.2 â€” INTERPOLATION CONTROL
    ============================================================ */
 
 .soil-interpolation-control {
@@ -1072,7 +1072,7 @@
 }
 
 /* ============================================================
-   PHASE 9.5 — FERTILITY ZONING CONTROL
+   PHASE 9.5 â€” FERTILITY ZONING CONTROL
    ============================================================ */
 
 .soil-fertility-zoning-control {
@@ -1311,7 +1311,7 @@
 }
 
 /* ============================================================
-   PHASE 9.5 — FERTILITY ZONING LEGEND
+   PHASE 9.5 â€” FERTILITY ZONING LEGEND
    ============================================================ */
 
 .soil-fertility-zoning-legend-control {
@@ -2091,7 +2091,7 @@
 }
 
 /* ============================================================
-   PHASE 9.6 — TOP-RIGHT ANALYTICAL CONTROL STACK
+   PHASE 9.6 â€” TOP-RIGHT ANALYTICAL CONTROL STACK
    ============================================================ */
 
 .leaflet-top.leaflet-right .soil-thematic-analysis-control,
@@ -2100,7 +2100,7 @@
 }
 
 /* ============================================================
-   PHASE 10.2.5 — SPATIAL ANALYSIS POPUP STACKING
+   PHASE 10.2.5 â€” SPATIAL ANALYSIS POPUP STACKING
    ============================================================ */
 
 .leaflet-popup-pane {
@@ -2112,7 +2112,7 @@
 }
 
 /* ============================================================
-   PHASE 10.2.5 — SPATIAL ANALYSIS POPUP CONTROL PRIORITY
+   PHASE 10.2.5 â€” SPATIAL ANALYSIS POPUP CONTROL PRIORITY
    ============================================================ */
 
 .leaflet-top.leaflet-right {
@@ -2120,7 +2120,7 @@
 }
 
 /* ============================================================
-   PHASE 10.4 — SPATIAL QUERY CONTROL
+   PHASE 10.4 â€” SPATIAL QUERY CONTROL
    ============================================================ */
 
 .spatial-query-control {

@@ -2696,3 +2696,139 @@ PRINT
 .historical-report-workspace.is-hidden {
   display: none;
 }
+/* ============================================================
+   PHASE 11.8  REMOTE SENSING INTELLIGENCE RAIL
+   ============================================================ */
+
+.agri-intelligence-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  background: #f7faf8;
+  border: 1px solid #dce5e0;
+  border-radius: 12px;
+}
+
+.agri-intelligence-panel.is-hidden {
+  display: none;
+}
+
+.agri-intelligence-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.agri-intelligence-panel-header h2 {
+  margin: 3px 0 0;
+  color: #123c2f;
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+.agri-intelligence-panel-close {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  padding: 0;
+  border: 1px solid #cfdcd5;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #45665a;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.agri-intelligence-panel-close:hover {
+  background: #eaf2ee;
+  color: #123c2f;
+}
+
+.agri-intelligence-panel-content {
+  min-width: 0;
+}
+
+.remote-sensing-index-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.remote-sensing-index-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 82px;
+  padding: 8px 5px;
+  border: 1px solid #d6e2dc;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #21483b;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
+}
+
+.remote-sensing-index-card:hover {
+  background: #eef6f1;
+  border-color: #9dbbad;
+  transform: translateY(-1px);
+}
+
+.remote-sensing-index-card.is-active {
+  background: #dfeee7;
+  border-color: #2d725a;
+  box-shadow: 0 0 0 1px rgba(45, 114, 90, 0.12);
+}
+
+.remote-sensing-index-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-bottom: 4px;
+  font-size: 19px;
+}
+
+.remote-sensing-index-code {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.remote-sensing-index-name {
+  max-width: 100%;
+  margin-top: 2px;
+  overflow: hidden;
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remote-sensing-rail-status {
+  margin-top: 12px;
+  padding: 8px 9px;
+  border-radius: 8px;
+  background: #edf3ef;
+  color: #526b60;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+@media (max-width: 1200px) {
+  .agri-intelligence-panel {
+    display: none;
+  }
+}
