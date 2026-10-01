@@ -12,6 +12,92 @@ const {
     downloadAsset: defaultDownloadAsset
 } = require("./copernicusAssetDownloadService");
 
+function buildSpatialReferenceFromAsset(asset) {
+    const code = asset?.["proj:code"];
+    const bbox = asset?.["proj:bbox"];
+    const transform = asset?.["proj:transform"];
+
+    if (
+        typeof code !== "string" ||
+        !Array.isArray(bbox) ||
+        bbox.length !== 4 ||
+        !Array.isArray(transform) ||
+        transform.length !== 6
+    ) {
+        throw new Error(
+            "Sentinel-2 asset is missing required projection metadata."
+        );
+    }
+
+    const epsgMatch = code.match(/^EPSG:(\d+)$/i);
+
+    if (!epsgMatch) {
+        throw new Error(
+            `Unsupported Sentinel-2 projection code: ${code}`
+        );
+    }
+
+    return {
+        origin: [
+            transform[2],
+            transform[5],
+            0
+        ],
+
+        resolution: [
+            transform[0],
+            transform[4],
+            0
+        ],
+
+        boundingBox: bbox.slice(),
+
+        geoKeys: {
+            ProjectedCSTypeGeoKey:
+                Number(epsgMatch[1]),
+            GTModelTypeGeoKey: 1,
+            GTRasterTypeGeoKey: 1
+        }
+    };
+}
+
+function validateMatchingSpatialReference(redAsset, nirAsset) {
+    const redSpatialReference =
+        buildSpatialReferenceFromAsset(redAsset);
+
+    const nirSpatialReference =
+        buildSpatialReferenceFromAsset(nirAsset);
+
+    if (
+        redSpatialReference.geoKeys.ProjectedCSTypeGeoKey !==
+        nirSpatialReference.geoKeys.ProjectedCSTypeGeoKey
+    ) {
+        throw new Error(
+            "Sentinel-2 Red and NIR assets use different coordinate reference systems."
+        );
+    }
+
+    if (
+        JSON.stringify(redSpatialReference.boundingBox) !==
+        JSON.stringify(nirSpatialReference.boundingBox)
+    ) {
+        throw new Error(
+            "Sentinel-2 Red and NIR assets use different spatial bounding boxes."
+        );
+    }
+
+    if (
+        JSON.stringify(redSpatialReference.resolution) !==
+        JSON.stringify(nirSpatialReference.resolution)
+    ) {
+        throw new Error(
+            "Sentinel-2 Red and NIR assets use different spatial resolutions."
+        );
+    }
+
+    return redSpatialReference;
+}
+
 async function acquireNDVIBands({
     request,
     outputDirectory,
@@ -84,6 +170,12 @@ async function acquireNDVIBands({
 
         acquisitionDate:
             item.properties?.datetime,
+
+        spatialReference:
+            validateMatchingSpatialReference(
+                redAsset,
+                nirAsset
+            ),
 
         red: {
             assetKey: "B04_10m",

@@ -35,6 +35,14 @@ const {
     "sentinel2PreparedRasterContract"
 );
 
+const {
+    createModelPixelScale,
+    createModelTiepoint,
+    createGeoKeyMetadata
+} = require(
+    "../raster/rasterOutputService"
+);
+
 function assertNonEmptyString(
     value,
     fieldName
@@ -139,48 +147,77 @@ function buildGeoTiffMetadata(
     };
 
     if (
-        Array.isArray(
-            spatialReference.modelPixelScale
-        )
+        spatialReference &&
+        typeof spatialReference === "object"
     ) {
-        metadata.ModelPixelScale =
-            spatialReference.modelPixelScale;
-    }
+        if (
+            Array.isArray(spatialReference.resolution) &&
+            Array.isArray(spatialReference.origin) &&
+            spatialReference.geoKeys &&
+            typeof spatialReference.geoKeys === "object"
+        ) {
+            metadata.ModelPixelScale =
+                createModelPixelScale(
+                    spatialReference.resolution
+                );
 
-    if (
-        Array.isArray(
-            spatialReference.modelTiepoint
-        )
-    ) {
-        metadata.ModelTiepoint =
-            spatialReference.modelTiepoint;
-    }
+            metadata.ModelTiepoint =
+                createModelTiepoint(
+                    spatialReference.origin
+                );
 
-    if (
-        Array.isArray(
-            spatialReference.geoKeyDirectory
-        )
-    ) {
-        metadata.GeoKeyDirectory =
-            spatialReference.geoKeyDirectory;
-    }
+            Object.assign(
+                metadata,
+                createGeoKeyMetadata(
+                    spatialReference.geoKeys
+                )
+            );
+        } else {
+            if (
+                Array.isArray(
+                    spatialReference.modelPixelScale
+                )
+            ) {
+                metadata.ModelPixelScale =
+                    spatialReference.modelPixelScale;
+            }
 
-    if (
-        Array.isArray(
-            spatialReference.geoDoubleParams
-        )
-    ) {
-        metadata.GeoDoubleParams =
-            spatialReference.geoDoubleParams;
-    }
+            if (
+                Array.isArray(
+                    spatialReference.modelTiepoint
+                )
+            ) {
+                metadata.ModelTiepoint =
+                    spatialReference.modelTiepoint;
+            }
 
-    if (
-        Array.isArray(
-            spatialReference.geoAsciiParams
-        )
-    ) {
-        metadata.GeoAsciiParams =
-            spatialReference.geoAsciiParams;
+            if (
+                Array.isArray(
+                    spatialReference.geoKeyDirectory
+                )
+            ) {
+                metadata.GeoKeyDirectory =
+                    spatialReference.geoKeyDirectory;
+            }
+
+            if (
+                Array.isArray(
+                    spatialReference.geoDoubleParams
+                )
+            ) {
+                metadata.GeoDoubleParams =
+                    spatialReference.geoDoubleParams;
+            }
+
+            if (
+                Array.isArray(
+                    spatialReference.geoAsciiParams
+                )
+            ) {
+                metadata.GeoAsciiParams =
+                    spatialReference.geoAsciiParams;
+            }
+        }
     }
 
     metadata.SamplesPerPixel =

@@ -34,12 +34,22 @@ test(
 
                         assets: {
                             B04_10m: {
-                                alternate: {
-                                    https: {
-                                        href:
-                                            "https://example.com/B04.jp2"
-                                    }
-                                }
+                                href: "https://...",
+                                "proj:code": "EPSG:32644",
+                                "proj:bbox": [
+                                    699960,
+                                    1890240,
+                                    809760,
+                                    2000040
+                                ],
+                                "proj:transform": [
+                                    10,
+                                    0,
+                                    699960,
+                                    0,
+                                    -10,
+                                    2000040
+                                ]
                             },
 
                             B08_10m: {
@@ -48,7 +58,22 @@ test(
                                         href:
                                             "https://example.com/B08.jp2"
                                     }
-                                }
+                                },
+                                "proj:code": "EPSG:32644",
+                                "proj:bbox": [
+                                    699960,
+                                    1890240,
+                                    809760,
+                                    2000040
+                                ],
+                                "proj:transform": [
+                                    10,
+                                    0,
+                                    699960,
+                                    0,
+                                    -10,
+                                    2000040
+                                ]
                             }
                         }
                     }
@@ -134,6 +159,33 @@ test(
         assert.equal(
             result.acquisitionDate,
             "2026-09-08T04:47:01Z"
+        );
+
+        assert.deepEqual(
+            result.spatialReference,
+            {
+                origin: [
+                    699960,
+                    2000040,
+                    0
+                ],
+                resolution: [
+                    10,
+                    -10,
+                    0
+                ],
+                boundingBox: [
+                    699960,
+                    1890240,
+                    809760,
+                    2000040
+                ],
+                geoKeys: {
+                    ProjectedCSTypeGeoKey: 32644,
+                    GTModelTypeGeoKey: 1,
+                    GTRasterTypeGeoKey: 1
+                }
+            }
         );
 
         assert.equal(

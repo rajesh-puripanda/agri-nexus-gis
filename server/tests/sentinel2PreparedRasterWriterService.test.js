@@ -69,39 +69,30 @@ function createTestPreparedRaster() {
             },
 
             spatialReference: {
-                modelPixelScale: [
-                    10,
-                    10,
-                    0
-                ],
-
-                modelTiepoint: [
-                    0,
-                    0,
-                    0,
+                origin: [
                     500000,
                     1900000,
                     0
                 ],
 
-                geoKeyDirectory: [
-                    1,
-                    1,
-                    0,
-                    7,
-                    1024,
-                    0,
-                    1,
-                    1,
-                    1025,
-                    0,
-                    1,
-                    1,
-                    2048,
-                    0,
-                    1,
-                    32644
-                ]
+                resolution: [
+                    10,
+                    -10,
+                    0
+                ],
+
+                boundingBox: [
+                    500000,
+                    1899980,
+                    500020,
+                    1900000
+                ],
+
+                geoKeys: {
+                    ProjectedCSTypeGeoKey: 32644,
+                    GTModelTypeGeoKey: 1,
+                    GTRasterTypeGeoKey: 1
+                }
             },
 
             noData: -9999,
@@ -211,6 +202,29 @@ test(
             await readGeoTiff(
                 TEST_OUTPUT
             );
+
+        assert.equal(
+            raster.geoKeys.ProjectedCSTypeGeoKey,
+            32644
+        );
+
+        assert.deepEqual(
+            raster.origin,
+            [
+                500000,
+                1900000,
+                0
+            ]
+        );
+
+        assert.deepEqual(
+            raster.resolution,
+            [
+                10,
+                -10,
+                0
+            ]
+        );
 
         assert.equal(
             raster.width,
