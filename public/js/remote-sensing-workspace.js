@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 /*
 ============================================================
@@ -10,10 +10,14 @@
 */
 
 (function () {
-  const CATALOG_URL = "/api/remote-sensing/indices";
+  const CATALOG_URL =
+    "/api/remote-sensing/indices";
 
   const RASTER_OUTPUT_BASE =
     "/api/remote-sensing/raster/output";
+
+  const ENSURE_RASTER_INDEX_URL =
+    "/api/remote-sensing/raster/ensure-index";
 
   const MAX_RENDER_SIZE = 1200;
 
@@ -21,13 +25,67 @@
   let selectedIndex = null;
   let remoteSensingLayer = null;
   let renderSequence = 0;
+  let remoteSensingBusy = false;
+
+  let remoteSensingLayerVisible = true;
+  let remoteSensingOpacity = 0.72;
 
   function getElements() {
     return {
-      rail: document.getElementById("remoteSensingRail"),
-      grid: document.getElementById("remoteSensingIndexGrid"),
-      status: document.getElementById("remoteSensingRailStatus"),
-      close: document.getElementById("remoteSensingRailClose"),
+      rail:
+        document.getElementById(
+          "remoteSensingRail"
+        ),
+
+      grid:
+        document.getElementById(
+          "remoteSensingIndexGrid"
+        ),
+
+      status:
+        document.getElementById(
+          "remoteSensingRailStatus"
+        ),
+
+      close:
+        document.getElementById(
+          "remoteSensingRailClose"
+        ),
+
+      layerToggle:
+        document.getElementById(
+          "remoteSensingLayerToggle"
+        ),
+
+      opacity:
+        document.getElementById(
+          "remoteSensingOpacity"
+        ),
+
+      opacityValue:
+        document.getElementById(
+          "remoteSensingOpacityValue"
+        ),
+
+      progress:
+        document.getElementById(
+          "remoteSensingProgress"
+        ),
+
+      progressText:
+        document.getElementById(
+          "remoteSensingProgressText"
+        ),
+
+      progressValue:
+        document.getElementById(
+          "remoteSensingProgressValue"
+        ),
+
+      progressBar:
+        document.getElementById(
+          "remoteSensingProgressBar"
+        ),
     };
   }
 
@@ -46,7 +104,8 @@
   }
 
   function renderCatalog() {
-    const { grid } = getElements();
+    const { grid } =
+      getElements();
 
     if (!grid) {
       return;
@@ -55,20 +114,42 @@
     grid.innerHTML = "";
 
     catalog.forEach((index) => {
-      const button = document.createElement("button");
+      const button =
+        document.createElement(
+          "button"
+        );
 
       button.type = "button";
-      button.className = "remote-sensing-index-card";
+
+      button.className =
+        "remote-sensing-index-card";
+
+      /*
+      ----------------------------------------------------------
+       Spectral-index selection is locked while an index
+       workflow is running.
+      ----------------------------------------------------------
+      */
+
+      button.disabled =
+        remoteSensingBusy;
 
       if (
         selectedIndex &&
         selectedIndex.code === index.code
       ) {
-        button.classList.add("is-active");
+        button.classList.add(
+          "is-active"
+        );
       }
 
-      button.dataset.indexCode = index.code;
-      button.title = index.description || index.name;
+      button.dataset.indexCode =
+        index.code;
+
+      button.title =
+        index.description ||
+        index.name;
+
       button.setAttribute(
         "aria-label",
         `${index.code}  ${index.name}`
@@ -91,40 +172,281 @@
 
       button.addEventListener(
         "click",
-        () => selectRemoteSensingIndex(index)
+        () =>
+          selectRemoteSensingIndex(
+            index
+          )
       );
 
-      grid.appendChild(button);
+      grid.appendChild(
+        button
+      );
     });
   }
 
   function updateStatus(message) {
-    const { status } = getElements();
+    const { status } =
+      getElements();
 
     if (status) {
-      status.textContent = message;
+      status.textContent =
+        message;
+    }
+  }
+
+  function setRemoteSensingBusy(
+    isBusy
+  ) {
+    remoteSensingBusy =
+      Boolean(isBusy);
+
+    renderCatalog();
+  }
+
+  function updateRemoteSensingLayerControls(
+    enabled
+  ) {
+    const {
+      layerToggle,
+      opacity
+    } = getElements();
+
+    if (layerToggle) {
+      layerToggle.disabled =
+        !enabled;
+
+      layerToggle.checked =
+        remoteSensingLayerVisible;
+    }
+
+    if (opacity) {
+      opacity.disabled =
+        !enabled;
+
+      opacity.value =
+        Math.round(
+          remoteSensingOpacity *
+            100
+        );
+    }
+
+    updateRemoteSensingOpacityLabel();
+  }
+
+  function updateRemoteSensingOpacityLabel() {
+    const { opacityValue } =
+      getElements();
+
+    if (opacityValue) {
+      opacityValue.textContent =
+        `${Math.round(
+          remoteSensingOpacity *
+            100
+        )}%`;
+    }
+  }
+
+  function setRemoteSensingLayerVisibility(
+    visible
+  ) {
+    remoteSensingLayerVisible =
+      Boolean(visible);
+
+    const map =
+      typeof window.getMap ===
+      "function"
+        ? window.getMap()
+        : null;
+
+    if (
+      !map ||
+      !remoteSensingLayer
+    ) {
+      return;
+    }
+
+    if (
+      remoteSensingLayerVisible &&
+      !map.hasLayer(
+        remoteSensingLayer
+      )
+    ) {
+      remoteSensingLayer.addTo(
+        map
+      );
+    }
+
+    if (
+      !remoteSensingLayerVisible &&
+      map.hasLayer(
+        remoteSensingLayer
+      )
+    ) {
+      map.removeLayer(
+        remoteSensingLayer
+      );
+    }
+  }
+
+  function setRemoteSensingOpacity(
+    value
+  ) {
+    const numericValue =
+      Number(value);
+
+    if (
+      !Number.isFinite(
+        numericValue
+      )
+    ) {
+      return;
+    }
+
+    remoteSensingOpacity =
+      Math.max(
+        0,
+        Math.min(
+          1,
+          numericValue
+        )
+      );
+
+    if (
+      remoteSensingLayer
+    ) {
+      remoteSensingLayer.setOpacity(
+        remoteSensingOpacity
+      );
+    }
+
+    updateRemoteSensingOpacityLabel();
+  }
+
+  function updateRemoteSensingProgress(
+    percent,
+    message
+  ) {
+    const {
+      progress,
+      progressText,
+      progressValue,
+      progressBar
+    } = getElements();
+
+    const safePercent =
+      Math.max(
+        0,
+        Math.min(
+          100,
+          Math.round(percent)
+        )
+      );
+
+    if (progress) {
+      progress.classList.remove(
+        "is-hidden"
+      );
+
+      progress.setAttribute(
+        "aria-valuenow",
+        String(safePercent)
+      );
+    }
+
+    if (
+      progressText &&
+      message
+    ) {
+      progressText.textContent =
+        message;
+    }
+
+    if (progressValue) {
+      progressValue.textContent =
+        `${safePercent}%`;
+    }
+
+    if (progressBar) {
+      progressBar.style.width =
+        `${safePercent}%`;
+    }
+  }
+
+  function resetRemoteSensingProgress(
+    message = "Loading raster..."
+  ) {
+    updateRemoteSensingProgress(
+      0,
+      message
+    );
+  }
+
+  function completeRemoteSensingProgress(
+    message = "Raster loaded."
+  ) {
+    updateRemoteSensingProgress(
+      100,
+      message
+    );
+  }
+
+  function hideRemoteSensingProgress() {
+    const { progress } =
+      getElements();
+
+    if (progress) {
+      progress.classList.add(
+        "is-hidden"
+      );
     }
   }
 
   function clearRemoteSensingLayer() {
-    if (!remoteSensingLayer) {
+    if (
+      !remoteSensingLayer
+    ) {
       return;
     }
 
     const map =
-      typeof window.getMap === "function"
+      typeof window.getMap ===
+      "function"
         ? window.getMap()
         : null;
 
-    if (map && map.hasLayer(remoteSensingLayer)) {
-      map.removeLayer(remoteSensingLayer);
+    if (
+      map &&
+      map.hasLayer(
+        remoteSensingLayer
+      )
+    ) {
+      map.removeLayer(
+        remoteSensingLayer
+      );
     }
 
     remoteSensingLayer = null;
+
+    updateRemoteSensingLayerControls(
+      false
+    );
   }
 
-  function selectRemoteSensingIndex(index) {
-    selectedIndex = index;
+  function selectRemoteSensingIndex(
+    index
+  ) {
+    /*
+    ----------------------------------------------------------
+     Hard guard against a second spectral-index request.
+    ----------------------------------------------------------
+    */
+
+    if (remoteSensingBusy) {
+      return;
+    }
+
+    selectedIndex =
+      index;
 
     renderCatalog();
 
@@ -132,20 +454,33 @@
       `${index.code}  ${index.name} selected.`
     );
 
-    loadRemoteSensingMap(index);
-  }
-
-  function getRasterUrl(indexCode, type) {
-    return (
-      `${RASTER_OUTPUT_BASE}/` +
-      `${encodeURIComponent(indexCode)}/` +
-      `${encodeURIComponent(type)}`
+    loadRemoteSensingMap(
+      index
     );
   }
 
-  function getUtmZoneFromEpsg(epsgCode) {
+  function getRasterUrl(
+    indexCode,
+    type
+  ) {
+    return (
+      `${RASTER_OUTPUT_BASE}/` +
+      `${encodeURIComponent(
+        indexCode
+      )}/` +
+      `${encodeURIComponent(
+        type
+      )}`
+    );
+  }
+
+  function getUtmZoneFromEpsg(
+    epsgCode
+  ) {
     if (
-      !Number.isInteger(epsgCode) ||
+      !Number.isInteger(
+        epsgCode
+      ) ||
       epsgCode < 32601 ||
       epsgCode > 32660
     ) {
@@ -155,166 +490,270 @@
     return epsgCode - 32600;
   }
 
-  function utmToLatLng(easting, northing, zone) {
+  function utmToLatLng(
+    easting,
+    northing,
+    zone
+  ) {
     const a = 6378137.0;
-    const eccSquared = 0.00669438;
+
+    const eccSquared =
+      0.00669438;
+
     const eccPrimeSquared =
-        eccSquared / (1 - eccSquared);
+      eccSquared /
+      (1 - eccSquared);
 
-    const k0 = 0.9996;
+    const k0 =
+      0.9996;
 
-    const x = easting - 500000.0;
-    const y = northing;
+    const x =
+      easting -
+      500000.0;
 
-    const m = y / k0;
+    const y =
+      northing;
+
+    const m =
+      y / k0;
+
     const mu =
-        m /
-        (
-            a *
-            (
-                1 -
-                eccSquared / 4 -
-                3 * eccSquared * eccSquared / 64 -
-                5 * Math.pow(eccSquared, 3) / 256
-            )
-        );
-
-    const e1 =
-        (
-            1 -
-            Math.sqrt(1 - eccSquared)
-        ) /
-        (
-            1 +
-            Math.sqrt(1 - eccSquared)
-        );
-
-    const j1 = 3 * e1 / 2 -
-        27 * Math.pow(e1, 3) / 32;
-
-    const j2 = 21 * e1 * e1 / 16 -
-        55 * Math.pow(e1, 4) / 32;
-
-    const j3 = 151 * Math.pow(e1, 3) / 96;
-
-    const j4 =
-        1097 * Math.pow(e1, 4) / 512;
-
-    const fp =
-        mu +
-        j1 * Math.sin(2 * mu) +
-        j2 * Math.sin(4 * mu) +
-        j3 * Math.sin(6 * mu) +
-        j4 * Math.sin(8 * mu);
-
-    const sinFp = Math.sin(fp);
-    const cosFp = Math.cos(fp);
-    const tanFp = Math.tan(fp);
-
-    const c1 =
-        eccPrimeSquared *
-        cosFp *
-        cosFp;
-
-    const t1 = tanFp * tanFp;
-
-    const r1 =
+      m /
+      (
         a *
         (
-            1 - eccSquared
-        ) /
-        Math.pow(
-            1 -
+          1 -
+          eccSquared / 4 -
+          3 *
             eccSquared *
-            sinFp *
-            sinFp,
-            1.5
+            eccSquared /
+            64 -
+          5 *
+            Math.pow(
+              eccSquared,
+              3
+            ) /
+            256
+        )
+      );
+
+    const e1 =
+      (
+        1 -
+        Math.sqrt(
+          1 -
+          eccSquared
+        )
+      ) /
+      (
+        1 +
+        Math.sqrt(
+          1 -
+          eccSquared
+        )
+      );
+
+    const j1 =
+      3 * e1 / 2 -
+      27 *
+        Math.pow(
+          e1,
+          3
+        ) /
+        32;
+
+    const j2 =
+      21 *
+        e1 *
+        e1 /
+        16 -
+      55 *
+        Math.pow(
+          e1,
+          4
+        ) /
+        32;
+
+    const j3 =
+      151 *
+        Math.pow(
+          e1,
+          3
+        ) /
+        96;
+
+    const j4 =
+      1097 *
+        Math.pow(
+          e1,
+          4
+        ) /
+        512;
+
+    const fp =
+      mu +
+      j1 *
+        Math.sin(
+          2 * mu
+        ) +
+      j2 *
+        Math.sin(
+          4 * mu
+        ) +
+      j3 *
+        Math.sin(
+          6 * mu
+        ) +
+      j4 *
+        Math.sin(
+          8 * mu
         );
+
+    const sinFp =
+      Math.sin(fp);
+
+    const cosFp =
+      Math.cos(fp);
+
+    const tanFp =
+      Math.tan(fp);
+
+    const c1 =
+      eccPrimeSquared *
+      cosFp *
+      cosFp;
+
+    const t1 =
+      tanFp * tanFp;
+
+    const r1 =
+      a *
+      (
+        1 -
+        eccSquared
+      ) /
+      Math.pow(
+        1 -
+          eccSquared *
+          sinFp *
+          sinFp,
+        1.5
+      );
 
     const n1 =
-        a /
-        Math.sqrt(
-            1 -
-            eccSquared *
-            sinFp *
-            sinFp
-        );
+      a /
+      Math.sqrt(
+        1 -
+          eccSquared *
+          sinFp *
+          sinFp
+      );
 
-    const d = x / (n1 * k0);
+    const d =
+      x /
+      (n1 * k0);
 
     const latitude =
-        fp -
+      fp -
+      (
+        n1 *
+        tanFp /
+        r1
+      ) *
+      (
+        Math.pow(
+          d,
+          2
+        ) /
+          2 -
         (
-            n1 *
-            tanFp /
-            r1
+          5 +
+          3 * t1 +
+          10 * c1 -
+          4 * c1 * c1 -
+          9 *
+            eccPrimeSquared
         ) *
+          Math.pow(
+            d,
+            4
+          ) /
+          24 +
         (
-            Math.pow(d, 2) / 2 -
-            (
-                5 +
-                3 * t1 +
-                10 * c1 -
-                4 * c1 * c1 -
-                9 * eccPrimeSquared
-            ) *
-            Math.pow(d, 4) / 24 +
-            (
-                61 +
-                90 * t1 +
-                298 * c1 +
-                45 * t1 * t1 -
-                252 * eccPrimeSquared -
-                3 * c1 * c1
-            ) *
-            Math.pow(d, 6) / 720
-        );
+          61 +
+          90 * t1 +
+          298 * c1 +
+          45 * t1 * t1 -
+          252 *
+            eccPrimeSquared -
+          3 * c1 * c1
+        ) *
+          Math.pow(
+            d,
+            6
+          ) /
+          720
+      );
 
     const longitude =
-        (
-            (zone - 1) * 6 -
-            180 +
-            3
-        ) *
+      (
+        (zone - 1) * 6 -
+        180 +
+        3
+      ) *
         (Math.PI / 180) +
+      (
+        d -
         (
-            d -
-            (
-                1 +
-                2 * t1 +
-                c1
-            ) *
-            Math.pow(d, 3) / 6 +
-            (
-                5 -
-                2 * c1 +
-                28 * t1 -
-                3 * c1 * c1 +
-                8 * eccPrimeSquared +
-                24 * t1 * t1
-            ) *
-            Math.pow(d, 5) / 120
-        ) /
+          1 +
+          2 * t1 +
+          c1
+        ) *
+          Math.pow(
+            d,
+            3
+          ) /
+          6 +
+        (
+          5 -
+          2 * c1 +
+          28 * t1 -
+          3 * c1 * c1 +
+          8 *
+            eccPrimeSquared +
+          24 * t1 * t1
+        ) *
+          Math.pow(
+            d,
+            5
+          ) /
+          120
+      ) /
         cosFp;
 
     return {
-        lat:
-            latitude *
-            180 /
-            Math.PI,
+      lat:
+        latitude *
+        180 /
+        Math.PI,
 
-        lng:
-            longitude *
-            180 /
-            Math.PI
+      lng:
+        longitude *
+        180 /
+        Math.PI
     };
-}
-function getLatLngBoundsFromGeoTIFF(image) {
+  }
+
+  function getLatLngBoundsFromGeoTIFF(
+    image
+  ) {
     const boundingBox =
       image.getBoundingBox();
 
     if (
-      !Array.isArray(boundingBox) ||
+      !Array.isArray(
+        boundingBox
+      ) ||
       boundingBox.length < 4
     ) {
       throw new Error(
@@ -323,7 +762,8 @@ function getLatLngBoundsFromGeoTIFF(image) {
     }
 
     const geoKeys =
-      typeof image.getGeoKeys === "function"
+      typeof image.getGeoKeys ===
+      "function"
         ? image.getGeoKeys()
         : {};
 
@@ -333,7 +773,9 @@ function getLatLngBoundsFromGeoTIFF(image) {
       );
 
     const zone =
-      getUtmZoneFromEpsg(epsgCode);
+      getUtmZoneFromEpsg(
+        epsgCode
+      );
 
     if (!zone) {
       throw new Error(
@@ -368,13 +810,20 @@ function getLatLngBoundsFromGeoTIFF(image) {
     isClassification
   ) {
     const canvas =
-      document.createElement("canvas");
+      document.createElement(
+        "canvas"
+      );
 
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width =
+      width;
+
+    canvas.height =
+      height;
 
     const context =
-      canvas.getContext("2d");
+      canvas.getContext(
+        "2d"
+      );
 
     if (!context) {
       throw new Error(
@@ -401,20 +850,32 @@ function getLatLngBoundsFromGeoTIFF(image) {
           Number(values[i]);
 
         if (
-          Number.isFinite(value) &&
+          Number.isFinite(
+            value
+          ) &&
           value !== -9999
         ) {
           min =
-            Math.min(min, value);
+            Math.min(
+              min,
+              value
+            );
 
           max =
-            Math.max(max, value);
+            Math.max(
+              max,
+              value
+            );
         }
       }
 
       if (
-        !Number.isFinite(min) ||
-        !Number.isFinite(max) ||
+        !Number.isFinite(
+          min
+        ) ||
+        !Number.isFinite(
+          max
+        ) ||
         min === max
       ) {
         min = -1;
@@ -434,10 +895,15 @@ function getLatLngBoundsFromGeoTIFF(image) {
         i * 4;
 
       if (
-        !Number.isFinite(value) ||
+        !Number.isFinite(
+          value
+        ) ||
         value === -9999
       ) {
-        imageData.data[offset + 3] = 0;
+        imageData.data[
+          offset + 3
+        ] = 0;
+
         continue;
       }
 
@@ -454,8 +920,12 @@ function getLatLngBoundsFromGeoTIFF(image) {
           );
       } else {
         normalized =
-          (value - min) /
-          (max - min);
+          (
+            value - min
+          ) /
+          (
+            max - min
+          );
 
         normalized =
           Math.max(
@@ -469,37 +939,47 @@ function getLatLngBoundsFromGeoTIFF(image) {
 
       const red =
         Math.round(
-          255 * normalized
+          255 *
+          normalized
         );
 
       const green =
         Math.round(
           255 *
-            (1 -
-              Math.abs(
-                normalized -
-                  0.5
-              ) *
-                2)
+          (
+            1 -
+            Math.abs(
+              normalized -
+              0.5
+            ) *
+            2
+          )
         );
 
       const blue =
         Math.round(
           255 *
-            (1 - normalized)
+          (
+            1 -
+            normalized
+          )
         );
 
-      imageData.data[offset] =
-        red;
+      imageData.data[
+        offset
+      ] = red;
 
-      imageData.data[offset + 1] =
-        green;
+      imageData.data[
+        offset + 1
+      ] = green;
 
-      imageData.data[offset + 2] =
-        blue;
+      imageData.data[
+        offset + 2
+      ] = blue;
 
-      imageData.data[offset + 3] =
-        190;
+      imageData.data[
+        offset + 3
+      ] = 190;
     }
 
     context.putImageData(
@@ -509,6 +989,139 @@ function getLatLngBoundsFromGeoTIFF(image) {
     );
 
     return canvas;
+  }
+
+  async function ensureRasterIndex(
+    index,
+    sequence
+  ) {
+    if (
+      !index ||
+      !index.code
+    ) {
+      return;
+    }
+
+    /*
+    ----------------------------------------------------------
+     Only NDVI currently has an authoritative production
+     rebuild path from the prepared Sentinel-2 scene.
+
+     Other indices continue using their existing output path.
+    ----------------------------------------------------------
+    */
+
+    if (
+      String(index.code)
+        .trim()
+        .toUpperCase() !==
+      "NDVI"
+    ) {
+      return;
+    }
+
+    updateStatus(
+      "NDVI: checking analytical output..."
+    );
+
+    resetRemoteSensingProgress(
+      "Building NDVI..."
+    );
+
+    updateRemoteSensingProgress(
+      5,
+      "Building NDVI..."
+    );
+
+    const response =
+      await fetch(
+        ENSURE_RASTER_INDEX_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            Accept:
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            indexCode:
+              "NDVI",
+          }),
+        }
+      );
+
+    if (
+      sequence !==
+      renderSequence
+    ) {
+      return;
+    }
+
+    if (!response.ok) {
+      let message =
+        `NDVI build request failed: ${response.status}`;
+
+      try {
+        const payload =
+          await response.json();
+
+        if (
+          payload &&
+          payload.message
+        ) {
+          message =
+            payload.message;
+        }
+      } catch (_) {
+        /*
+        Response body is optional
+        for error reporting.
+        */
+      }
+
+      throw new Error(
+        message
+      );
+    }
+
+    const payload =
+      await response.json();
+
+    if (
+      !payload ||
+      payload.success !== true ||
+      payload.status !== "ready"
+    ) {
+      throw new Error(
+        "NDVI ensure request returned an invalid response."
+      );
+    }
+
+    if (
+      payload.built === true
+    ) {
+      updateRemoteSensingProgress(
+        100,
+        "NDVI built. Loading NDVI..."
+      );
+
+      updateStatus(
+        "NDVI built. Loading NDVI..."
+      );
+    } else {
+      updateStatus(
+        "NDVI ready. Loading NDVI..."
+      );
+
+      updateRemoteSensingProgress(
+        100,
+        "NDVI ready. Loading NDVI..."
+      );
+    }
   }
 
   async function renderRasterOutput(
@@ -526,7 +1139,8 @@ function getLatLngBoundsFromGeoTIFF(image) {
     }
 
     const map =
-      typeof window.getMap === "function"
+      typeof window.getMap ===
+      "function"
         ? window.getMap()
         : null;
 
@@ -542,8 +1156,24 @@ function getLatLngBoundsFromGeoTIFF(image) {
         type
       );
 
+    resetRemoteSensingProgress(
+        `${index.code}: Loading raster...`
+    );
+
+    updateStatus(
+        `${index.code} ${index.name}: Loading raster...`
+    );
+
     const response =
-      await fetch(url);
+      await fetch(
+        url,
+        {
+          headers: {
+            Accept:
+              "image/tiff",
+          },
+        }
+      );
 
     if (!response.ok) {
       throw new Error(
@@ -551,11 +1181,133 @@ function getLatLngBoundsFromGeoTIFF(image) {
       );
     }
 
-    const arrayBuffer =
-      await response.arrayBuffer();
+    if (!response.body) {
+      throw new Error(
+        "Raster response streaming is unavailable."
+      );
+    }
+
+    const contentLength =
+      Number(
+        response.headers.get(
+          "content-length"
+        )
+      );
+
+    const reader =
+      response.body.getReader();
+
+    let arrayBuffer;
 
     if (
-      sequence !== renderSequence
+      Number.isFinite(
+        contentLength
+      ) &&
+      contentLength > 0
+    ) {
+      const buffer =
+        new Uint8Array(
+          contentLength
+        );
+
+      let offset = 0;
+
+      while (true) {
+        const {
+          done,
+          value
+        } =
+          await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        if (
+          sequence !==
+          renderSequence
+        ) {
+          reader.cancel();
+          return;
+        }
+
+        buffer.set(
+          value,
+          offset
+        );
+
+        offset +=
+          value.length;
+
+        updateRemoteSensingProgress(
+          (
+            offset /
+            contentLength
+          ) *
+            100,
+          `${index.code}: Loading raster...`
+        );
+      }
+
+      arrayBuffer =
+        buffer.buffer;
+    } else {
+      const chunks = [];
+      let received = 0;
+
+      while (true) {
+        const {
+          done,
+          value
+        } =
+          await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        if (
+          sequence !==
+          renderSequence
+        ) {
+          reader.cancel();
+          return;
+        }
+
+        chunks.push(
+          value
+        );
+
+        received +=
+          value.length;
+      }
+
+      const buffer =
+        new Uint8Array(
+          received
+        );
+
+      let offset = 0;
+
+      for (
+        const chunk of chunks
+      ) {
+        buffer.set(
+          chunk,
+          offset
+        );
+
+        offset +=
+          chunk.length;
+      }
+
+      arrayBuffer =
+        buffer.buffer;
+    }
+
+    if (
+      sequence !==
+      renderSequence
     ) {
       return;
     }
@@ -588,7 +1340,8 @@ function getLatLngBoundsFromGeoTIFF(image) {
       Math.max(
         1,
         Math.round(
-          imageWidth * scale
+          imageWidth *
+          scale
         )
       );
 
@@ -596,21 +1349,33 @@ function getLatLngBoundsFromGeoTIFF(image) {
       Math.max(
         1,
         Math.round(
-          imageHeight * scale
+          imageHeight *
+          scale
         )
       );
 
     const raster =
-      await image.readRasters({
-        samples: [0],
-        width: renderWidth,
-        height: renderHeight,
-        resampleMethod: "nearest",
-        interleave: true,
-      });
+      await image.readRasters(
+        {
+          samples: [0],
+
+          width:
+            renderWidth,
+
+          height:
+            renderHeight,
+
+          resampleMethod:
+            "nearest",
+
+          interleave:
+            true,
+        }
+      );
 
     if (
-      sequence !== renderSequence
+      sequence !==
+      renderSequence
     ) {
       return;
     }
@@ -620,7 +1385,8 @@ function getLatLngBoundsFromGeoTIFF(image) {
         raster,
         renderWidth,
         renderHeight,
-        type === "classification"
+        type ===
+          "classification"
       );
 
     const imageUrl =
@@ -640,22 +1406,44 @@ function getLatLngBoundsFromGeoTIFF(image) {
         imageUrl,
         bounds,
         {
-          opacity: 0.72,
-          interactive: false,
-          crossOrigin: false,
+          opacity:
+            remoteSensingOpacity,
+
+          interactive:
+            false,
+
+          crossOrigin:
+            false,
+
           className:
             "remote-sensing-raster-layer",
         }
       );
 
-    remoteSensingLayer.addTo(
-      map
+    if (
+      remoteSensingLayerVisible
+    ) {
+      remoteSensingLayer.addTo(
+        map
+      );
+    }
+
+    updateRemoteSensingLayerControls(
+      true
+    );
+
+    completeRemoteSensingProgress(
+       `${index.code}: Raster loaded.`
     );
 
     map.fitBounds(
       bounds,
       {
-        padding: [20, 20],
+        padding: [
+          20,
+          20
+        ],
+
         maxZoom: 13,
       }
     );
@@ -668,20 +1456,57 @@ function getLatLngBoundsFromGeoTIFF(image) {
   async function loadRemoteSensingMap(
     index
   ) {
-    const sequence =
-      ++renderSequence;
+    /*
+    ----------------------------------------------------------
+     Single-flight protection.
 
-    clearRemoteSensingLayer();
+     Once the workflow starts, all spectral-index buttons
+     remain disabled until the workflow reaches completion
+     or fails.
+    ----------------------------------------------------------
+    */
 
-    if (!index || !index.code) {
+    if (remoteSensingBusy) {
       return;
     }
 
-    updateStatus(
-      `${index.code} ${index.name}: loading raster...`
+    const sequence =
+      ++renderSequence;
+
+    setRemoteSensingBusy(
+      true
+    );
+
+    clearRemoteSensingLayer();
+
+    if (
+      !index ||
+      !index.code
+    ) {
+      setRemoteSensingBusy(
+        false
+      );
+
+      return;
+    }
+
+    updateRemoteSensingLayerControls(
+      false
     );
 
     try {
+      await ensureRasterIndex(
+        index,
+        sequence
+      );
+
+      if (
+        sequence !==
+        renderSequence
+      ) {
+        return;
+      }
+
       await renderRasterOutput(
         index,
         "index",
@@ -694,12 +1519,28 @@ function getLatLngBoundsFromGeoTIFF(image) {
       );
 
       if (
-        sequence === renderSequence
+        sequence ===
+        renderSequence
       ) {
         updateStatus(
           `${index.code}: raster unavailable.`
         );
+
+        hideRemoteSensingProgress();
       }
+    } finally {
+      /*
+      --------------------------------------------------------
+       The workflow lock is released only after the complete
+       workflow has finished or failed.
+
+       Successful workflow reaches 100% before this executes.
+      --------------------------------------------------------
+      */
+
+      setRemoteSensingBusy(
+        false
+      );
     }
   }
 
@@ -710,11 +1551,15 @@ function getLatLngBoundsFromGeoTIFF(image) {
 
     try {
       const response =
-        await fetch(CATALOG_URL, {
-          headers: {
-            Accept: "application/json",
-          },
-        });
+        await fetch(
+          CATALOG_URL,
+          {
+            headers: {
+              Accept:
+                "application/json",
+            },
+          }
+        );
 
       if (!response.ok) {
         throw new Error(
@@ -727,8 +1572,11 @@ function getLatLngBoundsFromGeoTIFF(image) {
 
       if (
         !payload ||
-        payload.success !== true ||
-        !Array.isArray(payload.indices)
+        payload.success !==
+          true ||
+        !Array.isArray(
+          payload.indices
+        )
       ) {
         throw new Error(
           "Invalid remote sensing catalog response."
@@ -790,12 +1638,17 @@ function getLatLngBoundsFromGeoTIFF(image) {
 
     clearRemoteSensingLayer();
 
+    hideRemoteSensingProgress();
+
     return true;
   }
 
   function initializeRemoteSensingTool() {
-    const { close } =
-      getElements();
+    const {
+      close,
+      layerToggle,
+      opacity
+    } = getElements();
 
     if (!close) {
       console.warn(
@@ -809,6 +1662,36 @@ function getLatLngBoundsFromGeoTIFF(image) {
       "click",
       closeRemoteSensingTool
     );
+
+    if (layerToggle) {
+      layerToggle.addEventListener(
+        "change",
+        () => {
+          setRemoteSensingLayerVisibility(
+            layerToggle.checked
+          );
+        }
+      );
+    }
+
+    if (opacity) {
+      opacity.addEventListener(
+        "input",
+        () => {
+          setRemoteSensingOpacity(
+            Number(
+              opacity.value
+            ) / 100
+          );
+        }
+      );
+    }
+
+    updateRemoteSensingLayerControls(
+      false
+    );
+
+    hideRemoteSensingProgress();
   }
 
   window.openRemoteSensingTool =
@@ -829,7 +1712,3 @@ function getLatLngBoundsFromGeoTIFF(image) {
   window.initializeRemoteSensingTool =
     initializeRemoteSensingTool;
 })();
-
-
-
-

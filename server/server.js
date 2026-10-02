@@ -4,7 +4,7 @@
 //
 // Soil Analysis GIS
 //
-// Phase 10.6 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Historical GIS Context REST API
+// Phase 10.6 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Historical GIS Context REST API
 //
 // ============================================================
 
@@ -39,9 +39,11 @@ const historicalComparisonRoutes = require("./routes/historicalComparisonRoutes"
 const historicalCandidateRoutes = require("./routes/historicalCandidateRoutes");
 const analyticalReportRoutes = require("./routes/analyticalReportRoutes");
 const rasterIndexWorkflowRoutes = require("./routes/rasterIndexWorkflowRoutes");
+const multiSourceRasterIndexWorkflowRoutes = require("./routes/multiSourceRasterIndexWorkflowRoutes");
 const rasterIndexBatchWorkflowRoutes = require("./routes/rasterIndexBatchWorkflowRoutes");
 const remoteSensingIndexCatalogRoutes = require("./routes/remoteSensingIndexCatalogRoutes");
 const rasterOutputRoutes = require("./routes/rasterOutputRoutes");
+const ensureRasterIndexRoutes = require("./routes/ensureRasterIndexRoutes");
 const rasterLayerConfigRoutes = require("./routes/rasterLayerConfigRoutes");
 const vectorLayerConfigRoutes = require("./routes/vectorLayerConfigRoutes");
 
@@ -139,9 +141,19 @@ app.use(
 );
 
 app.use(
+  "/api/remote-sensing/raster",
+  multiSourceRasterIndexWorkflowRoutes,
+);
+
+app.use(
     "/api/remote-sensing/raster",
     rasterOutputRoutes
 );
+
+  app.use(
+      "/api/remote-sensing/raster",
+      ensureRasterIndexRoutes
+  );
 
 app.use(
     "/api/remote-sensing/indices",
@@ -207,7 +219,7 @@ async function startServer() {
 
     const server = app.listen(PORT, () => {
       console.log("");
-      console.log("ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ GIS Server running on port " + PORT);
+      console.log("ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ GIS Server running on port " + PORT);
       console.log("");
       console.log("Open: http://localhost:" + PORT);
       console.log("");

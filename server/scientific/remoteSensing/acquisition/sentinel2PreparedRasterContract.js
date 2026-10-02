@@ -27,6 +27,9 @@
 
 const SENTINEL2_PREPARED_RASTER_CONTRACT_VERSION = "1.0";
 
+// Legacy compatibility export.
+// The prepared raster contract now accepts arbitrary supported
+// Sentinel-2 spectral bands rather than requiring only Red/NIR.
 const PREPARED_BANDS = Object.freeze([
     "Red",
     "NIR"
@@ -58,17 +61,6 @@ function assertFiniteNumber(value, fieldName) {
     ) {
         throw new TypeError(
             `${fieldName} must be a finite number.`
-        );
-    }
-}
-
-function assertPositiveInteger(value, fieldName) {
-    if (
-        !Number.isInteger(value) ||
-        value <= 0
-    ) {
-        throw new TypeError(
-            `${fieldName} must be a positive integer.`
         );
     }
 }
@@ -137,7 +129,7 @@ function validateRaster(raster) {
         ) {
             errors.push(
                 "raster.pixelCount must equal " +
-                "raster.width × raster.height."
+                "raster.width  raster.height."
             );
         }
     }
@@ -156,7 +148,16 @@ function validateRaster(raster) {
             "raster.bands must be an object."
         );
     } else {
-        for (const bandName of PREPARED_BANDS) {
+        const bandNames =
+            Object.keys(raster.bands);
+
+        if (bandNames.length === 0) {
+            errors.push(
+                "raster.bands must contain at least one spectral band."
+            );
+        }
+
+        for (const bandName of bandNames) {
             const band =
                 raster.bands[bandName];
 

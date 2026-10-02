@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // ============================================================
 // AgriNexus GIS
@@ -27,7 +27,9 @@ const CDSE_STAC_BASE_URL =
 const SENTINEL2_L2A_COLLECTION =
     "sentinel-2-l2a";
 
-const DEFAULT_SEARCH_LIMIT = 20;
+const DEFAULT_SEARCH_LIMIT = 1;
+
+const MAX_SEARCH_ATTEMPTS = 5;
 
 function assertAcquisitionRequest(request) {
     if (
@@ -133,21 +135,46 @@ async function search(
         { limit }
     );
 
-    const response = await fetchImpl(
-        endpoint,
-        {
-            method: "POST",
+    const requestOptions = {
+        method: "POST",
 
-            headers: {
-                "content-type":
-                    "application/json",
-                accept:
-                    "application/geo+json"
-            },
+        headers: {
+            "content-type":
+                "application/json",
+            accept:
+                "application/geo+json"
+        },
 
-            body: JSON.stringify(payload)
+        body: JSON.stringify(payload)
+    };
+
+    let response;
+
+    for (let attempt = 1; attempt <= MAX_SEARCH_ATTEMPTS; attempt++) {
+        try {
+            response =
+                await fetchImpl(
+                    endpoint,
+                    requestOptions
+                );
+
+            break;
+        } catch (error) {
+            const transient =
+                error?.cause?.code === "ECONNRESET" ||
+                error?.code === "ECONNRESET" ||
+                error?.message === "fetch failed";
+
+            if (!transient || attempt === MAX_SEARCH_ATTEMPTS) {
+                throw error;
+            }
+
+            await new Promise(
+                (resolve) =>
+                    setTimeout(resolve, 1000 * attempt)
+            );
         }
-    );
+    }
 
     if (!response.ok) {
         const error =

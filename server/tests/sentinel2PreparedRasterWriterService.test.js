@@ -375,3 +375,126 @@ test(
         );
     }
 );
+
+test(
+    "writes an arbitrary multi-band Sentinel-2 prepared raster",
+    async () => {
+        const preparedRaster =
+            createTestPreparedRaster();
+
+        preparedRaster.raster.bands = {
+            Blue: {
+                data: new Float32Array([
+                    0.01,
+                    0.02,
+                    0.03,
+                    0.04
+                ]),
+                dataType: "Float32"
+            },
+
+            Green: {
+                data: new Float32Array([
+                    0.05,
+                    0.06,
+                    0.07,
+                    0.08
+                ]),
+                dataType: "Float32"
+            },
+
+            Red: {
+                data: new Float32Array([
+                    0.10,
+                    0.20,
+                    0.30,
+                    0.40
+                ]),
+                dataType: "Float32"
+            },
+
+            NIR: {
+                data: new Float32Array([
+                    0.50,
+                    0.60,
+                    0.70,
+                    0.80
+                ]),
+                dataType: "Float32"
+            },
+
+            SWIR1: {
+                data: new Float32Array([
+                    0.90,
+                    1.00,
+                    1.10,
+                    1.20
+                ]),
+                dataType: "Float32"
+            },
+
+            SWIR2: {
+                data: new Float32Array([
+                    1.30,
+                    1.40,
+                    1.50,
+                    1.60
+                ]),
+                dataType: "Float32"
+            }
+        };
+
+        const result =
+            await writeSentinel2PreparedRaster({
+                preparedRaster,
+                outputPath: TEST_OUTPUT
+            });
+
+        assert.equal(
+            result.bandCount,
+            6
+        );
+
+        assert.deepEqual(
+            result.bands,
+            [
+                "Blue",
+                "Green",
+                "Red",
+                "NIR",
+                "SWIR1",
+                "SWIR2"
+            ]
+        );
+
+        assert.equal(
+            result.dataType,
+            "Float32"
+        );
+
+        const raster =
+            await readGeoTiff(
+                TEST_OUTPUT
+            );
+
+        assert.equal(
+            raster.samplesPerPixel,
+            6
+        );
+
+        assert.equal(
+            raster.data.length,
+            6
+        );
+
+        assert.equal(
+            raster.data[0].length,
+            4
+        );
+
+        assert.equal(
+            raster.data[5].length,
+            4
+        );
+    }
+);

@@ -7,11 +7,10 @@
 //
 // Responsibility:
 //   Write a validated Sentinel-2 prepared raster as a
-//   two-band Float32 GeoTIFF.
+//   multi-band Float32 GeoTIFF.
 //
 // Band order:
-//   1. Red
-//   2. NIR
+//   Determined by the insertion order of preparedRaster.raster.bands.
 //
 // This service does NOT:
 //   - calculate spectral indices
@@ -58,13 +57,33 @@ function assertNonEmptyString(
 }
 
 function flattenBandData(
-    red,
-    nir,
+    bands,
+    bandOrder,
     pixelCount
 ) {
+    if (
+        !bands ||
+        typeof bands !== "object" ||
+        Array.isArray(bands)
+    ) {
+        throw new TypeError(
+            "bands must be an object."
+        );
+    }
+
+    if (
+        !Array.isArray(bandOrder) ||
+        bandOrder.length === 0
+    ) {
+        throw new TypeError(
+            "bandOrder must be a non-empty array."
+        );
+    }
+
     const values =
         new Float32Array(
-            pixelCount * 2
+            pixelCount *
+            bandOrder.length
         );
 
     for (
@@ -72,11 +91,33 @@ function flattenBandData(
         index < pixelCount;
         index += 1
     ) {
-        values[index * 2] =
-            red[index];
+        for (
+            let bandIndex = 0;
+            bandIndex < bandOrder.length;
+            bandIndex += 1
+        ) {
+            const bandName =
+                bandOrder[bandIndex];
 
-        values[index * 2 + 1] =
-            nir[index];
+            const band =
+                bands[bandName];
+
+            if (
+                !band ||
+                !band.data
+            ) {
+                throw new TypeError(
+                    `Prepared raster band is missing: ${bandName}`
+                );
+            }
+
+            values[
+                index *
+                    bandOrder.length +
+                bandIndex
+            ] =
+                band.data[index];
+        }
     }
 
     return values;
@@ -93,27 +134,35 @@ function buildGeoTiffMetadata(
         noData
     } = preparedRaster.raster;
 
-    const red =
-        bands.Red.data;
+    const bandOrder =
+        Object.keys(bands);
 
-    const nir =
-        bands.NIR.data;
+    if (bandOrder.length === 0) {
+        throw new TypeError(
+            "preparedRaster.raster.bands must contain at least one band."
+        );
+    }
+
+    const bandCount =
+        bandOrder.length;
 
     const metadata = {
         width,
         height,
 
-        SamplesPerPixel: [2],
-
-        BitsPerSample: [
-            32,
-            32
+        SamplesPerPixel: [
+            bandCount
         ],
 
-        SampleFormat: [
-            3,
-            3
-        ],
+        BitsPerSample:
+            Array(
+                bandCount
+            ).fill(32),
+
+        SampleFormat:
+            Array(
+                bandCount
+            ).fill(3),
 
         PlanarConfiguration: 1,
 
@@ -136,10 +185,7 @@ function buildGeoTiffMetadata(
                 acquisitionDate:
                     preparedRaster.acquisitionDate,
 
-                bandOrder: [
-                    "Red",
-                    "NIR"
-                ],
+                bandOrder,
 
                 radiometry:
                     preparedRaster.radiometry
@@ -151,8 +197,12 @@ function buildGeoTiffMetadata(
         typeof spatialReference === "object"
     ) {
         if (
-            Array.isArray(spatialReference.resolution) &&
-            Array.isArray(spatialReference.origin) &&
+            Array.isArray(
+                spatialReference.resolution
+            ) &&
+            Array.isArray(
+                spatialReference.origin
+            ) &&
             spatialReference.geoKeys &&
             typeof spatialReference.geoKeys === "object"
         ) {
@@ -220,18 +270,6 @@ function buildGeoTiffMetadata(
         }
     }
 
-    metadata.SamplesPerPixel =
-        [2];
-
-    metadata.BitsPerSample =
-        [32, 32];
-
-    metadata.SampleFormat =
-        [3, 3];
-
-    metadata.PlanarConfiguration =
-        1;
-
     return metadata;
 }
 
@@ -256,16 +294,19 @@ async function writeSentinel2PreparedRaster({
         bands
     } = validatedRaster.raster;
 
-    const red =
-        bands.Red.data;
+    const bandOrder =
+        Object.keys(bands);
 
-    const nir =
-        bands.NIR.data;
+    if (bandOrder.length === 0) {
+        throw new TypeError(
+            "preparedRaster.raster.bands must contain at least one band."
+        );
+    }
 
     const values =
         flattenBandData(
-            red,
-            nir,
+            bands,
+            bandOrder,
             pixelCount
         );
 
@@ -297,13 +338,13 @@ async function writeSentinel2PreparedRaster({
         width,
         height,
         pixelCount,
-        bandCount: 2,
-        bands: [
-            "Red",
-            "NIR"
-        ],
+        bandCount:
+            bandOrder.length,
+        bands:
+            bandOrder,
         dataType: "Float32",
-        byteLength: buffer.byteLength
+        byteLength:
+            buffer.byteLength
     };
 }
 

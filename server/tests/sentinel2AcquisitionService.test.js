@@ -244,3 +244,264 @@ test(
 );
 
 
+
+test(
+    "acquireSentinel2Bands downloads requested native-resolution L2A bands",
+    async () => {
+        const {
+            acquireSentinel2Bands
+        } = require(
+            "../services/remoteSensing/acquisition/sentinel2AcquisitionService"
+        );
+
+        const calls = [];
+
+        const asset = (
+            code,
+            bbox,
+            transform
+        ) => ({
+            "proj:code": code,
+            "proj:bbox": bbox,
+            "proj:transform": transform,
+            nodata: 0,
+            data_type: "uint16",
+            "raster:scale": 0.0001,
+            "raster:offset": -0.1
+        });
+
+        const assets = {
+            B01_60m: asset(
+                "EPSG:32644",
+                [699960, 1890000, 810000, 2000040],
+                [60, 0, 699960, 0, -60, 2000040]
+            ),
+
+            B02_10m: asset(
+                "EPSG:32644",
+                [699960, 1890240, 809760, 2000040],
+                [10, 0, 699960, 0, -10, 2000040]
+            ),
+
+            B03_10m: asset(
+                "EPSG:32644",
+                [699960, 1890240, 809760, 2000040],
+                [10, 0, 699960, 0, -10, 2000040]
+            ),
+
+            B04_10m: asset(
+                "EPSG:32644",
+                [699960, 1890240, 809760, 2000040],
+                [10, 0, 699960, 0, -10, 2000040]
+            ),
+
+            B05_20m: asset(
+                "EPSG:32644",
+                [699960, 1890240, 809760, 2000040],
+                [20, 0, 699960, 0, -20, 2000040]
+            ),
+
+            B06_20m: asset(
+                "EPSG:32644",
+                [699960, 1890240, 809760, 2000040],
+                [20, 0, 699960, 0, -20, 2000040]
+            ),
+
+            B07_20m: asset(
+                "EPSG:32644",
+                [699960, 1890240, 809760, 2000040],
+                [20, 0, 699960, 0, -20, 2000040]
+            ),
+
+            B08_10m: asset(
+                "EPSG:32644",
+                [699960, 1890240, 809760, 2000040],
+                [10, 0, 699960, 0, -10, 2000040]
+            ),
+
+            B8A_20m: asset(
+                "EPSG:32644",
+                [699960, 1890240, 809760, 2000040],
+                [20, 0, 699960, 0, -20, 2000040]
+            ),
+
+            B09_60m: asset(
+                "EPSG:32644",
+                [699960, 1890000, 810000, 2000040],
+                [60, 0, 699960, 0, -60, 2000040]
+            ),
+
+            B11_20m: asset(
+                "EPSG:32644",
+                [699960, 1890240, 809760, 2000040],
+                [20, 0, 699960, 0, -20, 2000040]
+            ),
+
+            B12_20m: asset(
+                "EPSG:32644",
+                [699960, 1890240, 809760, 2000040],
+                [20, 0, 699960, 0, -20, 2000040]
+            )
+        };
+
+        const fakeSearch = async () => {
+            calls.push({
+                type: "search"
+            });
+
+            return {
+                type: "FeatureCollection",
+
+                features: [
+                    {
+                        id: "S2_TEST_ALL_BANDS",
+
+                        properties: {
+                            datetime:
+                                "2026-09-08T04:47:01Z"
+                        },
+
+                        assets
+                    }
+                ]
+            };
+        };
+
+        const fakeGetAccessToken = async () => {
+            calls.push({
+                type: "authentication"
+            });
+
+            return "TEST_TOKEN";
+        };
+
+        const fakeDownloadAsset = async ({
+            asset,
+            outputPath,
+            accessToken
+        }) => {
+            calls.push({
+                type: "download",
+                asset,
+                outputPath,
+                accessToken
+            });
+
+            return {
+                outputPath
+            };
+        };
+
+        const result =
+            await acquireSentinel2Bands({
+                request: {},
+
+                outputDirectory:
+                    "./data/remote-sensing/test-acquisition",
+
+                searchImpl:
+                    fakeSearch,
+
+                getAccessTokenImpl:
+                    fakeGetAccessToken,
+
+                downloadAssetImpl:
+                    fakeDownloadAsset
+            });
+
+        assert.equal(
+            result.sceneId,
+            "S2_TEST_ALL_BANDS"
+        );
+
+        assert.equal(
+            Object.keys(result.bands).length,
+            12
+        );
+
+        assert.equal(
+            result.bands.Blue.assetKey,
+            "B02_10m"
+        );
+
+        assert.equal(
+            result.bands.Red.assetKey,
+            "B04_10m"
+        );
+
+        assert.equal(
+            result.bands.NIR.assetKey,
+            "B08_10m"
+        );
+
+        assert.equal(
+            result.bands.RedEdge1.assetKey,
+            "B05_20m"
+        );
+
+        assert.equal(
+            result.bands.SWIR1.assetKey,
+            "B11_20m"
+        );
+
+        assert.equal(
+            result.bands.SWIR2.assetKey,
+            "B12_20m"
+        );
+
+        assert.equal(
+            result.bands.Blue.spatialReference.resolution[0],
+            10
+        );
+
+        assert.equal(
+            result.bands.RedEdge1.spatialReference.resolution[0],
+            20
+        );
+
+        assert.equal(
+            result.bands.CoastalAerosol.spatialReference.resolution[0],
+            60
+        );
+
+        assert.equal(
+            result.bands.Blue.radiometry.scale,
+            0.0001
+        );
+
+        assert.equal(
+            result.bands.Blue.radiometry.offset,
+            -0.1
+        );
+
+        assert.equal(
+            result.bands.Blue.radiometry.noData,
+            0
+        );
+
+        assert.equal(
+            calls.length,
+            14
+        );
+
+        assert.equal(
+            calls[0].type,
+            "search"
+        );
+
+        assert.equal(
+            calls[1].type,
+            "authentication"
+        );
+
+        assert.equal(
+            calls.slice(2).every(
+                call =>
+                    call.type === "download" &&
+                    call.accessToken === "TEST_TOKEN"
+            ),
+            true
+        );
+    }
+);
+

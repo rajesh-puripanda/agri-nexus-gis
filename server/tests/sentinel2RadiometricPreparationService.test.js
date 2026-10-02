@@ -266,3 +266,97 @@ test(
         );
     }
 );
+
+test(
+    "prepareSentinel2Bands prepares multiple spectral bands independently",
+    () => {
+        const {
+            prepareSentinel2Bands
+        } = require(
+            "../services/remoteSensing/acquisition/" +
+            "sentinel2RadiometricPreparationService"
+        );
+
+        const result =
+            prepareSentinel2Bands({
+                bands: {
+                    Blue: {
+                        samples:
+                            new Uint16Array([
+                                1000,
+                                2000
+                            ]),
+                        scale: 0.0001,
+                        offset: -0.1,
+                        noData: 0
+                    },
+
+                    RedEdge1: {
+                        samples:
+                            new Uint16Array([
+                                3000,
+                                4000
+                            ]),
+                        scale: 0.0001,
+                        offset: -0.1,
+                        noData: 0
+                    },
+
+                    SWIR1: {
+                        samples:
+                            new Uint16Array([
+                                5000,
+                                6000
+                            ]),
+                        scale: 0.0001,
+                        offset: -0.1,
+                        noData: 0
+                    }
+                },
+
+                outputNoData: -9999
+            });
+
+        assert.deepEqual(
+            Object.keys(result),
+            [
+                "Blue",
+                "RedEdge1",
+                "SWIR1"
+            ]
+        );
+
+        assert.equal(
+            result.Blue.dataType,
+            "Float32"
+        );
+
+        assert.equal(
+            result.RedEdge1.dataType,
+            "Float32"
+        );
+
+        assert.equal(
+            result.SWIR1.dataType,
+            "Float32"
+        );
+
+        assert.ok(
+            Math.abs(
+                result.Blue.data[0] - 0
+            ) < 1e-6
+        );
+
+        assert.ok(
+            Math.abs(
+                result.RedEdge1.data[0] - 0.2
+            ) < 1e-6
+        );
+
+        assert.ok(
+            Math.abs(
+                result.SWIR1.data[0] - 0.4
+            ) < 1e-6
+        );
+    }
+);

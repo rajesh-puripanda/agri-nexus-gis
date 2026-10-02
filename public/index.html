@@ -327,6 +327,66 @@
             ></div>
 
             <div
+              id="remoteSensingLayerControls"
+              class="remote-sensing-layer-controls"
+            >
+              <div class="remote-sensing-layer-header">
+                <span>Layer</span>
+
+                <label
+                  class="remote-sensing-layer-toggle"
+                  for="remoteSensingLayerToggle"
+                >
+                  <input
+                    type="checkbox"
+                    id="remoteSensingLayerToggle"
+                    checked
+                    disabled
+                  />
+                  <span>ON</span>
+                </label>
+              </div>
+
+              <div class="remote-sensing-opacity-control">
+                <div class="remote-sensing-control-label">
+                  <span>Opacity</span>
+                  <output id="remoteSensingOpacityValue">72%</output>
+                </div>
+
+                <input
+                  type="range"
+                  id="remoteSensingOpacity"
+                  min="0"
+                  max="100"
+                  value="72"
+                  disabled
+                />
+              </div>
+            </div>
+
+            <div
+              id="remoteSensingProgress"
+              class="remote-sensing-progress is-hidden"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="0"
+            >
+              <div class="remote-sensing-progress-label">
+                <span id="remoteSensingProgressText">
+                  Loading raster...
+                </span>
+                <span id="remoteSensingProgressValue">0%</span>
+              </div>
+
+              <div class="remote-sensing-progress-track">
+                <div
+                  id="remoteSensingProgressBar"
+                  class="remote-sensing-progress-bar"
+                ></div>
+              </div>
+            </div>
+            <div
               id="remoteSensingRailStatus"
               class="remote-sensing-rail-status"
               role="status"

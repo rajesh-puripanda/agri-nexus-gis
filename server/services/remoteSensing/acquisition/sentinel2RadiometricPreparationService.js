@@ -7,7 +7,7 @@
 //
 // Responsibility:
 //   Convert Sentinel-2 DN samples into physical values using
-//   the radiometric scale/offset declared by the source asset.
+//   the radiometric scale/offset declared by each source asset.
 //
 // Scientific boundary:
 //   physicalValue = DN * scale + offset
@@ -128,7 +128,8 @@ function prepareBandSamples({
         index < samples.length;
         index += 1
     ) {
-        const dn = samples[index];
+        const dn =
+            samples[index];
 
         if (dn === noData) {
             output[index] =
@@ -137,14 +138,84 @@ function prepareBandSamples({
             continue;
         }
 
-        const physicalValue =
-            dn * scale + offset;
-
         output[index] =
-            physicalValue;
+            dn * scale + offset;
     }
 
     return output;
+}
+
+function prepareSentinel2Bands({
+    bands,
+    outputNoData = -9999
+} = {}) {
+    if (
+        !bands ||
+        typeof bands !== "object" ||
+        Array.isArray(bands)
+    ) {
+        throw new TypeError(
+            "bands must be a non-empty object."
+        );
+    }
+
+    const bandNames =
+        Object.keys(bands);
+
+    if (
+        bandNames.length === 0
+    ) {
+        throw new TypeError(
+            "bands must be a non-empty object."
+        );
+    }
+
+    assertFiniteNumber(
+        outputNoData,
+        "outputNoData"
+    );
+
+    const preparedBands = {};
+
+    for (
+        const bandName of bandNames
+    ) {
+        const definition =
+            bands[bandName];
+
+        if (
+            !definition ||
+            typeof definition !== "object"
+        ) {
+            throw new TypeError(
+                `${bandName} definition must be an object.`
+            );
+        }
+
+        const {
+            samples,
+            scale,
+            offset,
+            noData = 0
+        } = definition;
+
+        const data =
+            prepareBandSamples({
+                samples,
+                scale,
+                offset,
+                noData,
+                outputNoData,
+                bandName
+            });
+
+        preparedBands[bandName] = {
+            data,
+            dataType: "Float32"
+        };
+    }
+
+    return preparedBands;
 }
 
 function prepareSentinel2Raster({
@@ -230,24 +301,25 @@ function prepareSentinel2Raster({
         "NIR"
     );
 
-    const red =
-        prepareBandSamples({
-            samples: redSamples,
-            scale,
-            offset,
-            noData: sourceNoData,
-            outputNoData,
-            bandName: "Red"
-        });
+    const preparedBands =
+        prepareSentinel2Bands({
+            bands: {
+                Red: {
+                    samples: redSamples,
+                    scale,
+                    offset,
+                    noData: sourceNoData
+                },
 
-    const nir =
-        prepareBandSamples({
-            samples: nirSamples,
-            scale,
-            offset,
-            noData: sourceNoData,
-            outputNoData,
-            bandName: "NIR"
+                NIR: {
+                    samples: nirSamples,
+                    scale,
+                    offset,
+                    noData: sourceNoData
+                }
+            },
+
+            outputNoData
         });
 
     return createSentinel2PreparedRaster({
@@ -270,17 +342,7 @@ function prepareSentinel2Raster({
             height,
             pixelCount,
 
-            bands: {
-                Red: {
-                    data: red,
-                    dataType: "Float32"
-                },
-
-                NIR: {
-                    data: nir,
-                    dataType: "Float32"
-                }
-            },
+            bands: preparedBands,
 
             spatialReference,
 
@@ -305,7 +367,6 @@ function prepareSentinel2Raster({
                 "UINT16",
 
             scale,
-
             offset,
 
             noData:
@@ -319,5 +380,6 @@ function prepareSentinel2Raster({
 
 module.exports = {
     prepareBandSamples,
+    prepareSentinel2Bands,
     prepareSentinel2Raster
 };

@@ -92,9 +92,15 @@ function calculateEVI(inputs, parameters) {
     L;
 
   if (denominator === 0) {
-    throw new Error(
-      "Cannot calculate EVI: denominator equals zero."
-    );
+    const error =
+        new Error(
+            "Cannot calculate EVI: denominator equals zero."
+        );
+
+    error.code = "INDEX_ZERO_DENOMINATOR";
+    error.indexCode = "EVI";
+
+    throw error;
   }
 
   return (
@@ -151,9 +157,18 @@ function calculateARVI(inputs, parameters) {
     inputs.NIR + correctedRed;
 
   if (denominator === 0) {
-    throw new Error(
-      "Cannot calculate ARVI: denominator equals zero."
-    );
+    const error =
+        new Error(
+            "Cannot calculate ARVI: denominator equals zero."
+        );
+
+    error.code =
+        "INDEX_ZERO_DENOMINATOR";
+
+    error.indexCode =
+        "ARVI";
+
+    throw error;
   }
 
   return (
