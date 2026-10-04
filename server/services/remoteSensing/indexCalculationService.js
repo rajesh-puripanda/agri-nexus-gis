@@ -195,6 +195,18 @@ function calculateNDMI(inputs) {
   );
 }
 
+function calculateSBI(inputs) {
+  assertFiniteBandValue("Green", inputs.Green);
+  assertFiniteBandValue("Red", inputs.Red);
+  assertFiniteBandValue("NIR", inputs.NIR);
+
+  return Math.sqrt(
+    (inputs.Green * inputs.Green) +
+    (inputs.Red * inputs.Red) +
+    (inputs.NIR * inputs.NIR)
+  );
+}
+
 function calculateBSI(inputs) {
   assertFiniteBandValue("SWIR1", inputs.SWIR1);
   assertFiniteBandValue("Red", inputs.Red);
@@ -293,6 +305,10 @@ function calculateScalarIndex({
 
     case "BSI":
       value = calculateBSI(inputs);
+      break;
+
+    case "SBI":
+      value = calculateSBI(inputs);
       break;
 
     default:

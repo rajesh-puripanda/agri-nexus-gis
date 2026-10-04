@@ -205,3 +205,39 @@ test("structural validation remains available independently", () => {
   assert.equal(result.valid, true);
   assert.deepEqual(result.errors, []);
 });
+
+test("SBI request is accepted with all registered bands", () => {
+  const result =
+    validateCalculationRequestAgainstRegistry({
+      indexCode: "SBI",
+      inputs: {
+        Green: "band-green",
+        Red: "band-red",
+        NIR: "band-nir",
+      },
+    });
+
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.indexCode, "SBI");
+  assert.equal(result.definition.code, "SBI");
+});
+
+test("SBI request is rejected when NIR band is missing", () => {
+  const result =
+    validateCalculationRequestAgainstRegistry({
+      indexCode: "SBI",
+      inputs: {
+        Green: "band-green",
+        Red: "band-red",
+      },
+    });
+
+  assert.equal(result.valid, false);
+
+  assert.ok(
+    result.errors.includes(
+      "SBI: missing required input band: NIR"
+    )
+  );
+});

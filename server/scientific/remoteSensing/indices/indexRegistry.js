@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // ============================================================
 // AgriNexus GIS
@@ -30,6 +30,7 @@ const ndmiDefinition = require("./ndmi");
 const INDEX_REGISTRY_VERSION = "1.0";
 
 const bsiDefinition = require("./bsi");
+const sbiDefinition = require("./sbi");
 
 const INDEX_DEFINITIONS = Object.freeze([
   ndviDefinition,
@@ -40,6 +41,7 @@ const INDEX_DEFINITIONS = Object.freeze([
   ndwiDefinition,
   ndmiDefinition,
   bsiDefinition,
+  sbiDefinition,
 ]);
 
 const INDEX_BY_CODE = Object.freeze(

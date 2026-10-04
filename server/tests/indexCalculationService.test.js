@@ -303,3 +303,65 @@ test("public calculation function returns index metadata", () => {
     }
   );
 });
+
+test("SBI calculates correctly", () => {
+  const value = calculateScalarIndex({
+    indexCode: "SBI",
+    inputs: {
+      Green: 0.3,
+      Red: 0.4,
+      NIR: 0.5,
+    },
+  });
+
+  const expected =
+    Math.sqrt(
+      (0.3 * 0.3) +
+      (0.4 * 0.4) +
+      (0.5 * 0.5)
+    );
+
+  assertApproximately(value, expected);
+});
+
+test("SBI is available through the public calculation function", () => {
+  const result =
+    calculateRemoteSensingIndex({
+      indexCode: "SBI",
+      inputs: {
+        Green: 0.3,
+        Red: 0.4,
+        NIR: 0.5,
+      },
+    });
+
+  assert.equal(result.indexCode, "SBI");
+
+  assertApproximately(
+    result.value,
+    Math.sqrt(0.5)
+  );
+
+  assert.deepEqual(
+    result.validRange,
+    {
+      min: 0,
+      max: Math.sqrt(3),
+    }
+  );
+});
+
+test("SBI rejects non-finite band values", () => {
+  assert.throws(
+    () =>
+      calculateScalarIndex({
+        indexCode: "SBI",
+        inputs: {
+          Green: NaN,
+          Red: 0.4,
+          NIR: 0.5,
+        },
+      }),
+    /Band Green must be a finite number/
+  );
+});
