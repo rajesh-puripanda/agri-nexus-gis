@@ -16,6 +16,7 @@
 
 const arviDefinition = Object.freeze({
   code: "ARVI",
+  category: "spectral",
 
   name: "Atmospherically Resistant Vegetation Index",
 

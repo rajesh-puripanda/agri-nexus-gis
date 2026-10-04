@@ -16,6 +16,7 @@
 
 const eviDefinition = Object.freeze({
   code: "EVI",
+  category: "spectral",
 
   name: "Enhanced Vegetation Index",
 

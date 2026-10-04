@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // ============================================================
 // AgriNexus GIS
@@ -195,6 +195,38 @@ function calculateNDMI(inputs) {
   );
 }
 
+function calculateBSI(inputs) {
+  assertFiniteBandValue("SWIR1", inputs.SWIR1);
+  assertFiniteBandValue("Red", inputs.Red);
+  assertFiniteBandValue("NIR", inputs.NIR);
+  assertFiniteBandValue("Blue", inputs.Blue);
+
+  const numerator =
+    (inputs.SWIR1 + inputs.Red) -
+    (inputs.NIR + inputs.Blue);
+
+  const denominator =
+    (inputs.SWIR1 + inputs.Red) +
+    (inputs.NIR + inputs.Blue);
+
+  if (denominator === 0) {
+    const error =
+      new Error(
+        "Cannot calculate BSI: denominator equals zero."
+      );
+
+    error.code =
+      "INDEX_ZERO_DENOMINATOR";
+
+    error.indexCode =
+      "BSI";
+
+    throw error;
+  }
+
+  return numerator / denominator;
+}
+
 function getDefaultParameters(definition) {
   return {
     ...(definition.parameters || {}),
@@ -257,6 +289,10 @@ function calculateScalarIndex({
 
     case "NDMI":
       value = calculateNDMI(inputs);
+      break;
+
+    case "BSI":
+      value = calculateBSI(inputs);
       break;
 
     default:

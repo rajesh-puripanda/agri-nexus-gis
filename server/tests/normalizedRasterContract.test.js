@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // ============================================================
 // server/tests/normalizedRasterContract.test.js
@@ -95,10 +95,10 @@ function createValidRaster() {
     };
 }
 
-test("normalized raster contract exposes version 1.0", () => {
+test("normalized raster contract exposes version 1.1", () => {
     assert.equal(
         NORMALIZED_RASTER_CONTRACT_VERSION,
-        "1.0"
+        "1.1"
     );
 });
 
@@ -110,7 +110,8 @@ test("normalized raster contract defines canonical spectral band names", () => {
             "Green",
             "Red",
             "NIR",
-            "SWIR"
+            "SWIR",
+            "SWIR1"
         ]
     );
 });
@@ -124,7 +125,7 @@ test("valid normalized raster passes contract validation", () => {
     assert.equal(result.valid, true);
     assert.equal(
         result.contractVersion,
-        "1.0"
+        "1.1"
     );
     assert.equal(result.width, 2);
     assert.equal(result.height, 2);
@@ -442,7 +443,7 @@ test("factory creates and validates a normalized raster", () => {
 
     assert.equal(
         raster.contractVersion,
-        "1.0"
+        "1.1"
     );
 
     assert.equal(

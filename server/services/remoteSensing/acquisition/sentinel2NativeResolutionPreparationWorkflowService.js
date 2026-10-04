@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 // ============================================================
 // AgriNexus GIS
@@ -6,10 +6,12 @@
 // Sentinel-2 Native-Resolution Preparation Workflow
 //
 // Responsibility:
-//   Acquire requested Sentinel-2 L2A bands, decode JP2 assets,
-//   apply per-band radiometric preparation, group bands by their
-//   authoritative native resolution, validate each native grid,
-//   and write one prepared Float32 GeoTIFF per native resolution.
+//   Acquire requested Sentinel-2 L2A bands, calculate a spatial
+//   pixel window from the requested WGS84 bbox, decode only that
+//   window from each JP2 asset, apply per-band radiometric
+//   preparation, group bands by their authoritative native
+//   resolution, validate each native grid, and write one
+//   prepared Float32 GeoTIFF per native resolution.
 //
 // This service does NOT:
 //   - calculate spectral indices
@@ -17,6 +19,28 @@
 //   - reproject
 //   - resample
 //   - align different native resolutions
+//
+// Spatial processing boundary:
+//
+//   WGS84 request bbox
+//          |
+//          v
+//   acquired projected CRS
+//          |
+//          v
+//   projected intersection with asset bounds
+//          |
+//          v
+//   pixel window
+//          |
+//          v
+//   windowed JP2 decode
+//          |
+//          v
+//   radiometric preparation
+//          |
+//          v
+//   native-resolution prepared GeoTIFF
 // ============================================================
 
 const path = require("node:path");
@@ -26,8 +50,9 @@ const {
 } = require("./sentinel2AcquisitionService");
 
 const {
-    decodeSentinel2Jp2: defaultDecodeSentinel2Jp2
-} = require("./sentinel2Jp2DecoderService");
+    decodeSentinel2Jp2Window:
+        defaultDecodeSentinel2Jp2Window
+} = require("./sentinel2Jp2WindowDecoderService");
 
 const {
     prepareSentinel2Bands: defaultPrepareSentinel2Bands
@@ -41,7 +66,8 @@ const {
 );
 
 const {
-    writeSentinel2PreparedRaster: defaultWriteSentinel2PreparedRaster
+    writeSentinel2PreparedRaster:
+        defaultWriteSentinel2PreparedRaster
 } = require("./sentinel2PreparedRasterWriterService");
 
 const {
@@ -51,8 +77,16 @@ const {
     "sentinel2BandCatalog"
 );
 
+const {
+    transformWgs84BboxToProjected,
+    projectedBboxToPixelWindow
+} = require(
+    "../../../scientific/remoteSensing/spatial/" +
+    "sentinel2SpatialWindow"
+);
+
 const SENTINEL2_NATIVE_RESOLUTION_PREPARATION_WORKFLOW_VERSION =
-    "1.0";
+    "1.1";
 
 const OUTPUT_NODATA = -9999;
 
@@ -251,6 +285,311 @@ function validateNativeResolutionGroup(
     };
 }
 
+function normalizeRequestBbox(
+    request
+) {
+    const bbox =
+        request
+            ?.spatialContext
+            ?.bbox;
+
+    if (
+        !bbox ||
+        typeof bbox !== "object" ||
+        Array.isArray(bbox)
+    ) {
+        throw new TypeError(
+            "request.spatialContext.bbox must be an object."
+        );
+    }
+
+    const {
+        west,
+        south,
+        east,
+        north
+    } = bbox;
+
+    if (
+        !Number.isFinite(west) ||
+        !Number.isFinite(south) ||
+        !Number.isFinite(east) ||
+        !Number.isFinite(north)
+    ) {
+        throw new TypeError(
+            "request.spatialContext.bbox coordinates must be finite numbers."
+        );
+    }
+
+    if (west >= east) {
+        throw new RangeError(
+            "request.spatialContext.bbox west must be less than east."
+        );
+    }
+
+    if (south >= north) {
+        throw new RangeError(
+            "request.spatialContext.bbox south must be less than north."
+        );
+    }
+
+    return [
+        west,
+        south,
+        east,
+        north
+    ];
+}
+
+function normalizeProjectedBoundingBox(
+    boundingBox
+) {
+    if (
+        !Array.isArray(boundingBox) ||
+        boundingBox.length !== 4
+    ) {
+        throw new Error(
+            "Sentinel-2 asset projected bounding box is required."
+        );
+    }
+
+    const [
+        minX,
+        minY,
+        maxX,
+        maxY
+    ] = boundingBox;
+
+    if (
+        !Number.isFinite(minX) ||
+        !Number.isFinite(minY) ||
+        !Number.isFinite(maxX) ||
+        !Number.isFinite(maxY)
+    ) {
+        throw new Error(
+            "Sentinel-2 asset projected bounding box must contain finite numbers."
+        );
+    }
+
+    if (
+        minX >= maxX ||
+        minY >= maxY
+    ) {
+        throw new Error(
+            "Sentinel-2 asset projected bounding box must have positive dimensions."
+        );
+    }
+
+    return [
+        minX,
+        minY,
+        maxX,
+        maxY
+    ];
+}
+
+function intersectProjectedBboxes(
+    requested,
+    available
+) {
+    const [
+        requestedMinX,
+        requestedMinY,
+        requestedMaxX,
+        requestedMaxY
+    ] = requested;
+
+    const [
+        availableMinX,
+        availableMinY,
+        availableMaxX,
+        availableMaxY
+    ] = available;
+
+    const minX =
+        Math.max(
+            requestedMinX,
+            availableMinX
+        );
+
+    const minY =
+        Math.max(
+            requestedMinY,
+            availableMinY
+        );
+
+    const maxX =
+        Math.min(
+            requestedMaxX,
+            availableMaxX
+        );
+
+    const maxY =
+        Math.min(
+            requestedMaxY,
+            availableMaxY
+        );
+
+    if (
+        minX >= maxX ||
+        minY >= maxY
+    ) {
+        throw new RangeError(
+            "Requested Sentinel-2 spatial bbox does not intersect the acquired raster."
+        );
+    }
+
+    return [
+        minX,
+        minY,
+        maxX,
+        maxY
+    ];
+}
+
+function buildWindowSpatialReference(
+    spatialReference,
+    window
+) {
+    const origin =
+        spatialReference.origin;
+
+    const resolution =
+        spatialReference.resolution;
+
+    const windowOriginX =
+        origin[0] +
+        window.x0 *
+        resolution[0];
+
+    const windowOriginY =
+        origin[1] +
+        window.y0 *
+        resolution[1];
+
+    const windowMaxX =
+        windowOriginX +
+        window.width *
+        resolution[0];
+
+    const windowMaxY =
+        windowOriginY +
+        window.height *
+        resolution[1];
+
+    return {
+        origin: [
+            windowOriginX,
+            windowOriginY,
+            0
+        ],
+
+        resolution: [
+            resolution[0],
+            resolution[1],
+            0
+        ],
+
+        boundingBox: [
+            Math.min(
+                windowOriginX,
+                windowMaxX
+            ),
+
+            Math.min(
+                windowOriginY,
+                windowMaxY
+            ),
+
+            Math.max(
+                windowOriginX,
+                windowMaxX
+            ),
+
+            Math.max(
+                windowOriginY,
+                windowMaxY
+            )
+        ],
+
+        geoKeys: {
+            ...spatialReference.geoKeys
+        }
+    };
+}
+
+function buildBandDecodeWindow({
+    requestBbox,
+    spatialReference
+}) {
+    if (
+        !spatialReference ||
+        typeof spatialReference !== "object"
+    ) {
+        throw new Error(
+            "Sentinel-2 band spatial reference is required."
+        );
+    }
+
+    const epsg =
+        spatialReference
+            ?.geoKeys
+            ?.ProjectedCSTypeGeoKey;
+
+    if (
+        !Number.isInteger(epsg) ||
+        epsg <= 0
+    ) {
+        throw new Error(
+            "Sentinel-2 band projected EPSG code is required."
+        );
+    }
+
+    const requestedProjectedBbox =
+        transformWgs84BboxToProjected(
+            requestBbox,
+            epsg
+        );
+
+    const assetProjectedBbox =
+        normalizeProjectedBoundingBox(
+            spatialReference.boundingBox
+        );
+
+    const intersectedProjectedBbox =
+        intersectProjectedBboxes(
+            requestedProjectedBbox,
+            assetProjectedBbox
+        );
+
+    const window =
+        projectedBboxToPixelWindow(
+            intersectedProjectedBbox,
+            spatialReference
+        );
+
+    return {
+        version: "1.0",
+
+        sourceCrs:
+            "EPSG:4326",
+
+        targetCrs:
+            `EPSG:${epsg}`,
+
+        geographicBbox:
+            requestBbox.slice(),
+
+        requestedProjectedBbox,
+
+        assetProjectedBbox,
+
+        intersectedProjectedBbox,
+
+        window
+    };
+}
+
 async function prepareSentinel2NativeResolutionRasters({
     request,
     outputDirectory,
@@ -261,7 +600,7 @@ async function prepareSentinel2NativeResolutionRasters({
         defaultAcquireSentinel2Bands,
 
     decodeImpl =
-        defaultDecodeSentinel2Jp2,
+        defaultDecodeSentinel2Jp2Window,
 
     prepareImpl =
         defaultPrepareSentinel2Bands,
@@ -291,6 +630,11 @@ async function prepareSentinel2NativeResolutionRasters({
             "bandNames must be a non-empty array."
         );
     }
+
+    const requestBbox =
+        normalizeRequestBbox(
+            request
+        );
 
     const acquisition =
         await acquisitionImpl({
@@ -323,6 +667,7 @@ async function prepareSentinel2NativeResolutionRasters({
         ] of Object.entries(groups)
     ) {
         const decodedBands = {};
+        const decodeWindows = {};
 
         for (
             const bandName of groupBandNames
@@ -336,10 +681,62 @@ async function prepareSentinel2NativeResolutionRasters({
                 );
             }
 
-            decodedBands[bandName] =
-                await decodeImpl(
-                    band.path
+            const decodeWindow =
+                buildBandDecodeWindow({
+                    requestBbox,
+                    spatialReference:
+                        band.spatialReference
+                });
+
+            decodeWindows[bandName] =
+                decodeWindow;
+
+            const decoded =
+                await decodeImpl({
+                    inputPath:
+                        band.path,
+
+                    x0:
+                        decodeWindow.window.x0,
+
+                    y0:
+                        decodeWindow.window.y0,
+
+                    x1:
+                        decodeWindow.window.x1,
+
+                    y1:
+                        decodeWindow.window.y1
+                });
+
+                        if (
+                !decoded ||
+                !decoded.window ||
+                !Number.isInteger(
+                    decoded.window.width
+                ) ||
+                !Number.isInteger(
+                    decoded.window.height
+                ) ||
+                !decoded.samples
+            ) {
+                throw new Error(
+                    `Sentinel-2 ${bandName} window decoder returned an invalid result.`
                 );
+            }
+
+            decoded.width =
+                decoded.window.width;
+
+            decoded.height =
+                decoded.window.height;
+
+            decoded.pixelCount =
+                decoded.width *
+                decoded.height;
+
+            decodedBands[bandName] =
+                decoded;
         }
 
         const group =
@@ -347,6 +744,14 @@ async function prepareSentinel2NativeResolutionRasters({
                 groupBandNames,
                 acquisition.bands,
                 decodedBands
+            );
+
+        const windowSpatialReference =
+            buildWindowSpatialReference(
+                group.spatialReference,
+                decodeWindows[
+                    groupBandNames[0]
+                ].window
             );
 
         const preparationInput = {};
@@ -412,7 +817,7 @@ async function prepareSentinel2NativeResolutionRasters({
                         preparedBands,
 
                     spatialReference:
-                        group.spatialReference,
+                        windowSpatialReference,
 
                     noData:
                         outputNoData,
@@ -455,6 +860,11 @@ async function prepareSentinel2NativeResolutionRasters({
                                     ]
                                 )
                             ),
+
+                        decodeWindows,
+
+                        requestedSpatialBbox:
+                            requestBbox,
 
                         radiometryByBand:
                             Object.fromEntries(
@@ -504,8 +914,34 @@ async function prepareSentinel2NativeResolutionRasters({
                 outputFileName
             );
 
-        console.log("=== PREPARED RASTER SPATIAL REFERENCE ===");
-        console.log(JSON.stringify(preparedRaster.raster.spatialReference, null, 2));
+        console.log(
+            "=== PREPARED RASTER SPATIAL REFERENCE ==="
+        );
+
+        console.log(
+            JSON.stringify(
+                preparedRaster
+                    .raster
+                    .spatialReference,
+                null,
+                2
+            )
+        );
+
+        console.log(
+            "=== SENTINEL-2 WINDOW ==="
+        );
+
+        console.log(
+            JSON.stringify(
+                decodeWindows[
+                    groupBandNames[0]
+                ],
+                null,
+                2
+            )
+        );
+
         const written =
             await writeImpl({
                 preparedRaster,
@@ -545,11 +981,13 @@ async function prepareSentinel2NativeResolutionRasters({
         outputs
     };
 }
+
 module.exports = {
     SENTINEL2_NATIVE_RESOLUTION_PREPARATION_WORKFLOW_VERSION,
     groupBandsByNativeResolution,
     validateNativeResolutionGroup,
-    prepareSentinel2NativeResolutionRasters
+    prepareSentinel2NativeResolutionRasters,
+    normalizeRequestBbox,
+    buildBandDecodeWindow,
+    buildWindowSpatialReference
 };
-
-

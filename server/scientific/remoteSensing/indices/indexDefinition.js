@@ -7,12 +7,17 @@
 //
 // Phase 13.1  Remote Sensing Domain Architecture
 //
-// Common scientific contract for spectral-index definitions.
+// Common scientific contract for remote-sensing index definitions.
 // Metadata validation only; no index calculation.
 //
 // ============================================================
 
-const INDEX_DEFINITION_VERSION = "1.0";
+const INDEX_DEFINITION_VERSION = "1.1";
+
+const INDEX_CATEGORIES = Object.freeze([
+  "spectral",
+  "soil-focused",
+]);
 
 const REQUIRED_INDEX_FIELDS = Object.freeze([
   "code",
@@ -42,30 +47,53 @@ function validateIndexDefinition(definition) {
       definition[field] === undefined ||
       definition[field] === null
     ) {
-      errors.push(`Missing required field: ${field}`);
+      errors.push(
+        `Missing required field: ${field}`
+      );
     }
   }
 
   if (
     definition.code !== undefined &&
-    (typeof definition.code !== "string" ||
-      definition.code.trim().length === 0)
+    (
+      typeof definition.code !== "string" ||
+      definition.code.trim().length === 0
+    )
   ) {
-    errors.push("code must be a non-empty string.");
+    errors.push(
+      "code must be a non-empty string."
+    );
+  }
+
+  if (
+    definition.category !== undefined &&
+    !INDEX_CATEGORIES.includes(
+      definition.category
+    )
+  ) {
+    errors.push(
+      `category must be one of: ${INDEX_CATEGORIES.join(", ")}.`
+    );
   }
 
   if (
     definition.requiredBands !== undefined &&
     !Array.isArray(definition.requiredBands)
   ) {
-    errors.push("requiredBands must be an array.");
+    errors.push(
+      "requiredBands must be an array."
+    );
   }
 
   if (
     definition.sensorCompatibility !== undefined &&
-    !Array.isArray(definition.sensorCompatibility)
+    !Array.isArray(
+      definition.sensorCompatibility
+    )
   ) {
-    errors.push("sensorCompatibility must be an array.");
+    errors.push(
+      "sensorCompatibility must be an array."
+    );
   }
 
   if (
@@ -76,16 +104,25 @@ function validateIndexDefinition(definition) {
       Array.isArray(definition.validRange)
     )
   ) {
-    errors.push("validRange must be an object.");
+    errors.push(
+      "validRange must be an object."
+    );
   } else if (definition.validRange) {
-    const { min, max } = definition.validRange;
+    const {
+      min,
+      max,
+    } = definition.validRange;
 
     if (!Number.isFinite(min)) {
-      errors.push("validRange.min must be a finite number.");
+      errors.push(
+        "validRange.min must be a finite number."
+      );
     }
 
     if (!Number.isFinite(max)) {
-      errors.push("validRange.max must be a finite number.");
+      errors.push(
+        "validRange.max must be a finite number."
+      );
     }
 
     if (
@@ -93,7 +130,9 @@ function validateIndexDefinition(definition) {
       Number.isFinite(max) &&
       min >= max
     ) {
-      errors.push("validRange.min must be less than validRange.max.");
+      errors.push(
+        "validRange.min must be less than validRange.max."
+      );
     }
   }
 
@@ -105,6 +144,7 @@ function validateIndexDefinition(definition) {
 
 module.exports = {
   INDEX_DEFINITION_VERSION,
+  INDEX_CATEGORIES,
   REQUIRED_INDEX_FIELDS,
   validateIndexDefinition,
 };

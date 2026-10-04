@@ -37,9 +37,19 @@
           "remoteSensingRail"
         ),
 
-      grid:
+      spectralGrid:
         document.getElementById(
-          "remoteSensingIndexGrid"
+          "remoteSensingSpectralGrid"
+        ),
+
+      soilGrid:
+        document.getElementById(
+          "remoteSensingSoilGrid"
+        ),
+
+      soilEmpty:
+        document.getElementById(
+          "remoteSensingSoilEmpty"
         ),
 
       status:
@@ -104,20 +114,34 @@
   }
 
   function renderCatalog() {
-    const { grid } =
-      getElements();
+    const {
+      spectralGrid,
+      soilGrid,
+      soilEmpty,
+    } = getElements();
 
-    if (!grid) {
+    if (!spectralGrid || !soilGrid) {
       return;
     }
 
-    grid.innerHTML = "";
+    spectralGrid.innerHTML = "";
+    soilGrid.innerHTML = "";
 
-    catalog.forEach((index) => {
+    const spectralIndexes =
+      catalog.filter(
+        (index) =>
+          index.category === "spectral"
+      );
+
+    const soilFocusedIndexes =
+      catalog.filter(
+        (index) =>
+          index.category === "soil-focused"
+      );
+
+    function createIndexCard(index) {
       const button =
-        document.createElement(
-          "button"
-        );
+        document.createElement("button");
 
       button.type = "button";
 
@@ -126,8 +150,8 @@
 
       /*
       ----------------------------------------------------------
-       Spectral-index selection is locked while an index
-       workflow is running.
+      Index selection is locked while an index workflow
+      is running.
       ----------------------------------------------------------
       */
 
@@ -152,12 +176,14 @@
 
       button.setAttribute(
         "aria-label",
-        `${index.code}  ${index.name}`
+        `${index.code} — ${index.name}`
       );
 
       button.innerHTML = `
-        <span class="remote-sensing-index-icon"
-              aria-hidden="true">
+        <span
+          class="remote-sensing-index-icon"
+          aria-hidden="true"
+        >
           ${indexIcon(index.code)}
         </span>
 
@@ -178,10 +204,31 @@
           )
       );
 
-      grid.appendChild(
-        button
+      return button;
+    }
+
+    spectralIndexes.forEach(
+      (index) => {
+        spectralGrid.appendChild(
+          createIndexCard(index)
+        );
+      }
+    );
+
+    soilFocusedIndexes.forEach(
+      (index) => {
+        soilGrid.appendChild(
+          createIndexCard(index)
+        );
+      }
+    );
+
+    if (soilEmpty) {
+      soilEmpty.classList.toggle(
+        "is-hidden",
+        soilFocusedIndexes.length > 0
       );
-    });
+    }
   }
 
   function updateStatus(message) {
@@ -1002,35 +1049,38 @@
       return;
     }
 
+    const indexCode =
+      String(index.code)
+        .trim()
+        .toUpperCase();
+
     /*
     ----------------------------------------------------------
-     Only NDVI currently has an authoritative production
-     rebuild path from the prepared Sentinel-2 scene.
+    NDVI and BSI currently have an authoritative production
+    rebuild path through the generic Sentinel-2 index workflow.
 
-     Other indices continue using their existing output path.
+    Other indices continue using their existing output path.
     ----------------------------------------------------------
     */
 
     if (
-      String(index.code)
-        .trim()
-        .toUpperCase() !==
-      "NDVI"
+      indexCode !== "NDVI" &&
+      indexCode !== "BSI"
     ) {
       return;
     }
 
     updateStatus(
-      "NDVI: checking analytical output..."
+      `${indexCode}: checking analytical output...`
     );
 
     resetRemoteSensingProgress(
-      "Building NDVI..."
+      `Building ${indexCode}...`
     );
 
     updateRemoteSensingProgress(
       5,
-      "Building NDVI..."
+      `Building ${indexCode}...`
     );
 
     const response =
@@ -1048,8 +1098,7 @@
           },
 
           body: JSON.stringify({
-            indexCode:
-              "NDVI",
+            indexCode,
           }),
         }
       );
@@ -1063,7 +1112,7 @@
 
     if (!response.ok) {
       let message =
-        `NDVI build request failed: ${response.status}`;
+        `${indexCode} build request failed: ${response.status}`;
 
       try {
         const payload =
@@ -1071,16 +1120,14 @@
 
         if (
           payload &&
-          payload.message
+          typeof payload.message ===
+            "string"
         ) {
           message =
             payload.message;
         }
-      } catch (_) {
-        /*
-        Response body is optional
-        for error reporting.
-        */
+      } catch {
+        // Preserve HTTP status message.
       }
 
       throw new Error(
@@ -1097,7 +1144,7 @@
       payload.status !== "ready"
     ) {
       throw new Error(
-        "NDVI ensure request returned an invalid response."
+        `${indexCode} build did not return a ready result.`
       );
     }
 
@@ -1106,20 +1153,12 @@
     ) {
       updateRemoteSensingProgress(
         100,
-        "NDVI built. Loading NDVI..."
-      );
-
-      updateStatus(
-        "NDVI built. Loading NDVI..."
+        `${indexCode} built. Loading ${indexCode}...`
       );
     } else {
-      updateStatus(
-        "NDVI ready. Loading NDVI..."
-      );
-
       updateRemoteSensingProgress(
         100,
-        "NDVI ready. Loading NDVI..."
+        `${indexCode} ready. Loading ${indexCode}...`
       );
     }
   }
@@ -1546,7 +1585,7 @@
 
   async function loadRemoteSensingCatalog() {
     updateStatus(
-      "Loading spectral indices..."
+      "Loading remote sensing indices..."
     );
 
     try {
@@ -1589,7 +1628,7 @@
       renderCatalog();
 
       updateStatus(
-        `${catalog.length} spectral indices available.`
+        `${catalog.length} remote sensing indices available.`
       );
 
       return catalog;
@@ -1600,7 +1639,7 @@
       );
 
       updateStatus(
-        "Unable to load spectral indices."
+        "Unable to load remote sensing indices."
       );
 
       return [];

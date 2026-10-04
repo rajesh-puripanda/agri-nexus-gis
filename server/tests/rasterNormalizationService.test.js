@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // ============================================================
 // server/tests/rasterNormalizationService.test.js
@@ -102,7 +102,7 @@ test("normalization creates a canonical normalized raster", () => {
 
     assert.equal(
         raster.contractVersion,
-        "1.0"
+        "1.1"
     );
 
     assert.equal(

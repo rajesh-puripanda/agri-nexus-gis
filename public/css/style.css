@@ -2753,6 +2753,51 @@ PRINT
   min-width: 0;
 }
 
+.remote-sensing-index-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.remote-sensing-index-category {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #d6e2dc;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.remote-sensing-category-header {
+  margin-bottom: 8px;
+}
+
+.remote-sensing-category-kicker {
+  display: block;
+  color: #6b8177;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.remote-sensing-category-header h3 {
+  margin: 2px 0 0;
+  color: #21483b;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.remote-sensing-category-empty {
+  padding: 8px 4px 3px;
+  color: #71847b;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.remote-sensing-category-empty.is-hidden {
+  display: none;
+}
+
 .remote-sensing-index-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

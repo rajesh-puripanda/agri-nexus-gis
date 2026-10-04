@@ -5,8 +5,9 @@ const {
 } = require("./rasterReaderService");
 
 const {
-    alignRasterToResolution
-} = require("./rasterAlignmentService");
+    buildDefaultTargetGrid,
+    alignRasterToTargetGrid
+} = require("./rasterAlignmentService");require("./rasterAlignmentService");
 
 const {
     normalizeMultiSourceRaster
@@ -167,6 +168,8 @@ async function prepareSources({
 }) {
     const prepared = [];
 
+    let targetGrid = null;
+
     for (const source of sources) {
         const raster =
             await readSourceRaster(
@@ -217,12 +220,25 @@ async function prepareSources({
                     : {}
         };
 
+        if (!targetGrid) {
+            targetGrid =
+                buildDefaultTargetGrid({
+                    raster:
+                        singleBandRaster,
+
+                    targetResolution
+                });
+        }
+
         const aligned =
-            alignRasterToResolution({
+            alignRasterToTargetGrid({
                 raster:
                     singleBandRaster,
 
-                targetResolution,
+                targetGrid,
+
+                resamplingMethod:
+                    "nearest_neighbor",
 
                 noData
             });

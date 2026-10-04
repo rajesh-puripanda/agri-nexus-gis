@@ -16,6 +16,7 @@
 
 const ndviDefinition = Object.freeze({
   code: "NDVI",
+  category: "spectral",
 
   name: "Normalized Difference Vegetation Index",
 

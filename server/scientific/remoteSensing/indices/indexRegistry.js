@@ -29,6 +29,8 @@ const ndmiDefinition = require("./ndmi");
 
 const INDEX_REGISTRY_VERSION = "1.0";
 
+const bsiDefinition = require("./bsi");
+
 const INDEX_DEFINITIONS = Object.freeze([
   ndviDefinition,
   eviDefinition,
@@ -37,6 +39,7 @@ const INDEX_DEFINITIONS = Object.freeze([
   arviDefinition,
   ndwiDefinition,
   ndmiDefinition,
+  bsiDefinition,
 ]);
 
 const INDEX_BY_CODE = Object.freeze(

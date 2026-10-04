@@ -18,6 +18,7 @@
 
 const ndwiDefinition = Object.freeze({
   code: "NDWI",
+  category: "spectral",
 
   name: "Normalized Difference Water Index",
 

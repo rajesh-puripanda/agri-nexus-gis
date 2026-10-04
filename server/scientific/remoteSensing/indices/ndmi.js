@@ -16,6 +16,7 @@
 
 const ndmiDefinition = Object.freeze({
   code: "NDMI",
+  category: "spectral",
 
   name: "Normalized Difference Moisture Index",
 

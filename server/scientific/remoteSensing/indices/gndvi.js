@@ -16,6 +16,7 @@
 
 const gndviDefinition = Object.freeze({
   code: "GNDVI",
+  category: "spectral",
 
   name: "Green Normalized Difference Vegetation Index",
 

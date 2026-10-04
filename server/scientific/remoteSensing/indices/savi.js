@@ -16,6 +16,7 @@
 
 const saviDefinition = Object.freeze({
   code: "SAVI",
+  category: "spectral",
 
   name: "Soil-Adjusted Vegetation Index",
 

@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // ============================================================
 // server/tests/multiSourceRasterNormalizationService.test.js
@@ -95,7 +95,7 @@ test("normalizes two compatible source rasters", () => {
 
     assert.equal(
         result.contractVersion,
-        "1.0"
+        "1.1"
     );
 
     assert.equal(
@@ -597,4 +597,3 @@ test("supports direct single-band typed-array data", () => {
         ]
     );
 });
-

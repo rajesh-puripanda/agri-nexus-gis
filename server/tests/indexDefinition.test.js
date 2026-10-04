@@ -26,7 +26,7 @@ const validDefinition = {
 };
 
 test("index definition contract exposes version", () => {
-  assert.equal(INDEX_DEFINITION_VERSION, "1.0");
+  assert.equal(INDEX_DEFINITION_VERSION, "1.1");
 });
 
 test("index definition contract exposes required fields", () => {

@@ -209,7 +209,7 @@ function buildMultiSourceInputs({
                     preparedOutput.outputPath,
 
                 sourceBand:
-                    resolvedBand.sourceBand,
+                    1,
             };
         }
     );

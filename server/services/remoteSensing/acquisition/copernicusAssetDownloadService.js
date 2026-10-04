@@ -2,6 +2,8 @@
 
 const fs = require("fs");
 const path = require("path");
+const { Readable } = require("stream");
+const { pipeline } = require("stream/promises");
 
 const MAX_DOWNLOAD_ATTEMPTS = 5;
 
@@ -24,10 +26,13 @@ async function downloadAsset({
     fetchImpl = globalThis.fetch
 } = {}) {
     if (!asset || typeof asset !== "object") {
-        throw new TypeError("CDSE asset is required.");
+        throw new TypeError(
+            "CDSE asset is required."
+        );
     }
 
-    const url = asset.alternate?.https?.href;
+    const url =
+        asset.alternate?.https?.href;
 
     if (!url) {
         throw new Error(
@@ -50,7 +55,8 @@ async function downloadAsset({
         );
     }
 
-    const directory = path.dirname(outputPath);
+    const directory =
+        path.dirname(outputPath);
 
     await fs.promises.mkdir(
         directory,
@@ -84,7 +90,7 @@ async function downloadAsset({
             }
 
             await new Promise(
-                (resolve) =>
+                resolve =>
                     setTimeout(
                         resolve,
                         1000 * attempt
@@ -95,9 +101,12 @@ async function downloadAsset({
         }
 
         if (!response.ok) {
-            const error = new Error(
-                `CDSE asset download failed: ${response.status} ${response.statusText}`
-            );
+            const error =
+                new Error(
+                    `CDSE asset download failed: ` +
+                    `${response.status} ` +
+                    `${response.statusText}`
+                );
 
             error.code =
                 "CDSE_ASSET_DOWNLOAD_FAILED";
@@ -114,62 +123,31 @@ async function downloadAsset({
             );
         }
 
-        const fileHandle =
-            await fs.promises.open(
-                outputPath,
-                "w"
-            );
-
         try {
-            const reader =
-                response.body.getReader();
+            const readable =
+                Readable.fromWeb(
+                    response.body
+                );
 
             const writable =
-                fileHandle.createWriteStream();
-
-            try {
-                while (true) {
-                    const { done, value } =
-                        await reader.read();
-
-                    if (done) {
-                        break;
-                    }
-
-                    if (value) {
-                        if (!writable.write(value)) {
-                            await new Promise(
-                                (resolve) =>
-                                    writable.once(
-                                        "drain",
-                                        resolve
-                                    )
-                            );
-                        }
-                    }
-                }
-
-                await new Promise(
-                    (resolve, reject) => {
-                        writable.end(
-                            resolve
-                        );
-
-                        writable.once(
-                            "error",
-                            reject
-                        );
-                    }
-                );
-            } finally {
-                writable.destroy();
-            }
-        } catch (error) {
-            await fileHandle.close();
-
-            try {
-                await fs.promises.unlink(
+                fs.createWriteStream(
                     outputPath
+                );
+
+            await pipeline(
+                readable,
+                writable
+            );
+
+            return {
+                outputPath,
+                url
+            };
+        } catch (error) {
+            try {
+                await fs.promises.rm(
+                    outputPath,
+                    { force: true }
                 );
             } catch {}
 
@@ -178,7 +156,7 @@ async function downloadAsset({
                 attempt < MAX_DOWNLOAD_ATTEMPTS
             ) {
                 await new Promise(
-                    (resolve) =>
+                    resolve =>
                         setTimeout(
                             resolve,
                             1000 * attempt
@@ -190,13 +168,6 @@ async function downloadAsset({
 
             throw error;
         }
-
-        await fileHandle.close();
-
-        return {
-            outputPath,
-            url
-        };
     }
 
     throw new Error(
@@ -205,7 +176,5 @@ async function downloadAsset({
 }
 
 module.exports = {
-    MAX_DOWNLOAD_ATTEMPTS,
-    isTransientDownloadError,
     downloadAsset
 };

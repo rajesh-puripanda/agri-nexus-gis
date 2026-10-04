@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -122,6 +122,68 @@ test("NDMI calculates correctly", () => {
   });
 
   assertApproximately(value, 0.5);
+});
+
+test("BSI calculates correctly", () => {
+  const value = calculateScalarIndex({
+    indexCode: "BSI",
+    inputs: {
+      SWIR1: 0.4,
+      Red: 0.3,
+      NIR: 0.2,
+      Blue: 0.1,
+    },
+  });
+
+  const expected =
+    ((0.4 + 0.3) - (0.2 + 0.1)) /
+    ((0.4 + 0.3) + (0.2 + 0.1));
+
+  assertApproximately(value, expected);
+});
+
+test("BSI zero denominator is rejected", () => {
+  assert.throws(
+    () =>
+      calculateScalarIndex({
+        indexCode: "BSI",
+        inputs: {
+          SWIR1: 0,
+          Red: 0,
+          NIR: 0,
+          Blue: 0,
+        },
+      }),
+    /BSI: denominator equals zero/
+  );
+});
+
+test("BSI is available through the public calculation function", () => {
+  const result =
+    calculateRemoteSensingIndex({
+      indexCode: "BSI",
+      inputs: {
+        SWIR1: 0.4,
+        Red: 0.3,
+        NIR: 0.2,
+        Blue: 0.1,
+      },
+    });
+
+  assert.equal(result.indexCode, "BSI");
+
+  assertApproximately(
+    result.value,
+    0.4
+  );
+
+  assert.deepEqual(
+    result.validRange,
+    {
+      min: -1,
+      max: 1,
+    }
+  );
 });
 
 test("custom EVI parameters are accepted", () => {

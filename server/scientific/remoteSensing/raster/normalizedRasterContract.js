@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // ============================================================
 // server/scientific/remoteSensing/raster/normalizedRasterContract.js
@@ -21,18 +21,19 @@
 //   - modify pixel values
 //
 // Canonical spectral roles:
-//   Blue, Green, Red, NIR, SWIR
+//   Blue, Green, Red, NIR, SWIR, SWIR1
 //
 // ============================================================
 
-const NORMALIZED_RASTER_CONTRACT_VERSION = "1.0";
+const NORMALIZED_RASTER_CONTRACT_VERSION = "1.1";
 
 const CANONICAL_BAND_NAMES = Object.freeze([
     "Blue",
     "Green",
     "Red",
     "NIR",
-    "SWIR"
+    "SWIR",
+    "SWIR1"
 ]);
 
 function isObject(value) {

@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -320,11 +320,58 @@
             id="remoteSensingRailContent"
             class="agri-intelligence-panel-content"
           >
-            <div
-              id="remoteSensingIndexGrid"
-              class="remote-sensing-index-grid"
-              aria-label="Remote sensing spectral indices"
-            ></div>
+          <div class="remote-sensing-index-categories">
+
+            <section
+              class="remote-sensing-index-category"
+              aria-labelledby="remoteSensingSpectralTitle"
+            >
+              <div class="remote-sensing-category-header">
+                <span class="remote-sensing-category-kicker">
+                  CATEGORY
+                </span>
+
+                <h3 id="remoteSensingSpectralTitle">
+                  Spectral Indices
+                </h3>
+              </div>
+
+              <div
+                id="remoteSensingSpectralGrid"
+                class="remote-sensing-index-grid"
+                aria-label="Spectral indices"
+              ></div>
+            </section>
+
+            <section
+              class="remote-sensing-index-category"
+              aria-labelledby="remoteSensingSoilTitle"
+            >
+              <div class="remote-sensing-category-header">
+                <span class="remote-sensing-category-kicker">
+                  CATEGORY
+                </span>
+
+                <h3 id="remoteSensingSoilTitle">
+                  Soil-Focused Indices
+                </h3>
+              </div>
+
+              <div
+                id="remoteSensingSoilGrid"
+                class="remote-sensing-index-grid"
+                aria-label="Soil-focused indices"
+              ></div>
+
+              <div
+                id="remoteSensingSoilEmpty"
+                class="remote-sensing-category-empty"
+              >
+                No soil-focused indices available.
+              </div>
+            </section>
+
+            </div>
 
             <div
               id="remoteSensingLayerControls"
