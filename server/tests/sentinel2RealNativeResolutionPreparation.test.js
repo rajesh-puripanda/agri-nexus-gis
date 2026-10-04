@@ -15,7 +15,6 @@ const {
 );
 
 const {
-    getAllSentinel2Bands,
     getSentinel2BandDefinition
 } = require(
     "../scientific/remoteSensing/bands/" +
@@ -23,10 +22,10 @@ const {
 );
 
 const {
-    decodeSentinel2Jp2
+    decodeSentinel2Jp2Window
 } = require(
     "../services/remoteSensing/acquisition/" +
-    "sentinel2Jp2DecoderService"
+    "sentinel2Jp2WindowDecoderService"
 );
 
 const {
@@ -43,17 +42,34 @@ const {
     "sentinel2PreparedRasterWriterService"
 );
 
+const TEST_DATA_DIRECTORY =
+    path.resolve(
+        "./data/remote-sensing/production/bsi-20260908"
+    );
+
 const TEST_OUTPUT_DIRECTORY =
-    path.resolve("./test-output");
+    path.resolve(
+        "./test-output/sentinel2-native-resolution-real"
+    );
 
 const SCENE_ID =
-    "S2C_MSIL2A_20260908T044701_N0512_R076_T44QQE_20260908T094920";
+    "S2C_MSIL2A_20260908T044701_N0512_R076_T44QQE";
+
+const ACQUISITION_TIMESTAMP =
+    "20260908T094920";
+
+const REAL_BAND_NAMES = [
+    "Blue",
+    "Red",
+    "NIR",
+    "SWIR1"
+];
 
 function buildLocalAcquisition() {
     const bands = {};
 
     for (
-        const bandName of getAllSentinel2Bands()
+        const bandName of REAL_BAND_NAMES
     ) {
         const definition =
             getSentinel2BandDefinition(
@@ -62,8 +78,8 @@ function buildLocalAcquisition() {
 
         const filePath =
             path.join(
-                TEST_OUTPUT_DIRECTORY,
-                `${SCENE_ID}_${definition.assetKey}.jp2`
+                TEST_DATA_DIRECTORY,
+                `${SCENE_ID}_${ACQUISITION_TIMESTAMP}_${definition.assetKey}.jp2`
             );
 
         assert.ok(
@@ -115,10 +131,15 @@ function buildLocalAcquisition() {
     }
 
     return {
-        sceneId: SCENE_ID,
-        acquisitionDate: "2026-09-08",
+        sceneId:
+            SCENE_ID,
+
+        acquisitionDate:
+            "2026-09-08",
+
         sourceProvider:
             "copernicus-data-space",
+
         bands
     };
 }
@@ -133,21 +154,28 @@ test(
             await prepareSentinel2NativeResolutionRasters({
                 request: {
                     temporalContext: {},
-                    spatialContext: {}
+                    spatialContext: {
+                        bbox: {
+                            west: 82.87915734882289,
+                            south: 17.075692993378123,
+                            east: 83.9261271945331,
+                            north: 18.0798197936174
+                        }
+                    }
                 },
 
                 outputDirectory:
                     TEST_OUTPUT_DIRECTORY,
 
                 bandNames:
-                    getAllSentinel2Bands(),
+                    REAL_BAND_NAMES,
 
                 acquisitionImpl:
                     async () =>
                         acquisition,
 
                 decodeImpl:
-                    decodeSentinel2Jp2,
+                    decodeSentinel2Jp2Window,
 
                 prepareImpl:
                     prepareSentinel2Bands,
@@ -160,13 +188,22 @@ test(
             Object.keys(outputs.outputs).sort(
                 (a, b) => Number(a) - Number(b)
             ),
-            ["10", "20", "60"]
+            [
+                "10",
+                "20"
+            ]
         );
 
         for (
-            const resolution of ["10", "20", "60"]
+            const resolution of [
+                "10",
+                "20"
+            ]
         ) {
-            const output = outputs.outputs[resolution];
+            const output =
+                outputs.outputs[
+                    resolution
+                ];
 
             assert.ok(
                 fs.existsSync(
@@ -189,7 +226,3 @@ test(
         }
     }
 );
-
-
-
-

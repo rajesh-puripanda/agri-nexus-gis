@@ -24,6 +24,7 @@ tmp/
 temp/
 
 # Coverage / test output
+test-output/
 coverage/
 
 # Build output

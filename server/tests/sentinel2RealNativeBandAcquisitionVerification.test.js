@@ -5,6 +5,7 @@ require("dotenv").config();
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
+const path = require("node:path");
 const {
     acquireSentinel2Bands
 } = require("../services/remoteSensing/acquisition/sentinel2AcquisitionService");
@@ -13,6 +14,11 @@ const {
     getAllSentinel2Bands,
     getSentinel2BandDefinition
 } = require("../scientific/remoteSensing/bands/sentinel2BandCatalog");
+
+const TEST_OUTPUT_DIRECTORY =
+    path.resolve(
+        "./test-output/sentinel2-native-band-acquisition-real"
+    );
 
 
 const TEST_REQUEST = {
@@ -38,9 +44,10 @@ test(
     async () => {
 
         const result =
-            await acquireSentinel2Bands(
-                TEST_REQUEST
-            );
+            await acquireSentinel2Bands({
+                ...TEST_REQUEST,
+                outputDirectory: TEST_OUTPUT_DIRECTORY
+            });
 
 
         assert.ok(
@@ -146,21 +153,10 @@ test(
                     band.assetKey.padEnd(5),
                     `${band.spatialReference.resolution[0]}m`,
                     band.radiometry.sourceDataType,
-                    band.asset.href
+                    band.path
                 ].join(" | ")
             );
         }
     }
 );
-
-
-
-
-
-
-
-
-
-
-
 
