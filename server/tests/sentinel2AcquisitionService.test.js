@@ -4,15 +4,38 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
-    acquireNDVIBands
+    acquireNDVIBands,
+    acquireSentinel2Bands
 } = require(
     "../services/remoteSensing/acquisition/sentinel2AcquisitionService"
 );
+
+const {
+    writeAcquisitionMetadata
+} = require(
+    "../services/remoteSensing/acquisition/sentinel2AcquisitionMetadataService"
+);
+
+const fs = require("fs");
+const path = require("path");
 
 test(
     "acquireNDVIBands orchestrates search, authentication and downloads",
     async () => {
         const calls = [];
+
+        const fs = require("fs");
+
+        const testOutputDirectory =
+            "./data/remote-sensing/test-acquisition";
+
+        await fs.promises.rm(
+            testOutputDirectory,
+            {
+                recursive: true,
+                force: true
+            }
+        );
 
         const fakeSearch = async (request) => {
             calls.push({
@@ -137,7 +160,7 @@ test(
                 },
 
                 outputDirectory:
-                    "./data/remote-sensing/test-acquisition",
+                    testOutputDirectory,
 
                 searchImpl:
                     fakeSearch,
@@ -397,7 +420,7 @@ test(
                 request: {},
 
                 outputDirectory:
-                    "./data/remote-sensing/test-acquisition",
+                    "./data/remote-sensing/test-acquisition-bands",
 
                 searchImpl:
                     fakeSearch,
@@ -618,7 +641,7 @@ test(
                 },
 
                 outputDirectory:
-                    "./data/remote-sensing/test-acquisition",
+                    "./data/remote-sensing/test-acquisition-scene-selection",
 
                 bandNames: [
                     "Red"
@@ -655,4 +678,443 @@ test(
         );
     }
 );
+test(
+    "acquireSentinel2Bands returns complete local acquisition cache without STAC search",
+    async () => {
+        const outputDirectory =
+            "./data/remote-sensing/test-acquisition-cache";
 
+        await fs.promises.rm(
+            outputDirectory,
+            {
+                recursive: true,
+                force: true
+            }
+        );
+
+        await fs.promises.mkdir(
+            outputDirectory,
+            {
+                recursive: true
+            }
+        );
+
+        const sceneId =
+            "S2_CACHE_TEST_001";
+
+        const redPath =
+            `${outputDirectory}/${sceneId}_B04_10m.jp2`;
+
+        const nirPath =
+            `${outputDirectory}/${sceneId}_B08_10m.jp2`;
+
+        await fs.promises.writeFile(
+            redPath,
+            "cached-red"
+        );
+
+        await fs.promises.writeFile(
+            nirPath,
+            "cached-nir"
+        );
+
+        const spatialReference = {
+            origin: [
+                699960,
+                2000040,
+                0
+            ],
+            resolution: [
+                10,
+                -10,
+                0
+            ],
+            boundingBox: [
+                699960,
+                1890240,
+                809760,
+                2000040
+            ],
+            geoKeys: {
+                ProjectedCSTypeGeoKey: 32644,
+                GTModelTypeGeoKey: 1,
+                GTRasterTypeGeoKey: 1
+            }
+        };
+
+        const radiometry = {
+            scale: 0.0001,
+            offset: -0.1,
+            noData: 0,
+            sourceDataType: "UINT16"
+        };
+
+        await writeAcquisitionMetadata({
+            outputDirectory,
+            acquisition: {
+                sceneId,
+                acquisitionDate:
+                    "2026-09-08T04:47:01Z",
+                sourceProvider:
+                    "copernicus-data-space",
+
+                bands: {
+                    Red: {
+                        assetKey:
+                            "B04_10m",
+                        path:
+                            redPath,
+                        spatialReference,
+                        radiometry
+                    },
+
+                    NIR: {
+                        assetKey:
+                            "B08_10m",
+                        path:
+                            nirPath,
+                        spatialReference,
+                        radiometry
+                    }
+                }
+            }
+        });
+
+        let searchCalled = false;
+        let authenticationCalled = false;
+        let downloadCalled = false;
+
+        const result =
+            await acquireSentinel2Bands({
+                request: {
+                    acquisitionParameters: {
+                        sceneId
+                    }
+                },
+
+                outputDirectory,
+
+                bandNames: [
+                    "Red",
+                    "NIR"
+                ],
+
+                searchImpl: async () => {
+                    searchCalled = true;
+                    throw new Error(
+                        "STAC search must not be called for a complete local cache."
+                    );
+                },
+
+                getAccessTokenImpl: async () => {
+                    authenticationCalled = true;
+                    throw new Error(
+                        "Authentication must not be called for a complete local cache."
+                    );
+                },
+
+                downloadAssetImpl: async () => {
+                    downloadCalled = true;
+                    throw new Error(
+                        "Download must not be called for a complete local cache."
+                    );
+                }
+            });
+
+        assert.equal(
+            result.sceneId,
+            sceneId
+        );
+
+        assert.equal(
+            result.sourceProvider,
+            "copernicus-data-space"
+        );
+
+        assert.equal(
+            result.bands.Red.source,
+            "local-cache"
+        );
+
+        assert.equal(
+            result.bands.NIR.source,
+            "local-cache"
+        );
+
+        assert.equal(
+            result.bands.Red.assetKey,
+            "B04_10m"
+        );
+
+        assert.equal(
+            result.bands.NIR.assetKey,
+            "B08_10m"
+        );
+
+        assert.equal(
+            searchCalled,
+            false
+        );
+
+        assert.equal(
+            authenticationCalled,
+            false
+        );
+
+        assert.equal(
+            downloadCalled,
+            false
+        );
+
+        await fs.promises.rm(
+            outputDirectory,
+            {
+                recursive: true,
+                force: true
+            }
+        );
+    }
+);
+test(
+    "acquireSentinel2Bands reuses partial local cache and downloads only missing bands",
+    async () => {
+        const outputDirectory =
+            "./data/remote-sensing/test-acquisition-partial-cache";
+
+        await fs.promises.rm(
+            outputDirectory,
+            {
+                recursive: true,
+                force: true
+            }
+        );
+
+        await fs.promises.mkdir(
+            outputDirectory,
+            {
+                recursive: true
+            }
+        );
+
+        const sceneId = "S2_PARTIAL_CACHE_TEST_001";
+
+        const spatialReference = {
+            origin: [699960, 2000040, 0],
+            resolution: [10, -10, 0],
+            boundingBox: [699960, 1990040, 709960, 2000040],
+            geoKeys: {
+                ProjectedCSTypeGeoKey: 32644
+            }
+        };
+
+        const radiometry = {
+            scale: 1,
+            offset: 0,
+            noData: -9999,
+            sourceDataType: "UInt16"
+        };
+
+        const redPath = path.join(
+            outputDirectory,
+            `${sceneId}_B04_10m.jp2`
+        );
+
+        const nirPath = path.join(
+            outputDirectory,
+            `${sceneId}_B08_10m.jp2`
+        );
+
+        await fs.promises.writeFile(
+            redPath,
+            "cached-red"
+        );
+
+        await fs.promises.writeFile(
+            nirPath,
+            "cached-nir"
+        );
+
+        await writeAcquisitionMetadata({
+            outputDirectory,
+            acquisition: {
+                sceneId,
+                acquisitionDate: "2026-09-08T04:47:01Z",
+                sourceProvider: "copernicus-data-space",
+                bands: {
+                    Red: {
+                        assetKey: "B04_10m",
+                        path: redPath,
+                        spatialReference,
+                        radiometry
+                    },
+                    NIR: {
+                        assetKey: "B08_10m",
+                        path: nirPath,
+                        spatialReference,
+                        radiometry
+                    }
+                }
+            }
+        });
+
+        const calls = {
+            search: 0,
+            auth: 0,
+            download: []
+        };
+
+        const result = await acquireSentinel2Bands({
+            request: {
+                acquisitionParameters: {
+                    sceneId
+                }
+            },
+            outputDirectory,
+            bandNames: ["Blue", "Red", "NIR"],
+
+            searchImpl: async () => {
+                calls.search += 1;
+
+                return {
+                    features: [
+                        {
+                            id: sceneId,
+                            properties: {
+                                datetime: "2026-09-08T04:47:01Z"
+                            },
+                            assets: {
+    B02_10m: {
+        href: "https://example.com/B02.jp2",
+        "proj:code": "EPSG:32644",
+        "proj:bbox": [
+            699960,
+            1890240,
+            809760,
+            2000040
+        ],
+        "proj:transform": [
+            10,
+            0,
+            699960,
+            0,
+            -10,
+            2000040
+        ],
+        nodata: 0,
+        data_type: "uint16",
+        "raster:scale": 0.0001,
+        "raster:offset": -0.1
+    },
+
+    B04_10m: {
+        href: "https://example.com/B04.jp2",
+        "proj:code": "EPSG:32644",
+        "proj:bbox": [
+            699960,
+            1890240,
+            809760,
+            2000040
+        ],
+        "proj:transform": [
+            10,
+            0,
+            699960,
+            0,
+            -10,
+            2000040
+        ],
+        nodata: 0,
+        data_type: "uint16",
+        "raster:scale": 0.0001,
+        "raster:offset": -0.1
+    },
+
+    B08_10m: {
+        href: "https://example.com/B08.jp2",
+        "proj:code": "EPSG:32644",
+        "proj:bbox": [
+            699960,
+            1890240,
+            809760,
+            2000040
+        ],
+        "proj:transform": [
+            10,
+            0,
+            699960,
+            0,
+                                -10,
+                                2000040
+                            ],
+                            nodata: 0,
+                            data_type: "uint16",
+                            "raster:scale": 0.0001,
+                            "raster:offset": -0.1
+                        }
+                    }
+                        }
+                    ]
+                };
+            },
+
+            getAccessTokenImpl: async () => {
+                calls.auth += 1;
+                return "fake-token";
+            },
+
+            downloadAssetImpl: async ({
+                asset,
+                outputPath
+            }) => {
+                calls.download.push(outputPath);
+                await fs.promises.writeFile(
+                    outputPath,
+                    "downloaded-blue"
+                );
+            }
+        });
+
+        assert.equal(
+            calls.search,
+            1
+        );
+
+        assert.equal(
+            calls.auth,
+            1
+        );
+
+        assert.equal(
+            calls.download.length,
+            1
+        );
+
+        assert.match(
+            calls.download[0],
+            /_B02_10m\.jp2$/
+        );
+
+        assert.equal(
+            result.bands.Blue.source,
+            "download"
+        );
+
+        assert.equal(
+            result.bands.Red.source,
+            "local-cache"
+        );
+
+        assert.equal(
+            result.bands.NIR.source,
+            "local-cache"
+        );
+
+        await fs.promises.rm(
+            outputDirectory,
+            {
+                recursive: true,
+                force: true
+            }
+        );
+    }
+);

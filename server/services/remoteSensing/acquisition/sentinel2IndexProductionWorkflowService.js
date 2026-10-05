@@ -61,6 +61,12 @@ const {
     "../raster/rasterIndexPostProcessingService"
 );
 
+const {
+    writeProductionMetadata,
+} = require(
+    "../catalog/sentinel2IndexProductionMetadataService"
+);
+
 const SENTINEL2_INDEX_PRODUCTION_WORKFLOW_VERSION =
     "1.0";
 
@@ -336,6 +342,43 @@ function buildMultiSourceInputs({
             outputDirectory:
                 analyticalOutputDirectory,
         });
+
+    await writeProductionMetadata({
+        workflowResult: {
+            workflowVersion:
+                SENTINEL2_INDEX_PRODUCTION_WORKFLOW_VERSION,
+
+            indexCode:
+                indexDefinition.code,
+
+            indexName:
+                indexDefinition.name,
+
+            sceneId:
+                preparation.sceneId,
+
+            acquisitionDate:
+                preparation.acquisitionDate,
+
+            targetResolution,
+
+            requiredBands:
+                resolvedBands.map(
+                    (band) => ({
+                        canonicalBandName:
+                            band.canonicalBandName,
+
+                        sentinel2BandName:
+                            band.sentinel2BandName,
+                    })
+                ),
+
+            outputProcessing,
+        },
+
+        outputDirectory:
+            analyticalOutputDirectory,
+    });
 
     if (typeof onProgress === "function") {
         onProgress({ stage: "complete", message: `${indexDefinition.name} processing complete.` });

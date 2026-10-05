@@ -1,4 +1,7 @@
-"use strict";
+﻿"use strict";
+
+const fs = require("fs");
+const path = require("path");
 
 const {
     search: defaultSearch
@@ -16,6 +19,11 @@ const {
     SENTINEL2_BANDS,
     getSentinel2BandAssets
 } = require("./sentinel2BandPreparation");
+
+const {
+    resolveLocalAcquisition,
+    writeAcquisitionMetadata
+} = require("./sentinel2AcquisitionMetadataService");
 
 function buildSpatialReferenceFromAsset(asset) {
     const code = asset?.["proj:code"];
@@ -233,6 +241,26 @@ function buildSafeSceneId(sceneId) {
     );
 }
 
+/*
+ * A Sentinel-2 band is reusable only when the expected
+ * deterministic cache file exists and contains data.
+ */
+async function isUsableLocalBand(outputPath) {
+    try {
+        const stat =
+            await fs.promises.stat(
+                outputPath
+            );
+
+        return (
+            stat.isFile() &&
+            stat.size > 0
+        );
+    } catch {
+        return false;
+    }
+}
+
 async function acquireSentinel2Bands({
     request,
     outputDirectory,
@@ -243,31 +271,84 @@ async function acquireSentinel2Bands({
     getAccessTokenImpl = defaultGetAccessToken,
     downloadAssetImpl = defaultDownloadAsset
 }) {
+    if (
+        !request ||
+        typeof request !== "object"
+    ) {
+        throw new TypeError(
+            "Sentinel-2 acquisition request is required."
+        );
+    }
+
+    if (
+        typeof outputDirectory !== "string" ||
+        outputDirectory.trim().length === 0
+    ) {
+        throw new TypeError(
+            "outputDirectory must be a non-empty string."
+        );
+    }
+
+    if (
+        !Array.isArray(bandNames) ||
+        bandNames.length === 0
+    ) {
+        throw new TypeError(
+            "bandNames must be a non-empty array."
+        );
+    }
+
+    const requestedSceneId =
+        request.acquisitionParameters &&
+        request.acquisitionParameters.sceneId;
+
+    const explicitSceneId =
+        typeof requestedSceneId === "string" &&
+        requestedSceneId.trim().length > 0
+            ? requestedSceneId.trim()
+            : null;
+
+        /*
+     * Fast local-cache path.
+     *
+     * A complete acquisition manifest contains the
+     * scientific metadata required to reconstruct the
+     * acquisition contract without contacting STAC.
+     */
+    if (explicitSceneId) {
+        const localAcquisition =
+            await resolveLocalAcquisition({
+                outputDirectory,
+                sceneId: explicitSceneId,
+                bandNames
+            });
+
+        if (localAcquisition) {
+            return localAcquisition;
+        }
+    }
+
     const catalogue =
         await searchImpl(
             request,
             { fetchImpl }
         );
 
-    const requestedSceneId =
-        request.acquisitionParameters &&
-        request.acquisitionParameters.sceneId;
-
     const item =
-        typeof requestedSceneId === "string" &&
-        requestedSceneId.trim().length > 0
+        explicitSceneId
             ? catalogue?.features?.find(
                 feature =>
                     feature &&
-                    feature.id === requestedSceneId.trim()
+                    feature.id === explicitSceneId
             )
             : catalogue?.features?.[0];
 
     if (!item) {
         throw new Error(
-            typeof requestedSceneId === "string" &&
-            requestedSceneId.trim().length > 0
-                ? "Sentinel-2 catalogue item " + requestedSceneId.trim() + " was not returned by the acquisition search."
+            explicitSceneId
+                ? "Sentinel-2 catalogue item " +
+                  explicitSceneId +
+                  " was not returned by the acquisition search."
                 : "No Sentinel-2 catalogue item matched the acquisition request."
         );
     }
@@ -278,15 +359,16 @@ async function acquireSentinel2Bands({
             bandNames
         );
 
-    const accessToken =
-        await getAccessTokenImpl({
-            fetchImpl
-        });
-
     const safeId =
         buildSafeSceneId(item.id);
 
     const bands = {};
+
+    /*
+     * Determine which bands need downloading before
+     * requesting an access token.
+     */
+    const pendingDownloads = [];
 
     for (const bandName of bandNames) {
         const asset =
@@ -295,37 +377,94 @@ async function acquireSentinel2Bands({
         const assetKey =
             SENTINEL2_BANDS[bandName];
 
-        const spatialReference =
-            buildSpatialReferenceFromAsset(
-                asset
-            );
-
-        const radiometry =
-            buildRadiometricMetadataFromAsset(
-                asset
-            );
-
         const outputPath =
-            `${outputDirectory}/` +
-            `${safeId}_${assetKey}.jp2`;
+            path.join(
+                outputDirectory,
+                `${safeId}_${assetKey}.jp2`
+            );
 
-        await downloadAssetImpl({
+        if (
+            await isUsableLocalBand(
+                outputPath
+            )
+        ) {
+            bands[bandName] = {
+                assetKey,
+                path: outputPath,
+                spatialReference:
+                    buildSpatialReferenceFromAsset(
+                        asset
+                    ),
+                radiometry:
+                    buildRadiometricMetadataFromAsset(
+                        asset
+                    ),
+                source:
+                    "local-cache"
+            };
+
+            continue;
+        }
+
+        pendingDownloads.push({
+            bandName,
             asset,
-            outputPath,
+            assetKey,
+            outputPath
+        });
+    }
+
+    /*
+     * Authentication is required only when at least one
+     * requested band is actually missing.
+     */
+    let accessToken = null;
+
+    if (pendingDownloads.length > 0) {
+        accessToken =
+            await getAccessTokenImpl({
+                fetchImpl
+            });
+    }
+
+    for (const pending of pendingDownloads) {
+        await downloadAssetImpl({
+            asset:
+                pending.asset,
+
+            outputPath:
+                pending.outputPath,
+
             accessToken,
+
             fetchImpl
         });
 
-        bands[bandName] = {
-            assetKey,
-            path: outputPath,
-            spatialReference,
-            radiometry
+        bands[pending.bandName] = {
+            assetKey:
+                pending.assetKey,
+
+            path:
+                pending.outputPath,
+
+            spatialReference:
+                buildSpatialReferenceFromAsset(
+                    pending.asset
+                ),
+
+            radiometry:
+                buildRadiometricMetadataFromAsset(
+                    pending.asset
+                ),
+
+            source:
+                "download"
         };
     }
 
-    return {
-        sceneId: item.id,
+        const acquisition = {
+        sceneId:
+            item.id,
 
         acquisitionDate:
             item.properties?.datetime,
@@ -335,6 +474,13 @@ async function acquireSentinel2Bands({
 
         bands
     };
+
+    await writeAcquisitionMetadata({
+        outputDirectory,
+        acquisition
+    });
+
+    return acquisition;
 }
 
 async function acquireNDVIBands({
@@ -374,13 +520,6 @@ async function acquireNDVIBands({
         );
     }
 
-    /*
-     * Preserve the legacy NDVI acquisition contract.
-     *
-     * Red/NIR are both native 10 m Sentinel-2 bands,
-     * therefore the legacy common spatial/radiometric
-     * validation remains valid here.
-     */
     const spatialReference =
         validateMatchingSpatialReference(
             {
@@ -484,5 +623,6 @@ module.exports = {
     buildSpatialReferenceFromAsset,
     validateMatchingSpatialReference,
     buildRadiometricMetadataFromAsset,
-    validateMatchingRadiometricMetadata
+    validateMatchingRadiometricMetadata,
+    isUsableLocalBand
 };
