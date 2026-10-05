@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 // ============================================================
 // AgriNexus GIS
@@ -100,6 +100,19 @@ function buildSearchPayload(
 
         limit
     };
+
+    const sceneId =
+        request.acquisitionParameters &&
+        request.acquisitionParameters.sceneId;
+
+    if (
+        typeof sceneId === "string" &&
+        sceneId.trim().length > 0
+    ) {
+        payload.ids = [
+            sceneId.trim()
+        ];
+    }
 
     const maxCloudCover =
         request.acquisitionParameters &&

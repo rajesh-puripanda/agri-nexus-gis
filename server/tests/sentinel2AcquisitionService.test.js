@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -501,6 +501,157 @@ test(
                     call.accessToken === "TEST_TOKEN"
             ),
             true
+        );
+    }
+);
+
+
+test(
+    "acquireSentinel2Bands selects the explicitly requested scene",
+    async () => {
+        const {
+            acquireSentinel2Bands
+        } = require(
+            "../services/remoteSensing/acquisition/sentinel2AcquisitionService"
+        );
+
+        const requestedSceneId =
+            "S2_REQUESTED_SCENE";
+
+        const calls = [];
+
+        const makeAsset = (href) => ({
+            href,
+            "proj:code": "EPSG:32644",
+            "proj:bbox": [
+                699960,
+                1890240,
+                809760,
+                2000040
+            ],
+            "proj:transform": [
+                10,
+                0,
+                699960,
+                0,
+                -10,
+                2000040
+            ],
+            nodata: 0,
+            data_type: "uint16",
+            "raster:scale": 0.0001,
+            "raster:offset": -0.1
+        });
+
+        const fakeSearch = async () => ({
+            type: "FeatureCollection",
+
+            features: [
+                {
+                    id: "S2_OTHER_SCENE",
+
+                    properties: {
+                        datetime:
+                            "2026-09-06T04:56:59Z"
+                    },
+
+                    assets: {
+                        B04_10m:
+                            makeAsset("https://example.com/other-red.jp2")
+                    }
+                },
+
+                {
+                    id: requestedSceneId,
+
+                    properties: {
+                        datetime:
+                            "2026-09-08T04:47:01Z"
+                    },
+
+                    assets: {
+                        B04_10m:
+                            makeAsset("https://example.com/requested-red.jp2")
+                    }
+                }
+            ]
+        });
+
+        const fakeGetAccessToken = async () =>
+            "TEST_TOKEN";
+
+        const fakeDownloadAsset = async ({
+            asset,
+            outputPath
+        }) => {
+            calls.push({
+                asset,
+                outputPath
+            });
+
+            return {
+                outputPath
+            };
+        };
+
+        const result =
+            await acquireSentinel2Bands({
+                request: {
+                    temporalContext: {
+                        startDate: "2026-09-01",
+                        endDate: "2026-09-15"
+                    },
+
+                    spatialContext: {
+                        bbox: {
+                            west: 82.9,
+                            south: 17.6,
+                            east: 83.4,
+                            north: 17.9
+                        }
+                    },
+
+                    acquisitionParameters: {
+                        maxCloudCover: 20,
+                        sceneId: requestedSceneId
+                    }
+                },
+
+                outputDirectory:
+                    "./data/remote-sensing/test-acquisition",
+
+                bandNames: [
+                    "Red"
+                ],
+
+                searchImpl:
+                    fakeSearch,
+
+                getAccessTokenImpl:
+                    fakeGetAccessToken,
+
+                downloadAssetImpl:
+                    fakeDownloadAsset
+            });
+
+        assert.equal(
+            result.sceneId,
+            requestedSceneId
+        );
+
+        assert.equal(
+            result.acquisitionDate,
+            "2026-09-08T04:47:01Z"
+        );
+
+        assert.equal(
+            calls.length,
+            1
+        );
+
+        assert.match(
+            calls[0].outputPath,
+            /S2_REQUESTED_SCENE_B04_10m\.jp2$/
         );
     }
 );

@@ -31,6 +31,7 @@ const INDEX_REGISTRY_VERSION = "1.0";
 
 const bsiDefinition = require("./bsi");
 const sbiDefinition = require("./sbi");
+const ndsiDefinition = require("./ndsi");
 
 const INDEX_DEFINITIONS = Object.freeze([
   ndviDefinition,
@@ -42,6 +43,7 @@ const INDEX_DEFINITIONS = Object.freeze([
   ndmiDefinition,
   bsiDefinition,
   sbiDefinition,
+  ndsiDefinition,
 ]);
 
 const INDEX_BY_CODE = Object.freeze(

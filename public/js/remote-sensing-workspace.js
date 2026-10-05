@@ -16,9 +16,6 @@
   const RASTER_OUTPUT_BASE =
     "/api/remote-sensing/raster/output";
 
-  const ENSURE_RASTER_INDEX_URL =
-    "/api/remote-sensing/raster/ensure-index";
-
   const MAX_RENDER_SIZE = 1200;
 
   let catalog = [];
@@ -26,6 +23,83 @@
   let remoteSensingLayer = null;
   let renderSequence = 0;
   let remoteSensingBusy = false;
+  const SENTINEL2_OBSERVATION_DISCOVERY_URL =
+    "/api/remote-sensing/sentinel2-observations";
+
+  const SENTINEL2_INDEX_PRODUCTION_URL =
+    "/api/remote-sensing/sentinel2-index-production";
+
+  let sentinel2AcquisitionContext = {
+    startDate: null,
+    endDate: null,
+    maxCloudCover: 20,
+  };
+
+  let sentinel2ObservationContext = {
+    observations: [],
+    selectedSceneId: null,
+    selectedSpatialCoverage: null,
+  };
+
+  function getSentinel2SpatialContext() {
+    const map =
+      typeof window.getMap === "function"
+        ? window.getMap()
+        : null;
+
+    if (!map) {
+      throw new Error(
+        "Map is not available for Sentinel-2 acquisition.",
+      );
+    }
+
+    const bounds = map.getBounds();
+
+    return {
+      bbox: {
+        west: bounds.getWest(),
+        south: bounds.getSouth(),
+        east: bounds.getEast(),
+        north: bounds.getNorth(),
+      },
+    };
+  }
+
+  function getSelectedSentinel2SpatialContext() {
+    const coverage =
+      sentinel2ObservationContext.selectedSpatialCoverage;
+
+    if (!Array.isArray(coverage) || coverage.length !== 4) {
+      throw new Error(
+        "Selected Sentinel-2 scene does not contain a valid spatial coverage.",
+      );
+    }
+
+    const [west, south, east, north] =
+      coverage.map(Number);
+
+    if (
+      !Number.isFinite(west) ||
+      !Number.isFinite(south) ||
+      !Number.isFinite(east) ||
+      !Number.isFinite(north) ||
+      west >= east ||
+      south >= north
+    ) {
+      throw new Error(
+        "Selected Sentinel-2 scene spatial coverage is invalid.",
+      );
+    }
+
+    return {
+      bbox: {
+        west,
+        south,
+        east,
+        north,
+      },
+    };
+  }
 
   let remoteSensingLayerVisible = true;
   let remoteSensingOpacity = 0.72;
@@ -77,6 +151,46 @@
           "remoteSensingOpacityValue"
         ),
 
+      startDate:
+        document.getElementById(
+          "remoteSensingStartDate"
+        ),
+
+      endDate:
+        document.getElementById(
+          "remoteSensingEndDate"
+        ),
+
+      maxCloudCover:
+        document.getElementById(
+          "remoteSensingMaxCloudCover"
+        ),
+
+      findObservations:
+        document.getElementById(
+          "remoteSensingFindObservations"
+        ),
+
+      observationResults:
+        document.getElementById(
+          "remoteSensingObservationResults"
+        ),
+
+      observationRail:
+        document.getElementById(
+          "remoteSensingObservationRail"
+        ),
+
+      observationCount:
+        document.getElementById(
+          "remoteSensingObservationCount"
+        ),
+
+      selectedObservation:
+        document.getElementById(
+          "remoteSensingSelectedObservation"
+        ),
+
       progress:
         document.getElementById(
           "remoteSensingProgress"
@@ -99,6 +213,367 @@
     };
   }
 
+  function updateSentinel2AcquisitionContext() {
+    const {
+      startDate,
+      endDate,
+      maxCloudCover,
+    } = getElements();
+
+    sentinel2AcquisitionContext.startDate =
+      startDate && startDate.value
+        ? startDate.value
+        : null;
+
+    sentinel2AcquisitionContext.endDate =
+      endDate && endDate.value
+        ? endDate.value
+        : null;
+
+    const cloudValue =
+      maxCloudCover && maxCloudCover.value !== ""
+        ? Number(maxCloudCover.value)
+        : 20;
+
+    sentinel2AcquisitionContext.maxCloudCover =
+      Number.isFinite(cloudValue)
+        ? Math.max(0, Math.min(100, cloudValue))
+        : 20;
+  }
+
+  function bindSentinel2AcquisitionControls() {
+    const {
+      startDate,
+      endDate,
+      maxCloudCover,
+      findObservations,
+    } = getElements();
+
+    [
+      startDate,
+      endDate,
+      maxCloudCover,
+    ].forEach((element) => {
+      if (element) {
+        element.addEventListener(
+          "change",
+          updateSentinel2AcquisitionContext,
+        );
+      }
+    });
+
+    if (findObservations) {
+      findObservations.addEventListener(
+        "click",
+        () => {
+          discoverSentinel2Observations().catch(
+            (error) => {
+              updateStatus(
+                error && error.message
+                  ? error.message
+                  : "Unable to discover Sentinel-2 observations.",
+              );
+            },
+          );
+        },
+      );
+    }
+
+    updateSentinel2AcquisitionContext();
+  }
+
+  function clearSentinel2ObservationSelection() {
+    sentinel2ObservationContext.selectedSceneId =
+      null;
+
+    sentinel2ObservationContext.selectedSpatialCoverage =
+      null;
+
+    const {
+      selectedObservation,
+    } = getElements();
+
+    if (selectedObservation) {
+      selectedObservation.textContent = "";
+      selectedObservation.classList.add(
+        "is-hidden",
+      );
+    }
+  }
+  function renderSentinel2Observations() {
+    const {
+      observationRail,
+      observationCount,
+      selectedObservation,
+    } = getElements();
+
+    if (!observationRail) {
+      return;
+    }
+
+    observationRail.innerHTML = "";
+
+    const observations =
+      sentinel2ObservationContext.observations;
+
+    if (observationCount) {
+      observationCount.textContent =
+        String(observations.length);
+    }
+
+    if (selectedObservation) {
+      selectedObservation.classList.add(
+        "is-hidden",
+      );
+      selectedObservation.textContent = "";
+    }
+
+    if (!observations.length) {
+      const empty =
+        document.createElement("div");
+
+      empty.className =
+        "remote-sensing-observation-empty";
+
+      empty.textContent =
+        "No Sentinel-2 scenes match the selected observation criteria.";
+
+      observationRail.appendChild(empty);
+
+      return;
+    }
+
+    observations.forEach((observation) => {
+      const card =
+        document.createElement("button");
+
+      card.type = "button";
+      card.className =
+        "remote-sensing-observation-card";
+
+      if (
+        observation.sceneId ===
+        sentinel2ObservationContext.selectedSceneId
+      ) {
+        card.classList.add("is-selected");
+      }
+
+      const date =
+        document.createElement("span");
+
+      date.className =
+        "remote-sensing-observation-date";
+
+      date.textContent =
+        observation.acquisitionDate
+          ? String(
+              observation.acquisitionDate,
+            ).slice(0, 10)
+          : "Unknown date";
+
+      const satellite =
+        document.createElement("span");
+
+      satellite.className =
+        "remote-sensing-observation-satellite";
+
+      satellite.textContent =
+        observation.satellite ||
+        "Sentinel-2";
+
+      const cloud =
+        document.createElement("span");
+
+      cloud.className =
+        "remote-sensing-observation-cloud";
+
+      cloud.textContent =
+        observation.cloudCover === null ||
+        observation.cloudCover === undefined
+          ? "Cloud: unavailable"
+          : `Cloud: ${Number(
+              observation.cloudCover,
+            ).toFixed(1)}%`;
+
+      const scene =
+        document.createElement("span");
+
+      scene.className =
+        "remote-sensing-observation-scene";
+
+      scene.textContent =
+        observation.sceneId ||
+        "Unknown scene";
+
+      card.append(
+        date,
+        satellite,
+        cloud,
+        scene,
+      );
+
+      card.addEventListener(
+        "click",
+        () => {
+          selectSentinel2Observation(
+            observation,
+          );
+        },
+      );
+
+      observationRail.appendChild(card);
+    });
+  }
+
+  function selectSentinel2Observation(
+    observation,
+  ) {
+    if (
+      !observation ||
+      !observation.sceneId
+    ) {
+      return;
+    }
+
+    sentinel2ObservationContext.selectedSceneId =
+      observation.sceneId;
+
+    sentinel2ObservationContext.selectedSpatialCoverage =
+      Array.isArray(
+        observation.spatialCoverage,
+      ) &&
+      observation.spatialCoverage.length === 4
+        ? observation.spatialCoverage.slice()
+        : null;
+
+    renderSentinel2Observations();
+
+    const {
+      selectedObservation,
+    } = getElements();
+
+    if (selectedObservation) {
+      selectedObservation.textContent =
+        `Selected scene: ${observation.sceneId}  ${
+          observation.acquisitionDate
+            ? String(
+                observation.acquisitionDate,
+              ).slice(0, 10)
+            : "date unavailable"
+        }`;
+
+      selectedObservation.classList.remove(
+        "is-hidden",
+      );
+    }
+
+    updateStatus(
+      `Selected Sentinel-2 scene: ${observation.sceneId}`,
+    );
+  }
+  async function discoverSentinel2Observations() {
+    updateSentinel2AcquisitionContext();
+
+    if (
+      !sentinel2AcquisitionContext.startDate ||
+      !sentinel2AcquisitionContext.endDate
+    ) {
+      throw new Error(
+        "Observation start and end dates are required.",
+      );
+    }
+
+    if (
+      sentinel2AcquisitionContext.startDate >
+      sentinel2AcquisitionContext.endDate
+    ) {
+      throw new Error(
+        "Observation start date must not be later than end date.",
+      );
+    }
+
+    const {
+      findObservations,
+    } = getElements();
+
+    if (findObservations) {
+      findObservations.disabled = true;
+    }
+
+    updateStatus(
+      "Searching Sentinel-2 observations...",
+    );
+
+    try {
+      const response = await fetch(
+        SENTINEL2_OBSERVATION_DISCOVERY_URL,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            contractVersion: "1.0",
+            sourceId:
+              "COPERNICUS_DATA_SPACE",
+            temporalContext: {
+              startDate:
+                sentinel2AcquisitionContext.startDate,
+              endDate:
+                sentinel2AcquisitionContext.endDate,
+            },
+            spatialContext:
+              getSentinel2SpatialContext(),
+            acquisitionParameters: {
+              maxCloudCover:
+                sentinel2AcquisitionContext.maxCloudCover,
+            },
+          }),
+        },
+      );
+
+      const payload =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          payload && payload.error
+            ? payload.error
+            : "Unable to discover Sentinel-2 observations.",
+        );
+      }
+
+      sentinel2ObservationContext.observations =
+        Array.isArray(payload.observations)
+          ? payload.observations
+          : [];
+
+      clearSentinel2ObservationSelection();
+
+      renderSentinel2Observations();
+
+      const {
+        observationResults,
+      } = getElements();
+
+      if (observationResults) {
+        observationResults.classList.remove(
+          "is-hidden",
+        );
+      }
+
+      updateStatus(
+        `${sentinel2ObservationContext.observations.length} Sentinel-2 observation(s) found.`,
+      );
+
+      return sentinel2ObservationContext.observations;
+    } finally {
+      if (findObservations) {
+        findObservations.disabled = false;
+      }
+    }
+  }
   function indexIcon(code) {
     const icons = {
       NDVI: "",
@@ -1038,131 +1513,6 @@
     return canvas;
   }
 
-  async function ensureRasterIndex(
-    index,
-    sequence
-  ) {
-    if (
-      !index ||
-      !index.code
-    ) {
-      return;
-    }
-
-    const indexCode =
-      String(index.code)
-        .trim()
-        .toUpperCase();
-
-    /*
-    ----------------------------------------------------------
-    NDVI and BSI currently have an authoritative production
-    rebuild path through the generic Sentinel-2 index workflow.
-
-    Other indices continue using their existing output path.
-    ----------------------------------------------------------
-    */
-
-    if (
-      indexCode !== "NDVI" &&
-      indexCode !== "BSI"
-    ) {
-      return;
-    }
-
-    updateStatus(
-      `${indexCode}: checking analytical output...`
-    );
-
-    resetRemoteSensingProgress(
-      `Building ${indexCode}...`
-    );
-
-    updateRemoteSensingProgress(
-      5,
-      `Building ${indexCode}...`
-    );
-
-    const response =
-      await fetch(
-        ENSURE_RASTER_INDEX_URL,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-
-            Accept:
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            indexCode,
-          }),
-        }
-      );
-
-    if (
-      sequence !==
-      renderSequence
-    ) {
-      return;
-    }
-
-    if (!response.ok) {
-      let message =
-        `${indexCode} build request failed: ${response.status}`;
-
-      try {
-        const payload =
-          await response.json();
-
-        if (
-          payload &&
-          typeof payload.message ===
-            "string"
-        ) {
-          message =
-            payload.message;
-        }
-      } catch {
-        // Preserve HTTP status message.
-      }
-
-      throw new Error(
-        message
-      );
-    }
-
-    const payload =
-      await response.json();
-
-    if (
-      !payload ||
-      payload.success !== true ||
-      payload.status !== "ready"
-    ) {
-      throw new Error(
-        `${indexCode} build did not return a ready result.`
-      );
-    }
-
-    if (
-      payload.built === true
-    ) {
-      updateRemoteSensingProgress(
-        100,
-        `${indexCode} built. Loading ${indexCode}...`
-      );
-    } else {
-      updateRemoteSensingProgress(
-        100,
-        `${indexCode} ready. Loading ${indexCode}...`
-      );
-    }
-  }
-
   async function renderRasterOutput(
     index,
     type,
@@ -1646,9 +1996,317 @@
     }
   }
 
+  async function consumeSentinel2ProductionStream(
+    response,
+    onProgress,
+  ) {
+    if (!response.body) {
+      throw new Error(
+        "Sentinel-2 production stream is not available.",
+      );
+    }
+
+    const reader =
+      response.body.getReader();
+
+    const decoder =
+      new TextDecoder();
+
+    let buffer = "";
+    let resultPayload = null;
+
+    const processEvent = (
+      eventText,
+    ) => {
+      let eventName = "message";
+      let data = "";
+
+      for (
+        const line of eventText.split(
+          /\r?\n/,
+        )
+      ) {
+        if (
+          line.startsWith(
+            "event: ",
+          )
+        ) {
+          eventName =
+            line.slice(7);
+        } else if (
+          line.startsWith(
+            "data: ",
+          )
+        ) {
+          data += line.slice(6);
+        }
+      }
+
+      if (!data) {
+        return;
+      }
+
+      const payload =
+        JSON.parse(data);
+
+      if (
+        eventName ===
+        "progress"
+      ) {
+        if (
+          typeof onProgress ===
+          "function"
+        ) {
+          onProgress(payload);
+        }
+
+        return;
+      }
+
+      if (
+        eventName ===
+        "result"
+      ) {
+        resultPayload =
+          payload;
+
+        return;
+      }
+
+      if (
+        eventName ===
+        "error"
+      ) {
+        throw new Error(
+          payload.error ||
+            "Sentinel-2 index production failed.",
+        );
+      }
+    };
+
+    while (true) {
+      const {
+        done,
+        value,
+      } =
+        await reader.read();
+
+      buffer +=
+        decoder.decode(
+          value ||
+            new Uint8Array(),
+          {
+            stream: !done,
+          },
+        );
+
+      const events =
+        buffer.split(
+          /\r?\n\r?\n/,
+        );
+
+      buffer =
+        events.pop() || "";
+
+      for (
+        const eventText of events
+      ) {
+        processEvent(
+          eventText,
+        );
+      }
+
+      if (done) {
+        break;
+      }
+    }
+
+    if (buffer.trim()) {
+      processEvent(buffer);
+    }
+
+    if (!resultPayload) {
+      throw new Error(
+        "Sentinel-2 production stream ended without a result.",
+      );
+    }
+
+    return resultPayload;
+  }
+  async function ensureRasterIndex(
+    index,
+    sequence,
+  ) {
+    if (!index || !index.code) {
+      return;
+    }
+
+    const indexCode =
+      String(index.code)
+        .trim()
+        .toUpperCase();
+
+    if (
+      !sentinel2AcquisitionContext.startDate ||
+      !sentinel2AcquisitionContext.endDate
+    ) {
+      throw new Error(
+        "Sentinel-2 acquisition start and end dates are required.",
+      );
+    }
+
+    if (
+      !sentinel2ObservationContext.selectedSceneId
+    ) {
+      throw new Error(
+        "Select a Sentinel-2 observation before producing an index.",
+      );
+    }
+
+    updateStatus(
+      `${indexCode}: checking analytical output...`,
+    );
+
+    resetRemoteSensingProgress(
+      `Building ${indexCode}...`,
+    );
+
+    updateRemoteSensingProgress(
+      null,
+      `${indexCode}: Preparing Sentinel-2 imagery...`,
+    );
+
+    const response = await fetch(
+      SENTINEL2_INDEX_PRODUCTION_URL,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
+          Accept:
+            "text/event-stream",
+        },
+        body: JSON.stringify({
+          contractVersion: "1.0",
+          sourceId: "sentinel2",
+          temporalContext: {
+            startDate:
+              sentinel2AcquisitionContext.startDate,
+            endDate:
+              sentinel2AcquisitionContext.endDate,
+          },
+          spatialContext:
+            getSelectedSentinel2SpatialContext(),
+          acquisitionParameters: {
+            maxCloudCover:
+              sentinel2AcquisitionContext.maxCloudCover,
+            sceneId:
+              sentinel2ObservationContext.selectedSceneId,
+          },
+          outputDirectory:
+            "./data/remote-sensing/acquisitions",
+          analyticalOutputDirectory:
+            "./data/remote-sensing/outputs",
+          indexCode,
+          targetResolution: 10,
+          outputNoData: -9999,
+          parameters: {},
+        }),
+      },
+    );
+
+    if (sequence !== renderSequence) {
+      return;
+    }
+
+    if (!response.ok) {
+      let message =
+        `${indexCode} build request failed: ${response.status}`;
+
+      try {
+        const payload =
+          await response.json();
+
+        if (
+          payload &&
+          typeof payload.message ===
+            "string"
+        ) {
+          message =
+            payload.message;
+        }
+
+        if (
+          payload &&
+          typeof payload.error ===
+            "string"
+        ) {
+          message =
+            payload.error;
+        }
+      } catch {
+        // Preserve HTTP status message.
+      }
+
+      throw new Error(message);
+    }
+
+    const streamPayload =
+      await consumeSentinel2ProductionStream(
+        response,
+        (progress) => {
+          if (
+            sequence !== renderSequence
+          ) {
+            return;
+          }
+
+          const message =
+            progress &&
+            typeof progress.message ===
+              "string"
+              ? progress.message
+              : `Processing ${indexCode}...`;
+
+          updateRemoteSensingProgress(
+            null,
+            `${indexCode}: ${message}`,
+          );
+
+          updateStatus(
+            `${indexCode}: ${message}`,
+          );
+        },
+      );
+
+    if (sequence !== renderSequence) {
+      return;
+    }
+
+    const payload =
+      streamPayload;
+
+    if (
+      !payload ||
+      payload.success !== true ||
+      !payload.result
+    ) {
+      throw new Error(
+        `${indexCode} build did not return a valid production result.`,
+      );
+    }
+
+    updateRemoteSensingProgress(
+      null,
+      `${indexCode} built. Loading ${indexCode}...`,
+    );
+  }
+
   function openRemoteSensingTool() {
-    const { rail } =
-      getElements();
+    const {
+      rail,
+      observationResults,
+    } = getElements();
 
     if (!rail) {
       return false;
@@ -1658,14 +2316,22 @@
       "is-hidden"
     );
 
+    if (observationResults) {
+      observationResults.classList.remove(
+        "is-hidden"
+      );
+    }
+
     loadRemoteSensingCatalog();
 
     return true;
   }
 
   function closeRemoteSensingTool() {
-    const { rail } =
-      getElements();
+    const {
+      rail,
+      observationResults,
+    } = getElements();
 
     if (!rail) {
       return false;
@@ -1674,6 +2340,12 @@
     rail.classList.add(
       "is-hidden"
     );
+
+    if (observationResults) {
+      observationResults.classList.add(
+        "is-hidden"
+      );
+    }
 
     clearRemoteSensingLayer();
 
@@ -1731,6 +2403,8 @@
     );
 
     hideRemoteSensingProgress();
+
+    bindSentinel2AcquisitionControls();
   }
 
   window.openRemoteSensingTool =

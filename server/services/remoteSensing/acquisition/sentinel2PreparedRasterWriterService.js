@@ -150,19 +150,11 @@ function buildGeoTiffMetadata(
         width,
         height,
 
-        SamplesPerPixel: [
-            bandCount
-        ],
+        SamplesPerPixel: bandCount,
 
-        BitsPerSample:
-            Array(
-                bandCount
-            ).fill(32),
+        BitsPerSample: Array(bandCount).fill(32),
 
-        SampleFormat:
-            Array(
-                bandCount
-            ).fill(3),
+        SampleFormat: Array(bandCount).fill(3),
 
         PlanarConfiguration: 1,
 
@@ -314,6 +306,26 @@ async function writeSentinel2PreparedRaster({
         buildGeoTiffMetadata(
             validatedRaster
         );
+
+    console.log(
+        "=== PREPARED RASTER WRITER METADATA ==="
+    );
+    console.log({
+        bandOrder,
+        valuesConstructor: values.constructor.name,
+        valuesLength: values.length,
+        width,
+        height,
+        SamplesPerPixel: metadata.SamplesPerPixel,
+        BitsPerSample: metadata.BitsPerSample,
+        SampleFormat: metadata.SampleFormat,
+        BitsPerSampleLength:
+            metadata.BitsPerSample &&
+            metadata.BitsPerSample.length,
+        SampleFormatLength:
+            metadata.SampleFormat &&
+            metadata.SampleFormat.length
+    });
 
     const buffer =
         await GeoTIFF.writeArrayBuffer(

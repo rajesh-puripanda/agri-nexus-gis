@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -270,6 +270,43 @@
 
         </div>
         <div id="map" class="map-container"></div>
+            <section
+              id="remoteSensingObservationResults"
+              class="remote-sensing-observation-results is-hidden"
+              aria-labelledby="remoteSensingObservationTitle"
+            >
+              <div class="remote-sensing-observation-header">
+                <div>
+                  <span class="remote-sensing-category-kicker">
+                    OBSERVATIONS
+                  </span>
+
+                  <h3 id="remoteSensingObservationTitle">
+                    Sentinel-2 Scenes
+                  </h3>
+                </div>
+
+                <span
+                  id="remoteSensingObservationCount"
+                  class="remote-sensing-observation-count"
+                >
+                  0
+                </span>
+              </div>
+
+              <div
+                id="remoteSensingObservationRail"
+                class="remote-sensing-observation-rail"
+                aria-label="Sentinel-2 observations"
+              ></div>
+
+              <div
+                id="remoteSensingSelectedObservation"
+                class="remote-sensing-selected-observation is-hidden"
+                role="status"
+                aria-live="polite"
+              ></div>
+            </section>
       </section>
 
     </section>
@@ -372,6 +409,61 @@
             </section>
 
             </div>
+
+            <div
+              id="remoteSensingAcquisitionControls"
+              class="remote-sensing-acquisition-controls"
+            >
+              <div class="remote-sensing-layer-header">
+                <span>Observation Date Range</span>
+              </div>
+
+              <div class="remote-sensing-acquisition-field">
+                <label for="remoteSensingStartDate">
+                  Start date
+                </label>
+
+                <input
+                  type="date"
+                  id="remoteSensingStartDate"
+                />
+              </div>
+
+              <div class="remote-sensing-acquisition-field">
+                <label for="remoteSensingEndDate">
+                  End date
+                </label>
+
+                <input
+                  type="date"
+                  id="remoteSensingEndDate"
+                />
+              </div>
+
+              <div class="remote-sensing-acquisition-field">
+                <label for="remoteSensingMaxCloudCover">
+                  Max cloud cover
+                </label>
+
+                <input
+                  type="number"
+                  id="remoteSensingMaxCloudCover"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value="20"
+                />
+              </div>
+
+              <button
+                type="button"
+                id="remoteSensingFindObservations"
+                class="remote-sensing-observation-search"
+              >
+                Find Observations
+              </button>
+            </div>
+
 
             <div
               id="remoteSensingLayerControls"

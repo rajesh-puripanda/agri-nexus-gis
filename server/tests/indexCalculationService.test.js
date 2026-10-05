@@ -365,3 +365,73 @@ test("SBI rejects non-finite band values", () => {
     /Band Green must be a finite number/
   );
 });
+
+test("NDSI calculates correctly", () => {
+  const value = calculateScalarIndex({
+    indexCode: "NDSI",
+    inputs: {
+      SWIR1: 0.4,
+      NIR: 0.2,
+    },
+  });
+
+  const expected =
+    (0.4 - 0.2) /
+    (0.4 + 0.2);
+
+  assertApproximately(value, expected);
+});
+
+test("NDSI zero denominator is rejected", () => {
+  assert.throws(
+    () =>
+      calculateScalarIndex({
+        indexCode: "NDSI",
+        inputs: {
+          SWIR1: 0,
+          NIR: 0,
+        },
+      }),
+    /SWIR1 \+ NIR equals zero/
+  );
+});
+
+test("NDSI is available through the public calculation function", () => {
+  const result =
+    calculateRemoteSensingIndex({
+      indexCode: "NDSI",
+      inputs: {
+        SWIR1: 0.4,
+        NIR: 0.2,
+      },
+    });
+
+  assert.equal(result.indexCode, "NDSI");
+
+  assertApproximately(
+    result.value,
+    0.3333333333333333
+  );
+
+  assert.deepEqual(
+    result.validRange,
+    {
+      min: -1,
+      max: 1,
+    }
+  );
+});
+
+test("NDSI rejects non-finite band values", () => {
+  assert.throws(
+    () =>
+      calculateScalarIndex({
+        indexCode: "NDSI",
+        inputs: {
+          SWIR1: NaN,
+          NIR: 0.2,
+        },
+      }),
+    /Band SWIR1 must be a finite number/
+  );
+});

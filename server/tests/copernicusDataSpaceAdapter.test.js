@@ -242,3 +242,40 @@ test(
         );
     }
 );
+test(
+    "buildSearchPayload adds an explicit Sentinel-2 scene ID filter",
+    () => {
+        const sceneId =
+            "S2C_MSIL2A_20260908T044701_N0512_R076_T44QQE_20260908T094920";
+
+        const request = {
+            ...VALID_REQUEST,
+
+            acquisitionParameters: {
+                ...VALID_REQUEST.acquisitionParameters,
+                sceneId
+            }
+        };
+
+        const payload =
+            buildSearchPayload(
+                request
+            );
+
+        assert.deepEqual(
+            payload.ids,
+            [
+                sceneId
+            ]
+        );
+
+        assert.deepEqual(
+            payload.query,
+            {
+                "eo:cloud_cover": {
+                    lte: 20
+                }
+            }
+        );
+    }
+);

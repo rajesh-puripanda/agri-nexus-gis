@@ -385,6 +385,17 @@ function validateSentinel2IndexProductionRequest(
         );
     }
 
+    if (
+        value.analyticalOutputDirectory !== undefined &&
+        !isNonEmptyString(
+            value.analyticalOutputDirectory
+        )
+    ) {
+        errors.push(
+            "analyticalOutputDirectory must be a non-empty string."
+        );
+    }
+
     errors.push(
         ...validateIndexCode(
             value.indexCode
@@ -435,6 +446,7 @@ function createSentinel2IndexProductionRequestContract(
 ) {
     const normalized = {
         ...request,
+
         contractVersion:
             request &&
             request.contractVersion !== undefined
@@ -443,24 +455,37 @@ function createSentinel2IndexProductionRequestContract(
                 ).trim()
                 : request &&
                   request.contractVersion,
+
         sourceId:
             request &&
             isNonEmptyString(request.sourceId)
                 ? request.sourceId.trim()
                 : request &&
                   request.sourceId,
+
         outputDirectory:
             request &&
             isNonEmptyString(request.outputDirectory)
                 ? request.outputDirectory.trim()
                 : request &&
                   request.outputDirectory,
+
+        analyticalOutputDirectory:
+            request &&
+            isNonEmptyString(
+                request.analyticalOutputDirectory
+            )
+                ? request.analyticalOutputDirectory.trim()
+                : request &&
+                  request.analyticalOutputDirectory,
+
         indexCode:
             request &&
             isNonEmptyString(request.indexCode)
                 ? request.indexCode.trim().toUpperCase()
                 : request &&
                   request.indexCode,
+
         targetResolution:
             request &&
             isFiniteNumber(request.targetResolution)
@@ -469,6 +494,7 @@ function createSentinel2IndexProductionRequestContract(
                 )
                 : request &&
                   request.targetResolution,
+
         parameters:
             request &&
             request.parameters !== undefined
@@ -482,12 +508,14 @@ function createSentinel2IndexProductionRequestContract(
     if (isPlainObject(normalized.temporalContext)) {
         normalized.temporalContext = {
             ...normalized.temporalContext,
+
             startDate:
                 isNonEmptyString(
                     normalized.temporalContext.startDate
                 )
                     ? normalized.temporalContext.startDate.trim()
                     : normalized.temporalContext.startDate,
+
             endDate:
                 isNonEmptyString(
                     normalized.temporalContext.endDate
@@ -527,4 +555,3 @@ module.exports = {
     validateSentinel2IndexProductionRequest,
     createSentinel2IndexProductionRequestContract
 };
-

@@ -4,7 +4,7 @@
 //
 // Soil Analysis GIS
 //
-// Phase 10.6 ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Historical GIS Context REST API
+// Phase 10.6  Historical GIS Context REST API
 //
 // ============================================================
 
@@ -46,6 +46,8 @@ const rasterOutputRoutes = require("./routes/rasterOutputRoutes");
 const ensureRasterIndexRoutes = require("./routes/ensureRasterIndexRoutes");
 const sentinel2IndexProductionWorkflowRoutes =
   require("./routes/sentinel2IndexProductionWorkflowRoutes");
+const sentinel2ObservationDiscoveryRoutes =
+  require("./routes/sentinel2ObservationDiscoveryRoutes");
 const rasterLayerConfigRoutes = require("./routes/rasterLayerConfigRoutes");
 const vectorLayerConfigRoutes = require("./routes/vectorLayerConfigRoutes");
 
@@ -166,6 +168,10 @@ app.use(
   "/api/remote-sensing",
   sentinel2IndexProductionWorkflowRoutes
 );
+app.use(
+  "/api/remote-sensing",
+  sentinel2ObservationDiscoveryRoutes
+);
 
 // ============================================================
 // RASTER LAYER CONFIGURATION API
@@ -226,7 +232,7 @@ async function startServer() {
 
     const server = app.listen(PORT, () => {
       console.log("");
-      console.log("ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ GIS Server running on port " + PORT);
+      console.log("ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ GIS Server running on port " + PORT);
       console.log("");
       console.log("Open: http://localhost:" + PORT);
       console.log("");

@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -238,6 +238,40 @@ test("SBI request is rejected when NIR band is missing", () => {
   assert.ok(
     result.errors.includes(
       "SBI: missing required input band: NIR"
+    )
+  );
+});
+
+test("NDSI request is accepted with all registered bands", () => {
+  const result =
+    validateCalculationRequestAgainstRegistry({
+      indexCode: "NDSI",
+      inputs: {
+        NIR: "band-nir",
+        SWIR1: "band-swir1",
+      },
+    });
+
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.indexCode, "NDSI");
+  assert.equal(result.definition.code, "NDSI");
+});
+
+test("NDSI request is rejected when SWIR1 band is missing", () => {
+  const result =
+    validateCalculationRequestAgainstRegistry({
+      indexCode: "NDSI",
+      inputs: {
+        NIR: "band-nir",
+      },
+    });
+
+  assert.equal(result.valid, false);
+
+  assert.ok(
+    result.errors.includes(
+      "NDSI: missing required input band: SWIR1"
     )
   );
 });

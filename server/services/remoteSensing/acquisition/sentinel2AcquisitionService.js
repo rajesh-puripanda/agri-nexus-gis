@@ -249,12 +249,26 @@ async function acquireSentinel2Bands({
             { fetchImpl }
         );
 
+    const requestedSceneId =
+        request.acquisitionParameters &&
+        request.acquisitionParameters.sceneId;
+
     const item =
-        catalogue?.features?.[0];
+        typeof requestedSceneId === "string" &&
+        requestedSceneId.trim().length > 0
+            ? catalogue?.features?.find(
+                feature =>
+                    feature &&
+                    feature.id === requestedSceneId.trim()
+            )
+            : catalogue?.features?.[0];
 
     if (!item) {
         throw new Error(
-            "No Sentinel-2 catalogue item matched the acquisition request."
+            typeof requestedSceneId === "string" &&
+            requestedSceneId.trim().length > 0
+                ? "Sentinel-2 catalogue item " + requestedSceneId.trim() + " was not returned by the acquisition search."
+                : "No Sentinel-2 catalogue item matched the acquisition request."
         );
     }
 

@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // ============================================================
 // server/services/remoteSensing/raster/rasterReaderService.js
@@ -56,6 +56,19 @@ async function readGeoTiff(filePath) {
     const width = image.getWidth();
     const height = image.getHeight();
     const samplesPerPixel = image.getSamplesPerPixel();
+
+    console.log("=== RASTER READER INPUT ===");
+    console.log({
+        filePath,
+        width,
+        height,
+        samplesPerPixel,
+        fileSize: fileBuffer.byteLength,
+        bitsPerSample: image.fileDirectory.BitsPerSample,
+        sampleFormat: image.fileDirectory.SampleFormat,
+        samplesPerPixelDirectory:
+            image.fileDirectory.SamplesPerPixel
+    });
 
     const data = await image.readRasters({
         interleave: false

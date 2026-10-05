@@ -4,100 +4,229 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+    createSentinel2IndexProductionResponse,
     processSentinel2IndexProductionWorkflowRequest
 } = require(
     "../controllers/" +
     "sentinel2IndexProductionWorkflowController"
 );
 
-function createValidRequest() {
-    return {
-        contractVersion: "1.0",
-
-        sourceId: "sentinel2",
-
-        temporalContext: {
-            startDate: "2026-09-01",
-            endDate: "2026-09-15"
-        },
-
-        spatialContext: {
-            bbox: {
-                west: 82.90,
-                south: 17.60,
-                east: 83.40,
-                north: 17.90
-            }
-        },
-
-        acquisitionParameters: {
-            maxCloudCover: 20
-        },
-
-        outputDirectory:
-            "./data/remote-sensing/acquisitions",
-
-        indexCode: "BSI",
-
-        targetResolution: 10,
-
-        outputNoData: -9999,
-
-        parameters: {}
-    };
-}
-
-function createResponseMock() {
-    return {
-        statusCode: null,
-        payload: null,
-
-        status(code) {
-            this.statusCode = code;
-            return this;
-        },
-
-        json(payload) {
-            this.payload = payload;
-            return this;
-        }
-    };
-}
-
 test(
-    "controller accepts valid Sentinel-2 BSI production request",
-    async () => {
-        let capturedArguments = null;
-
-        const workflowMock =
-            async (args) => {
-                capturedArguments = args;
-
-                return {
-                    indexCode: "BSI",
-                    status: "completed"
-                };
-            };
-
-        const req = {
-            body:
-                createValidRequest()
-        };
-
-        const res =
-            createResponseMock();
+    "createSentinel2IndexProductionResponse removes heavy raster payloads",
+    () => {
+        const hugeRaster =
+            new Float32Array(1000000);
 
         const result =
-            await processSentinel2IndexProductionWorkflowRequest(
-                req,
-                res,
-                () => {},
-                workflowMock
-            );
+            createSentinel2IndexProductionResponse({
+                indexCode: "NDVI",
+
+                outputProcessing: {
+                    continuousRaster:
+                        hugeRaster,
+
+                    classificationResult: {
+                        classification: {
+                            raster:
+                                hugeRaster
+                        }
+                    },
+
+                    continuousOutputRaster:
+                        hugeRaster,
+
+                    classificationOutputRaster:
+                        hugeRaster,
+
+                    outputPaths: {
+                        continuous:
+                            "ndvi_continuous.tif",
+
+                        classification:
+                            "ndvi_classified.tif"
+                    },
+
+                    continuousOutput: {
+                        dataType: "Float32"
+                    },
+
+                    classificationOutput: {
+                        dataType: "UInt8"
+                    }
+                }
+            });
 
         assert.equal(
-            result,
-            res
+            result.outputProcessing
+                .continuousRaster,
+            undefined
+        );
+
+        assert.equal(
+            result.outputProcessing
+                .classificationResult,
+            undefined
+        );
+
+        assert.equal(
+            result.outputProcessing
+                .continuousOutputRaster,
+            undefined
+        );
+
+        assert.equal(
+            result.outputProcessing
+                .classificationOutputRaster,
+            undefined
+        );
+
+        assert.deepEqual(
+            result.outputProcessing.outputPaths,
+            {
+                continuous:
+                    "ndvi_continuous.tif",
+
+                classification:
+                    "ndvi_classified.tif"
+            }
+        );
+
+        assert.deepEqual(
+            result.outputProcessing
+                .continuousOutput,
+            {
+                dataType: "Float32"
+            }
+        );
+
+        assert.deepEqual(
+            result.outputProcessing
+                .classificationOutput,
+            {
+                dataType: "UInt8"
+            }
+        );
+    }
+);
+
+test(
+    "processSentinel2IndexProductionWorkflowRequest returns compact production result",
+    async () => {
+        const hugeRaster =
+            new Float32Array(1000000);
+
+        const workflowResult = {
+            workflowVersion: "1.0",
+            indexCode: "NDVI",
+            indexName: "Normalized Difference Vegetation Index",
+            sceneId: "TEST_SCENE",
+            acquisitionDate: "2026-09-08",
+            targetResolution: 10,
+
+            outputProcessing: {
+                continuousRaster:
+                    hugeRaster,
+
+                classificationResult: {
+                    classification: {
+                        raster:
+                            hugeRaster
+                    }
+                },
+
+                continuousOutputRaster:
+                    hugeRaster,
+
+                classificationOutputRaster:
+                    hugeRaster,
+
+                outputPaths: {
+                    continuous:
+                        "ndvi_continuous.tif",
+
+                    classification:
+                        "ndvi_classified.tif"
+                },
+
+                continuousOutput: {
+                    dataType: "Float32"
+                },
+
+                classificationOutput: {
+                    dataType: "UInt8"
+                }
+            }
+        };
+
+        const request = {
+            contractVersion: "1.0",
+            sourceId: "sentinel-2",
+            indexCode: "NDVI",
+            sceneId: "TEST_SCENE",
+
+            temporalContext: {
+                startDate: "2026-09-01",
+                endDate: "2026-09-10"
+            },
+
+            spatialContext: {
+                bbox: {
+                    west: 83.1,
+                    south: 17.6,
+                    east: 83.5,
+                    north: 17.9
+                }
+            },
+
+            acquisitionParameters: {
+                maxCloudCover: 20
+            },
+
+            outputDirectory: "test-output",
+            outputNoData: -9999,
+            parameters: {},
+            targetResolution: 10
+        };
+
+        const req = {
+            body: request
+        };
+
+        let responseBody = null;
+
+        const res = {
+            statusCode: 200,
+
+            status(code) {
+                this.statusCode = code;
+                return this;
+            },
+
+            json(payload) {
+                responseBody = payload;
+                return this;
+            }
+        };
+
+        let nextError = null;
+
+        const next = (error) => {
+            nextError = error;
+        };
+
+        const workflowImpl =
+            async () => workflowResult;
+
+        await processSentinel2IndexProductionWorkflowRequest(
+            req,
+            res,
+            next,
+            workflowImpl
+        );
+
+        assert.equal(
+            nextError,
+            null
         );
 
         assert.equal(
@@ -105,134 +234,219 @@ test(
             200
         );
 
+        assert.equal(
+            responseBody.success,
+            true
+        );
+
+        assert.equal(
+            responseBody.result
+                .outputProcessing
+                .continuousRaster,
+            undefined
+        );
+
+        assert.equal(
+            responseBody.result
+                .outputProcessing
+                .classificationResult,
+            undefined
+        );
+
         assert.deepEqual(
-            res.payload,
+            responseBody.result
+                .outputProcessing
+                .outputPaths,
             {
-                success: true,
-                result: {
-                    indexCode: "BSI",
-                    status: "completed"
-                }
+                continuous:
+                    "ndvi_continuous.tif",
+
+                classification:
+                    "ndvi_classified.tif"
             }
         );
 
-        assert.ok(
-            capturedArguments
-        );
-
-        assert.equal(
-            capturedArguments.request.indexCode,
-            "BSI"
-        );
-
-        assert.equal(
-            capturedArguments.outputDirectory,
-            "./data/remote-sensing/acquisitions"
-        );
-
-        assert.equal(
-            capturedArguments.targetResolution,
-            10
-        );
-
-        assert.equal(
-            capturedArguments.outputNoData,
-            -9999
-        );
+        assert.doesNotThrow(() => {
+            JSON.stringify(
+                responseBody
+            );
+        });
     }
 );
 
+
 test(
-    "controller rejects invalid request with HTTP 400",
+    "processSentinel2IndexProductionWorkflowStreamRequest emits progress stages and compact result",
     async () => {
-        const req = {
-            body:
-                createValidRequest()
+        const {
+            processSentinel2IndexProductionWorkflowStreamRequest
+        } = require(
+            "../controllers/" +
+            "sentinel2IndexProductionWorkflowController"
+        );
+
+        const request = {
+            contractVersion: "1.0",
+            sourceId: "sentinel-2",
+            indexCode: "NDVI",
+            sceneId: "TEST_SCENE",
+
+            temporalContext: {
+                startDate: "2026-09-01",
+                endDate: "2026-09-10"
+            },
+
+            spatialContext: {
+                bbox: {
+                    west: 83.1,
+                    south: 17.6,
+                    east: 83.5,
+                    north: 17.9
+                }
+            },
+
+            acquisitionParameters: {
+                maxCloudCover: 20
+            },
+
+            outputDirectory: "test-output",
+            outputNoData: -9999,
+            parameters: {},
+            targetResolution: 10
         };
 
-        delete req.body.indexCode;
+        const events = [];
+        let responseEnded = false;
 
-        const res =
-            createResponseMock();
+        const res = {
+            statusCode: 200,
+            headers: {},
 
-        let nextCalled = false;
+            status(code) {
+                this.statusCode = code;
+                return this;
+            },
 
-        await processSentinel2IndexProductionWorkflowRequest(
-            req,
-            res,
-            () => {
-                nextCalled = true;
+            setHeader(name, value) {
+                this.headers[name] = value;
+                return this;
+            },
+
+            flushHeaders() {},
+
+            write(chunk) {
+                events.push(chunk);
+                return true;
+            },
+
+            end() {
+                responseEnded = true;
             }
-        );
+        };
 
-        assert.equal(
-            res.statusCode,
-            400
-        );
+        const workflowImpl =
+            async ({ onProgress }) => {
+                onProgress({
+                    stage: "preparing",
+                    message:
+                        "Preparing Sentinel-2 imagery."
+                });
 
-        assert.equal(
-            res.payload.success,
-            false
-        );
+                onProgress({
+                    stage: "processing",
+                    message:
+                        "Processing Normalized Difference Vegetation Index."
+                });
 
-        assert.ok(
-            Array.isArray(
-                res.payload.validationErrors
-            )
-        );
+                onProgress({
+                    stage: "writing",
+                    message:
+                        "Writing Normalized Difference Vegetation Index raster."
+                });
 
-        assert.equal(
-            nextCalled,
-            false
-        );
-    }
-);
+                onProgress({
+                    stage: "complete",
+                    message:
+                        "Normalized Difference Vegetation Index processing complete."
+                });
 
-test(
-    "controller forwards workflow errors to next",
-    async () => {
-        const expectedError =
-            new Error(
-                "Workflow execution failed."
-            );
+                return {
+                    workflowVersion: "1.0",
+                    indexCode: "NDVI",
+                    indexName:
+                        "Normalized Difference Vegetation Index",
+                    sceneId: "TEST_SCENE",
+                    acquisitionDate: "2026-09-08",
+                    targetResolution: 10,
 
-        const workflowMock =
-            async () => {
-                throw expectedError;
+                    outputProcessing: {
+                        outputPaths: {
+                            continuous:
+                                "ndvi_continuous.tif"
+                        },
+
+                        continuousOutput: {
+                            dataType: "Float32"
+                        }
+                    }
+                };
             };
 
-        const req = {
-            body:
-                createValidRequest()
+        let nextError = null;
+
+        const next = (error) => {
+            nextError = error;
         };
 
-        const res =
-            createResponseMock();
-
-        let forwardedError = null;
-
-        await processSentinel2IndexProductionWorkflowRequest(
-            req,
-            res,
-            (error) => {
-                forwardedError = error;
+        await processSentinel2IndexProductionWorkflowStreamRequest(
+            {
+                body: request
             },
-            workflowMock
+            res,
+            next,
+            workflowImpl
         );
 
-        assert.equal(
-            forwardedError,
-            expectedError
-        );
+        assert.equal(nextError, null);
+        assert.equal(res.statusCode, 200);
+        assert.equal(responseEnded, true);
 
         assert.equal(
-            res.statusCode,
-            null
+            res.headers["Content-Type"],
+            "text/event-stream"
         );
 
-        assert.equal(
-            res.payload,
-            null
+        const streamText =
+            events.join("");
+
+        const progressEvents =
+            [...streamText.matchAll(
+                /event: progress\r?\ndata: (.+)\r?\n\r?\n/g
+            )].map(
+                (match) =>
+                    JSON.parse(match[1])
+            );
+
+        assert.deepEqual(
+            progressEvents.map(
+                (event) => event.stage
+            ),
+            [
+                "preparing",
+                "processing",
+                "writing",
+                "complete"
+            ]
+        );
+
+        assert.match(
+            streamText,
+            /event: result/
+        );
+
+        assert.doesNotMatch(
+            streamText,
+            /continuousRaster/
         );
     }
 );

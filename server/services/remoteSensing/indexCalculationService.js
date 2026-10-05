@@ -195,6 +195,15 @@ function calculateNDMI(inputs) {
   );
 }
 
+function calculateNDSI(inputs) {
+  return calculateNormalizedDifference(
+    inputs.SWIR1,
+    inputs.NIR,
+    "SWIR1",
+    "NIR"
+  );
+}
+
 function calculateSBI(inputs) {
   assertFiniteBandValue("Green", inputs.Green);
   assertFiniteBandValue("Red", inputs.Red);
@@ -301,6 +310,10 @@ function calculateScalarIndex({
 
     case "NDMI":
       value = calculateNDMI(inputs);
+      break;
+
+    case "NDSI":
+      value = calculateNDSI(inputs);
       break;
 
     case "BSI":

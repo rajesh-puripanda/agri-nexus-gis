@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const sbiDefinition = Object.freeze({
   code: "SBI",
@@ -11,7 +11,7 @@ const sbiDefinition = Object.freeze({
     "for relative surface brightness characterization.",
 
   formula:
-    "sqrt(Green + Red + NIR)",
+    "sqrt(Green^2 + Red^2 + NIR^2)",
 
   requiredBands: Object.freeze([
     "Green",

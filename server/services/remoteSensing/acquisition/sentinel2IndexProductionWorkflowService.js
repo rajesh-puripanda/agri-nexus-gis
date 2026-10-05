@@ -201,6 +201,18 @@ function buildMultiSourceInputs({
                 );
             }
 
+            const resolutionBands =
+                resolvedBands.filter(
+                    (band) =>
+                        band.nativeResolution ===
+                        resolution
+                );
+
+            const sourceBand =
+                resolutionBands.indexOf(
+                    resolvedBand
+                ) + 1;
+
             return {
                 band:
                     resolvedBand.canonicalBandName,
@@ -208,16 +220,16 @@ function buildMultiSourceInputs({
                 inputPath:
                     preparedOutput.outputPath,
 
-                sourceBand:
-                    1,
+                sourceBand,
             };
         }
     );
 }
 
-async function processSentinel2IndexProductionWorkflow({
+    async function processSentinel2IndexProductionWorkflow({
         request,
         outputDirectory,
+        analyticalOutputDirectory = outputDirectory,
         targetResolution,
         outputNoData = -9999,
         preparationImpl = prepareSentinel2NativeResolutionRasters,
@@ -225,6 +237,7 @@ async function processSentinel2IndexProductionWorkflow({
             processMultiSourceRasterIndex,
         postProcessingImpl =
             processAndWriteRasterIndexOutputs,
+        onProgress = null,
     } = {}) {
     assertRequest(request);
 
@@ -267,6 +280,10 @@ async function processSentinel2IndexProductionWorkflow({
             resolvedBands
         );
 
+    if (typeof onProgress === "function") {
+        onProgress({ stage: "preparing", message: "Preparing Sentinel-2 imagery." });
+    }
+
     const preparation =
         await preparationImpl({
             request,
@@ -287,6 +304,10 @@ async function processSentinel2IndexProductionWorkflow({
             preparationOutputs,
         });
 
+    if (typeof onProgress === "function") {
+        onProgress({ stage: "processing", message: `Processing ${indexDefinition.name}.` });
+    }
+
     const rasterWorkflow =
         await indexWorkflowImpl({
             indexCode,
@@ -296,6 +317,10 @@ async function processSentinel2IndexProductionWorkflow({
             parameters:
                 request.parameters,
         });
+
+    if (typeof onProgress === "function") {
+        onProgress({ stage: "writing", message: `Writing ${indexDefinition.name} raster.` });
+    }
 
     const outputProcessing =
         await postProcessingImpl({
@@ -308,8 +333,13 @@ async function processSentinel2IndexProductionWorkflow({
             calculationResult:
                 rasterWorkflow.result,
 
-            outputDirectory,
+            outputDirectory:
+                analyticalOutputDirectory,
         });
+
+    if (typeof onProgress === "function") {
+        onProgress({ stage: "complete", message: `${indexDefinition.name} processing complete.` });
+    }
 
     return {
         workflowVersion:

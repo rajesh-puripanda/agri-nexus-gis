@@ -176,6 +176,19 @@ async function prepareSources({
                 source
             );
 
+        console.log("\n=== MULTI-SOURCE RASTER INPUT ===");
+        console.log({
+            band: source.band,
+            inputPath: source.inputPath,
+            sourceBand: source.sourceBand,
+            width: raster.width,
+            height: raster.height,
+            pixelCount: raster.width * raster.height,
+            resolution: raster.resolution,
+            origin: raster.origin,
+            boundingBox: raster.boundingBox
+        });
+
         const singleBandRaster = {
             width:
                 raster.width,

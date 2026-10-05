@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -212,16 +212,14 @@ test(
             };
         };
 
-        const decodeImpl = async (
-            filePath
-        ) => {
+        const decodeImpl = async ({ inputPath }) => {
             calls.push({
                 stage: "decode",
-                filePath
+                filePath: inputPath
             });
 
             const bandName =
-                filePath.replace(
+                inputPath.replace(
                     ".jp2",
                     ""
                 );
@@ -241,6 +239,15 @@ test(
                 dimensions.height;
 
             return {
+                window: {
+                    x0: 0,
+                    y0: 0,
+                    x1: dimensions.width,
+                    y1: dimensions.height,
+                    width: dimensions.width,
+                    height: dimensions.height
+                },
+
                 width:
                     dimensions.width,
 
@@ -258,7 +265,6 @@ test(
                     )
             };
         };
-
         const prepareImpl = ({
             bands
         }) => {
@@ -342,12 +348,14 @@ test(
                     collection:
                         "sentinel-2-l2a",
 
-                    bbox: [
-                        82.9,
-                        17.6,
-                        83.4,
-                        17.9
-                    ],
+                    spatialContext: {
+            bbox: {
+                west: 82.88944,
+                south: 18.07964,
+                east: 82.88962,
+                north: 18.07981
+            },
+                    },
 
                     datetime:
                         "2026-09-01/2026-09-15"
@@ -572,10 +580,20 @@ test(
         });
 
         const decodeImpl = async () => ({
+            window: {
+                x0: 0,
+                y0: 0,
+                x1: 2,
+                y1: 2,
+                width: 2,
+                height: 2
+            },
+
             width: 2,
             height: 2,
             pixelCount: 4,
             dataType: "UINT16",
+
             samples:
                 new Uint16Array(4)
         });
@@ -585,7 +603,16 @@ test(
                 prepareSentinel2NativeResolutionRasters({
                     request: {
                         collection:
-                            "sentinel-2-l2a"
+                            "sentinel-2-l2a",
+
+                        spatialContext: {
+                bbox: {
+                    west: 82.88944,
+                    south: 18.07964,
+                    east: 82.88962,
+                    north: 18.07981
+                }
+                        }
                     },
 
                     outputDirectory:
@@ -626,6 +653,3 @@ test(
         );
     }
 );
-
-
-
