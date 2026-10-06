@@ -29,6 +29,14 @@
   const SENTINEL2_INDEX_PRODUCTION_URL =
     "/api/remote-sensing/sentinel2-index-production";
 
+  const SENTINEL2_INDEX_AVAILABILITY_URL =
+    "/api/remote-sensing/availability";
+
+  let sentinel2IndexAvailability = {
+    observationDate: null,
+    results: [],
+    loading: false,
+  };
   let sentinel2AcquisitionContext = {
     startDate: null,
     endDate: null,
@@ -124,6 +132,30 @@
       soilEmpty:
         document.getElementById(
           "remoteSensingSoilEmpty"
+        ),
+      indexAvailability:
+        document.getElementById(
+          "remoteSensingIndexAvailability"
+        ),
+
+      availabilityDate:
+        document.getElementById(
+          "remoteSensingAvailabilityDate"
+        ),
+
+      availableProducts:
+        document.getElementById(
+          "remoteSensingAvailableProducts"
+        ),
+
+      processingProducts:
+        document.getElementById(
+          "remoteSensingProcessingProducts"
+        ),
+
+      availabilityNotice:
+        document.getElementById(
+          "remoteSensingAvailabilityNotice"
         ),
 
       status:
@@ -470,6 +502,15 @@
     updateStatus(
       `Selected Sentinel-2 scene: ${observation.sceneId}`,
     );
+
+    loadSentinel2IndexAvailability(
+      observation.acquisitionDate,
+    ).catch((error) => {
+      console.error(
+        "Unable to load Sentinel-2 index availability:",
+        error,
+      );
+    });
   }
   async function discoverSentinel2Observations() {
     updateSentinel2AcquisitionContext();
@@ -588,6 +629,204 @@
     return icons[code] || "";
   }
 
+  function formatObservationDate(dateValue) {
+    if (!dateValue) {
+      return "Unknown observation date";
+    }
+
+    const value = String(dateValue).slice(0, 10);
+    const parts = value.split("-");
+
+    if (parts.length !== 3) {
+      return value;
+    }
+
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+
+  function getAvailabilityResult(indexCode) {
+    return (
+      sentinel2IndexAvailability.results.find(
+        (result) =>
+          result.indexCode === indexCode
+      ) || null
+    );
+  }
+
+  function renderIndexAvailability() {
+    const {
+      indexAvailability,
+      availabilityDate,
+      availableProducts,
+      processingProducts,
+      availabilityNotice,
+    } = getElements();
+
+    if (!indexAvailability) {
+      return;
+    }
+
+    if (
+      !sentinel2IndexAvailability.observationDate
+    ) {
+      indexAvailability.classList.add(
+        "is-hidden"
+      );
+
+      return;
+    }
+
+    indexAvailability.classList.remove(
+      "is-hidden"
+    );
+
+    const date =
+      sentinel2IndexAvailability.observationDate;
+
+    if (availabilityDate) {
+      availabilityDate.textContent =
+        `Observation Date: ${formatObservationDate(date)}`;
+    }
+
+    const available = [];
+    const processing = [];
+
+    catalog.forEach((index) => {
+      const result =
+        getAvailabilityResult(index.code);
+
+      if (
+        result &&
+        result.status === "AVAILABLE"
+      ) {
+        available.push(index);
+      } else {
+        processing.push(index);
+      }
+    });
+
+    if (availableProducts) {
+      availableProducts.innerHTML =
+        available.length > 0
+          ? `
+            <strong>Available locally</strong>
+            <div class="remote-sensing-availability-list">
+              ${available
+                .map(
+                  (index) =>
+                    `<span> ${index.code}</span>`
+                )
+                .join("")}
+            </div>
+          `
+          : `
+            <strong>No products available locally</strong>
+          `;
+    }
+
+    if (processingProducts) {
+      processingProducts.innerHTML =
+        processing.length > 0
+          ? `
+            <strong>Requires processing</strong>
+            <div class="remote-sensing-availability-list">
+              ${processing
+                .map(
+                  (index) =>
+                    `<span> ${index.code}</span>`
+                )
+                .join("")}
+            </div>
+          `
+          : "";
+    }
+
+    if (availabilityNotice) {
+      availabilityNotice.classList.remove(
+        "is-hidden"
+      );
+    }
+  }
+
+  async function loadSentinel2IndexAvailability(
+    observationDate
+  ) {
+    if (!observationDate) {
+      sentinel2IndexAvailability = {
+        observationDate: null,
+        results: [],
+        loading: false,
+      };
+
+      renderIndexAvailability();
+      renderCatalog();
+
+      return;
+    }
+
+    sentinel2IndexAvailability.loading =
+      true;
+
+    sentinel2IndexAvailability.observationDate =
+      String(observationDate).slice(0, 10);
+
+    renderIndexAvailability();
+
+    try {
+      const url =
+        `${SENTINEL2_INDEX_AVAILABILITY_URL}` +
+        `?observationDate=${encodeURIComponent(
+          sentinel2IndexAvailability.observationDate
+        )}`;
+
+      const response =
+        await fetch(url, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+      if (!response.ok) {
+        throw new Error(
+          `Availability request failed: ${response.status}`
+        );
+      }
+
+      const payload =
+        await response.json();
+
+      if (
+        !payload ||
+        payload.success !== true ||
+        !Array.isArray(payload.results)
+      ) {
+        throw new Error(
+          "Invalid index availability response."
+        );
+      }
+
+      sentinel2IndexAvailability.results =
+        payload.results;
+    } catch (error) {
+      console.error(
+        "Sentinel-2 index availability failed:",
+        error
+      );
+
+      sentinel2IndexAvailability.results =
+        catalog.map((index) => ({
+          indexCode: index.code,
+          status: "MISSING",
+        }));
+    } finally {
+      sentinel2IndexAvailability.loading =
+        false;
+
+      renderIndexAvailability();
+      renderCatalog();
+    }
+  }
   function renderCatalog() {
     const {
       spectralGrid,
@@ -645,6 +884,28 @@
       button.dataset.indexCode =
         index.code;
 
+      const availabilityResult =
+        getAvailabilityResult(index.code);
+
+      const isAvailable =
+        availabilityResult &&
+        availabilityResult.status === "AVAILABLE";
+
+      button.classList.toggle(
+        "is-available",
+        Boolean(isAvailable)
+      );
+
+      button.classList.toggle(
+        "requires-processing",
+        !isAvailable
+      );
+
+      const availabilityLabel =
+        isAvailable
+          ? "Available"
+          : "Process";
+
       button.title =
         index.description ||
         index.name;
@@ -668,6 +929,13 @@
 
         <span class="remote-sensing-index-name">
           ${index.name}
+        </span>
+
+        <span
+          class="remote-sensing-index-availability"
+          aria-label="${isAvailable ? "Available locally" : "Requires processing"}"
+        >
+          ${availabilityLabel}
         </span>
       `;
 

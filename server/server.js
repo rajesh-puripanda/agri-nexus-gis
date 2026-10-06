@@ -46,6 +46,8 @@ const rasterOutputRoutes = require("./routes/rasterOutputRoutes");
 const ensureRasterIndexRoutes = require("./routes/ensureRasterIndexRoutes");
 const sentinel2IndexProductionWorkflowRoutes =
   require("./routes/sentinel2IndexProductionWorkflowRoutes");
+const sentinel2IndexAvailabilityRoutes =
+  require("./routes/sentinel2IndexAvailabilityRoutes");
 const sentinel2ObservationDiscoveryRoutes =
   require("./routes/sentinel2ObservationDiscoveryRoutes");
 const rasterLayerConfigRoutes = require("./routes/rasterLayerConfigRoutes");
@@ -171,6 +173,11 @@ app.use(
 app.use(
   "/api/remote-sensing",
   sentinel2ObservationDiscoveryRoutes
+);
+
+app.use(
+    "/api/remote-sensing",
+    sentinel2IndexAvailabilityRoutes
 );
 
 // ============================================================
