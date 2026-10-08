@@ -204,6 +204,14 @@ function calculateNDSI(inputs) {
   );
 }
 
+function calculateSSMI(inputs) {
+  return calculateNormalizedDifference(
+    inputs.SWIR1,
+    inputs.SWIR2,
+    "SWIR1",
+    "SWIR2"
+  );
+}
 function calculateSBI(inputs) {
   assertFiniteBandValue("Green", inputs.Green);
   assertFiniteBandValue("Red", inputs.Red);
@@ -312,6 +320,9 @@ function calculateScalarIndex({
       value = calculateNDMI(inputs);
       break;
 
+    case "SSMI":
+      value = calculateSSMI(inputs);
+      break;
     case "NDSI":
       value = calculateNDSI(inputs);
       break;
@@ -403,3 +414,5 @@ module.exports = {
   calculateScalarIndex,
   calculateRemoteSensingIndex,
 };
+
+

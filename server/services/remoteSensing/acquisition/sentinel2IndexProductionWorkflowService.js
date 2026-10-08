@@ -340,7 +340,7 @@ function buildMultiSourceInputs({
         });
     }
 
-    console.log("=== BEFORE EVI OUTPUT POST-PROCESSING ===");
+    console.log("=== BEFORE INDEX OUTPUT POST-PROCESSING ===");
 
     const outputProcessing =
         await postProcessingImpl({
@@ -357,7 +357,7 @@ function buildMultiSourceInputs({
                 analyticalOutputDirectory,
         });
 
-    console.log("=== AFTER EVI OUTPUT POST-PROCESSING ===");
+    console.log("=== AFTER INDEX OUTPUT POST-PROCESSING ===");
 
     if (typeof onProgress === "function") {
         onProgress({
@@ -478,3 +478,4 @@ module.exports = {
     SENTINEL2_INDEX_PRODUCTION_WORKFLOW_VERSION,
     processSentinel2IndexProductionWorkflow,
 };
+

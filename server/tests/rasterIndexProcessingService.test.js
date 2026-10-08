@@ -224,6 +224,23 @@ test("supports NDMI raster processing", () => {
     assert.equal(result.results.raster.bands.NDMI.data.length, 4);
 });
 
+test("supports SSMI raster processing", () => {
+    const result = processRasterIndex({
+        indexCode: "SSMI",
+        raster: createRaster({
+            bands: {
+                SWIR1: new Float32Array([0.3, 0.4, 0.5, 0.6]),
+                SWIR2: new Float32Array([0.2, 0.2, 0.3, 0.4])
+            }
+        })
+    });
+
+    assert.equal(result.statistics.validPixelCount, 4);
+    assert.equal(
+        result.results.raster.bands.SSMI.data.length,
+        4
+    );
+});
 test("preserves custom NoData value", () => {
     const raster = createRaster({
         noData: -32768,
@@ -388,3 +405,4 @@ test("converts out-of-range index pixels to NoData", () => {
     assert.equal(result.statistics.validPixelCount, 3);
     assert.equal(result.statistics.noDataPixelCount, 1);
 });
+

@@ -2817,7 +2817,7 @@ observationCount:
           analyticalOutputDirectory:
             "./data/remote-sensing/outputs",
           indexCode,
-          targetResolution: 10,
+          targetResolution: indexCode === "SSMI" ? 20 : 10,
           outputNoData: -9999,
           parameters: {},
         }),

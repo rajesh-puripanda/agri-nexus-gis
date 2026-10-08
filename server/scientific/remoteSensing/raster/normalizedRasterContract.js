@@ -33,7 +33,8 @@ const CANONICAL_BAND_NAMES = Object.freeze([
     "Red",
     "NIR",
     "SWIR",
-    "SWIR1"
+    "SWIR1",
+    "SWIR2"
 ]);
 
 function isObject(value) {
@@ -275,3 +276,6 @@ module.exports = {
     validateNormalizedRaster,
     createNormalizedRasterContract
 };
+
+
+

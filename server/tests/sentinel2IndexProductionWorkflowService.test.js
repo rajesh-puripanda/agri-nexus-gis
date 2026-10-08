@@ -11,6 +11,96 @@ const {
 );
 
 test(
+    "processSentinel2IndexProductionWorkflow resolves SSMI SWIR1 and SWIR2 bands at 20m",
+    async () => {
+        let preparationRequest = null;
+        let rasterRequest = null;
+
+        const preparationImpl = async (request) => {
+            preparationRequest = request;
+
+            return {
+                workflowVersion: "1.0",
+                sceneId: "S2C_SSMI_TEST_SCENE",
+                acquisitionDate: "2026-09-08",
+                outputDirectory: request.outputDirectory,
+                outputs: {
+                    20: {
+                        resolution: 20,
+                        bands: [
+                            "RedEdge1",
+                            "RedEdge2",
+                            "RedEdge3",
+                            "RedEdge4",
+                            "SWIR1",
+                            "SWIR2",
+                        ],
+                        outputPath: "prepared-20m.tif",
+                    },
+                },
+            };
+        };
+
+        const indexWorkflowImpl = async (request) => {
+            rasterRequest = request;
+
+            return {
+                indexCode: request.indexCode,
+                targetResolution: request.targetResolution,
+                sourceBands: request.sources.map((source) => ({
+                    band: source.band,
+                    sourceBand: source.sourceBand,
+                    inputPath: source.inputPath,
+                })),
+            };
+        };
+
+        const result = await processSentinel2IndexProductionWorkflow({
+            request: {
+                indexCode: "SSMI",
+                parameters: {},
+            },
+            outputDirectory: "test-output",
+            targetResolution: 20,
+            preparationImpl,
+            indexWorkflowImpl,
+            postProcessingImpl: async () => ({
+                outputPaths: {
+                    continuous: "SSMI_index.tif",
+                    classification: "SSMI_classification.tif",
+                },
+            }),
+        });
+
+        assert.equal(result.indexCode, "SSMI");
+        assert.equal(result.indexName, "Surface Soil Moisture Indicator");
+        assert.equal(result.targetResolution, 20);
+
+        assert.deepEqual(preparationRequest.bandNames, [
+            "SWIR1",
+            "SWIR2",
+        ]);
+
+        assert.deepEqual(result.sources, [
+            {
+                band: "SWIR1",
+                inputPath: "prepared-20m.tif",
+                sourceBand: 1,
+            },
+            {
+                band: "SWIR2",
+                inputPath: "prepared-20m.tif",
+                sourceBand: 2,
+            },
+        ]);
+
+        assert.equal(rasterRequest.indexCode, "SSMI");
+        assert.equal(rasterRequest.targetResolution, 20);
+        assert.deepEqual(rasterRequest.sources, result.sources);
+    }
+);
+
+test(
     "processSentinel2IndexProductionWorkflow resolves NDMI bands and delegates mixed-resolution processing",
     async () => {
         let preparationRequest = null;

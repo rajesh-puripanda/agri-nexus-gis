@@ -41,6 +41,7 @@ const SENTINEL2_SPECTRAL_BAND_MAPPING =
         // Explicit canonical SWIR1 band required by
         // soil-focused indices such as BSI.
         SWIR1: "SWIR1",
+        SWIR2: "SWIR2",
     });
 
 function resolveSentinel2SpectralBand(
