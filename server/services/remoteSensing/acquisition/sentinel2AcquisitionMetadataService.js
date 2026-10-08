@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const fs = require("fs");
 const path = require("path");
@@ -109,6 +109,23 @@ function validateAcquisitionMetadata(metadata) {
     if (
         typeof metadata.sourceProvider !== "string" ||
         !metadata.sourceProvider
+    ) {
+        return false;
+    }
+
+    if (
+        metadata.spatialCoverage !== undefined &&
+        (
+            !Array.isArray(metadata.spatialCoverage) ||
+            metadata.spatialCoverage.length !== 4 ||
+            metadata.spatialCoverage.some(
+                value => !Number.isFinite(Number(value))
+            ) ||
+            Number(metadata.spatialCoverage[0]) >=
+                Number(metadata.spatialCoverage[2]) ||
+            Number(metadata.spatialCoverage[1]) >=
+                Number(metadata.spatialCoverage[3])
+        )
     ) {
         return false;
     }
@@ -249,6 +266,13 @@ async function writeAcquisitionMetadata({
 
         sourceProvider:
             acquisition.sourceProvider,
+
+        spatialCoverage:
+            Array.isArray(
+                acquisition.spatialCoverage
+            )
+                ? acquisition.spatialCoverage.slice()
+                : undefined,
 
         bands
     };

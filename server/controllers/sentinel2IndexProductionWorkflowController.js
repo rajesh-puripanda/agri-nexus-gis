@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const {
     validateSentinel2IndexProductionRequest,
@@ -179,6 +179,20 @@ async function processSentinel2IndexProductionWorkflowStreamRequest(
         ) {
             res.flushHeaders();
         }
+
+        console.log("=== BEFORE WORKFLOW AWAIT ===");
+
+        req.on("close", () => {
+            console.log("=== SSE REQUEST CLOSED ===");
+        });
+
+        res.on("close", () => {
+            console.log("=== SSE RESPONSE CLOSED ===");
+        });
+
+        res.on("error", (error) => {
+            console.error("=== SSE RESPONSE ERROR ===", error);
+        });
 
         const result =
             await workflowImpl({

@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const {
     getIndexAvailability
@@ -7,8 +7,10 @@ const {
     "sentinel2IndexAvailabilityService"
 );
 
-const DEFAULT_PRODUCTION_ROOT =
-    "./data/remote-sensing/production";
+const DEFAULT_PRODUCTION_ROOTS = [
+    "./data/remote-sensing/outputs",
+    "./data/remote-sensing/production",
+];
 
 async function getSentinel2IndexAvailability(
     req,
@@ -37,8 +39,8 @@ async function getSentinel2IndexAvailability(
 
         const result =
             await getIndexAvailability({
-                productionRoot:
-                    DEFAULT_PRODUCTION_ROOT,
+                productionRoots:
+                    DEFAULT_PRODUCTION_ROOTS,
 
                 acquisitionDate,
 
@@ -79,3 +81,5 @@ async function getSentinel2IndexAvailability(
 module.exports = {
     getSentinel2IndexAvailability
 };
+
+

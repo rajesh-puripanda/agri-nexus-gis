@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const fs = require("fs");
 const path = require("path");
@@ -471,6 +471,11 @@ async function acquireSentinel2Bands({
 
         sourceProvider:
             "copernicus-data-space",
+
+        spatialCoverage:
+            Array.isArray(item.bbox)
+                ? item.bbox.slice()
+                : null,
 
         bands
     };

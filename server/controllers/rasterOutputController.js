@@ -2,6 +2,11 @@
 
 const path = require("path");
 const fs = require("fs");
+const {
+    ensureRasterRenderCache
+} = require(
+    "../services/remoteSensing/raster/rasterRenderService"
+);
 
 const {
     hasIndexDefinition
@@ -88,6 +93,60 @@ function serveRasterOutput(req, res) {
     }
 }
 
+async function serveRasterRender(req, res) {
+    try {
+        const sourcePath =
+            getOutputPath(
+                req.params.indexCode,
+                req.params.type
+            );
+
+        if (!sourcePath) {
+            return res.status(400).json({
+                success: false,
+                code: "INVALID_RASTER_RENDER_REQUEST",
+                message:
+                    "Invalid raster render request."
+            });
+        }
+
+        if (!fs.existsSync(sourcePath)) {
+            return res.status(404).json({
+                success: false,
+                code: "RASTER_OUTPUT_NOT_FOUND",
+                message:
+                    "Requested raster output was not found."
+            });
+        }
+
+        const result =
+            await ensureRasterRenderCache({
+                sourcePath,
+                indexCode:
+                    req.params.indexCode,
+                type:
+                    req.params.type
+            });
+
+        return res.sendFile(
+            result.cachePath
+        );
+    } catch (error) {
+        console.error(
+            "Raster render delivery error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            code: "RASTER_RENDER_DELIVERY_ERROR",
+            message:
+                error.message ||
+                "Failed to deliver raster render."
+        });
+    }
+}
 module.exports = {
-    serveRasterOutput
+    serveRasterOutput,
+    serveRasterRender
 };

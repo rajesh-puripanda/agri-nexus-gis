@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
 public/css/style.css
 ====================
 
@@ -2337,6 +2337,7 @@ PRINT
   flex-direction: column;
 
   min-width: 0;
+  min-height: 0;
   overflow: hidden;
 
   background: #ffffff;
@@ -2376,9 +2377,6 @@ PRINT
   flex: 1;
   padding: 18px;
 }
-
-.agri-context-empty {
-  margin: 0;
 
   color: #718079;
   font-size: 13px;
@@ -2458,11 +2456,12 @@ PRINT
 }
 
 .agri-context-content {
+  display: flex;
+  flex-direction: column;
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   padding: 12px;
-}/* Preserve every existing analysis panel. */
+}
 .agri-context-content .analysis-panel {
   width: 100%;
   min-width: 0;
@@ -2495,8 +2494,7 @@ PRINT
 
 .agri-context-content {
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   padding: 12px;
 }
 
@@ -2709,6 +2707,8 @@ PRINT
 .agri-intelligence-panel {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   width: 100%;
   box-sizing: border-box;
   padding: 14px;
@@ -2756,7 +2756,12 @@ PRINT
 }
 
 .agri-intelligence-panel-content {
+  flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
 }
 
 .remote-sensing-index-categories {
@@ -2780,7 +2785,7 @@ PRINT
 .remote-sensing-category-kicker {
   display: block;
   color: #6b8177;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.8px;
   text-transform: uppercase;
@@ -2789,7 +2794,7 @@ PRINT
 .remote-sensing-category-header h3 {
   margin: 2px 0 0;
   color: #21483b;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.25;
 }
 
@@ -2869,6 +2874,8 @@ PRINT
 }
 
 .remote-sensing-index-availability {
+  font-size: 12px;
+  line-height: 1.45;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -3024,6 +3031,107 @@ PRINT
    SENTINEL-2 OBSERVATION DISCOVERY RAIL
    ============================================================ */
 
+.remote-sensing-acquisition-controls {
+  margin-top: 9px;
+  padding: 11px;
+  border: 1px solid #d6e2dc;
+  border-radius: 9px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(47, 91, 72, 0.06);
+}
+
+.remote-sensing-acquisition-heading {
+  margin-bottom: 10px;
+}
+
+.remote-sensing-acquisition-title {
+  color: #304f42;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.remote-sensing-acquisition-subtitle {
+  margin-top: 2px;
+  color: #819188;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.remote-sensing-date-fields {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.remote-sensing-acquisition-field {
+  min-width: 0;
+}
+
+.remote-sensing-acquisition-field label {
+  display: inline-block;
+  margin: 0 5px 0 0;
+  color: #60766c;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.remote-sensing-acquisition-field {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.remote-sensing-acquisition-field input {
+  width: 105px;
+  box-sizing: border-box;
+  min-height: 24px;
+  height: 24px;
+  padding: 3px 5px;
+  border: 1px solid #d2dfd8;
+  border-radius: 5px;
+  background: #f8fbf9;
+  color: #344e43;
+  font: inherit;
+  font-size: 9px;
+}
+
+.remote-sensing-acquisition-field input:focus,
+.remote-sensing-cloud-field input:focus {
+  border-color: #2d725a;
+  background: #ffffff;
+  box-shadow: 0 0 0 2px rgba(45, 114, 90, 0.10);
+}
+
+.remote-sensing-cloud-field {
+  margin-top: 9px;
+}
+
+.remote-sensing-cloud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.remote-sensing-cloud-value {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #edf5f0;
+  color: #2d725a;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+
+.remote-sensing-acquisition-controls
+  .remote-sensing-observation-search {
+  margin-top: 10px;
+}
 .remote-sensing-observation-search {
   width: 100%;
   margin-top: 9px;
@@ -3103,6 +3211,17 @@ PRINT
   padding: 2px 1px 5px;
 }
 
+.remote-sensing-queried-observation-rail {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 2px 1px 5px;
+}
+
+.remote-sensing-queried-observation-rail .remote-sensing-observation-card {
+  flex: 0 0 230px;
+}
+
 .remote-sensing-observation-card {
   flex: 0 0 230px;
   display: flex;
@@ -3172,10 +3291,145 @@ PRINT
   border-radius: 7px;
   background: #dfeee7;
   color: #21483b;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .remote-sensing-selected-observation.is-hidden {
   display: none;
+}
+
+/* ============================================================
+   REMOTE SENSING OBSERVATION BOTTOM RAIL
+   ============================================================ */
+
+.remote-sensing-bottom-rail {
+  grid-column: 2 / -1;
+
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+
+  margin: 0;
+
+  background: #ffffff;
+  border: 1px solid #dce5e0;
+  border-radius: 14px;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.remote-sensing-bottom-rail-content {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  width: 100%;
+}
+
+.remote-sensing-bottom-rail
+.remote-sensing-observation-results {
+  border: 0;
+  border-radius: 0;
+}
+
+.remote-sensing-bottom-rail
+.remote-sensing-index-availability {
+  margin: 0 14px 14px;
+}
+
+@media (max-width: 900px) {
+  .remote-sensing-bottom-rail {
+    grid-column: 1 / -1;
+  }
+}
+
+ /* ============================================================
+    APPLICATION PROCESSING LOCK
+    ============================================================ */
+
+.application-processing-lock {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  box-sizing: border-box;
+
+  background: rgba(15, 31, 25, 0.48);
+
+  cursor: wait;
+
+  user-select: none;
+  -webkit-user-select: none;
+
+  pointer-events: auto;
+}
+
+.application-processing-lock.is-hidden {
+  display: none;
+}
+
+.application-processing-lock-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  width: min(420px, calc(100vw - 40px));
+  box-sizing: border-box;
+
+  padding: 28px 30px;
+
+  background: #ffffff;
+  border: 1px solid #dce5e0;
+  border-radius: 16px;
+
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+
+  text-align: center;
+}
+
+.application-processing-spinner {
+  width: 46px;
+  height: 46px;
+
+  margin-bottom: 18px;
+
+  box-sizing: border-box;
+
+  border: 4px solid #dce5e0;
+  border-top-color: #2f7d5f;
+  border-radius: 50%;
+
+  animation: application-processing-spin 0.85s linear infinite;
+}
+
+.application-processing-lock-title {
+  margin-bottom: 8px;
+
+  color: #21483b;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.application-processing-lock-message {
+  max-width: 340px;
+
+  color: #64776f;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@keyframes application-processing-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

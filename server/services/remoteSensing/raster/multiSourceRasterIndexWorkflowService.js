@@ -306,13 +306,17 @@ async function processMultiSourceRasterIndex({
             noData
         });
 
-    const normalizedRaster =
-        normalizeMultiSourceRaster(
-            preparedSources
-        );
+    console.log("=== BEFORE MULTI-SOURCE NORMALIZATION ===");
 
-    const result =
-        processRasterIndex({
+const normalizedRaster =
+    normalizeMultiSourceRaster(
+        preparedSources
+    );
+
+console.log("=== AFTER MULTI-SOURCE NORMALIZATION ===");
+
+const result =
+    processRasterIndex({
             indexCode:
                 definition.code,
 
@@ -321,6 +325,8 @@ async function processMultiSourceRasterIndex({
 
             parameters
         });
+
+    console.log("=== AFTER RASTER INDEX PROCESSING ===");
 
     return {
         indexCode:

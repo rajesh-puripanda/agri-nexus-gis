@@ -5,7 +5,8 @@ const express = require("express");
 const router = express.Router();
 
 const {
-    serveRasterOutput
+    serveRasterOutput,
+    serveRasterRender
 } = require(
     "../controllers/rasterOutputController"
 );
@@ -13,6 +14,11 @@ const {
 router.get(
     "/output/:indexCode/:type",
     serveRasterOutput
+);
+
+router.get(
+    "/render/:indexCode/:type",
+    serveRasterRender
 );
 
 module.exports = router;

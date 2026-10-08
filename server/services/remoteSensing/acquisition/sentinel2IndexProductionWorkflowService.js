@@ -287,7 +287,11 @@ function buildMultiSourceInputs({
         );
 
     if (typeof onProgress === "function") {
-        onProgress({ stage: "preparing", message: "Preparing Sentinel-2 imagery." });
+        onProgress({
+            stage: "preparing",
+            percent: 10,
+            message: "Preparing Sentinel-2 imagery."
+        });
     }
 
     const preparation =
@@ -311,7 +315,11 @@ function buildMultiSourceInputs({
         });
 
     if (typeof onProgress === "function") {
-        onProgress({ stage: "processing", message: `Processing ${indexDefinition.name}.` });
+        onProgress({
+            stage: "processing",
+            percent: 40,
+            message: `Processing ${indexDefinition.name}.`
+        });
     }
 
     const rasterWorkflow =
@@ -325,8 +333,14 @@ function buildMultiSourceInputs({
         });
 
     if (typeof onProgress === "function") {
-        onProgress({ stage: "writing", message: `Writing ${indexDefinition.name} raster.` });
+        onProgress({
+            stage: "writing",
+            percent: 70,
+            message: `Writing ${indexDefinition.name} raster.`
+        });
     }
+
+    console.log("=== BEFORE EVI OUTPUT POST-PROCESSING ===");
 
     const outputProcessing =
         await postProcessingImpl({
@@ -342,6 +356,21 @@ function buildMultiSourceInputs({
             outputDirectory:
                 analyticalOutputDirectory,
         });
+
+    console.log("=== AFTER EVI OUTPUT POST-PROCESSING ===");
+
+    if (typeof onProgress === "function") {
+        onProgress({
+            stage: "finalizing",
+            percent: 90,
+            message:
+                `${indexDefinition.name}: Finalizing outputs and metadata.`
+        });
+    }
+    
+    console.log("=== BEFORE PRODUCTION METADATA ===");
+
+    
 
     await writeProductionMetadata({
         workflowResult: {
@@ -380,9 +409,17 @@ function buildMultiSourceInputs({
             analyticalOutputDirectory,
     });
 
+    console.log("=== AFTER PRODUCTION METADATA ===");
+
     if (typeof onProgress === "function") {
-        onProgress({ stage: "complete", message: `${indexDefinition.name} processing complete.` });
+        onProgress({
+            stage: "complete",
+            percent: 100,
+            message: `${indexDefinition.name} processing complete.`
+        });
     }
+
+    console.log("=== BEFORE WORKFLOW RETURN ===");
 
     return {
         workflowVersion:
@@ -433,6 +470,8 @@ function buildMultiSourceInputs({
 
         outputProcessing,
     };
+
+    
 }
 
 module.exports = {

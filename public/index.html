@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -34,6 +34,35 @@
   </head>
 
   <body>
+    <!-- =====================================================
+         APPLICATION PROCESSING LOCK
+         ===================================================== -->
+
+    <div
+      id="applicationProcessingLock"
+      class="application-processing-lock is-hidden"
+      aria-hidden="true"
+      aria-live="polite"
+    >
+      <div
+        class="application-processing-lock-panel"
+        role="status"
+        aria-label="Application processing"
+      >
+        <div
+          class="application-processing-spinner"
+          aria-hidden="true"
+        ></div>
+
+        <div class="application-processing-lock-title">
+          Processing Spectral Indices
+        </div>
+
+        <div class="application-processing-lock-message">
+          Please wait while Sentinel-2 production processing is running.
+        </div>
+      </div>
+    </div>
     <!-- =====================================================
          HEADER
          ===================================================== -->
@@ -268,45 +297,8 @@
             </svg>
           </button>
 
-        </div>
+          </div>
         <div id="map" class="map-container"></div>
-            <section
-              id="remoteSensingObservationResults"
-              class="remote-sensing-observation-results is-hidden"
-              aria-labelledby="remoteSensingObservationTitle"
-            >
-              <div class="remote-sensing-observation-header">
-                <div>
-                  <span class="remote-sensing-category-kicker">
-                    OBSERVATIONS
-                  </span>
-
-                  <h3 id="remoteSensingObservationTitle">
-                    Sentinel-2 Scenes
-                  </h3>
-                </div>
-
-                <span
-                  id="remoteSensingObservationCount"
-                  class="remote-sensing-observation-count"
-                >
-                  0
-                </span>
-              </div>
-
-              <div
-                id="remoteSensingObservationRail"
-                class="remote-sensing-observation-rail"
-                aria-label="Sentinel-2 observations"
-              ></div>
-
-              <div
-                id="remoteSensingSelectedObservation"
-                class="remote-sensing-selected-observation is-hidden"
-                role="status"
-                aria-live="polite"
-              ></div>
-            </section>
       </section>
 
     </section>
@@ -329,6 +321,29 @@
              PHASE 11.8  REMOTE SENSING INTELLIGENCE RAIL
              ================================================= -->
 
+        <section class="analysis-panel">
+          <div class="analysis-panel-header">
+            <h2>Selected Soil Sample</h2>
+            <button
+              type="button"
+              class="analysis-panel-toggle"
+              id="selectedSamplePanelToggle"
+              aria-expanded="true"
+              aria-controls="selectedSamplePanelContent"
+            >
+              &#8722;
+            </button>
+          </div>
+
+          <div id="selectedSamplePanelContent" class="analysis-panel-content">
+            <div id="selectedSampleContainer">
+              <p class="analysis-empty-state">
+                Select a soil sample on the map to view details.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section
           id="remoteSensingRail"
           class="agri-intelligence-panel is-hidden"
@@ -341,60 +356,13 @@
                 Spectral Indices
               </h2>
             </div>
-
-            <button
-              type="button"
-              id="remoteSensingRailClose"
-              class="agri-intelligence-panel-close"
-              title="Close Remote Sensing"
-              aria-label="Close Remote Sensing"
-            >
-              &times;
-            </button>
           </div>
 
           <div
             id="remoteSensingRailContent"
             class="agri-intelligence-panel-content"
           >
-          <div
-            id="remoteSensingIndexAvailability"
-            class="remote-sensing-index-availability is-hidden"
-            aria-live="polite"
-          >
-            <div class="remote-sensing-availability-header">
-              <span class="remote-sensing-category-kicker">
-                OBSERVATION
-              </span>
 
-              <h3>
-                Index Availability
-              </h3>
-            </div>
-
-            <div
-              id="remoteSensingAvailabilityDate"
-              class="remote-sensing-availability-date"
-            ></div>
-
-            <div
-              id="remoteSensingAvailableProducts"
-              class="remote-sensing-availability-group"
-            ></div>
-
-            <div
-              id="remoteSensingProcessingProducts"
-              class="remote-sensing-availability-group"
-            ></div>
-
-            <div
-              id="remoteSensingAvailabilityNotice"
-              class="remote-sensing-availability-notice"
-            >
-              Selecting another observation date may require
-              Sentinel-2 acquisition and processing and may take
-              considerably longer.
-            </div>
           </div>
 
           <div class="remote-sensing-index-categories">
@@ -450,59 +418,6 @@
 
             </div>
 
-            <div
-              id="remoteSensingAcquisitionControls"
-              class="remote-sensing-acquisition-controls"
-            >
-              <div class="remote-sensing-layer-header">
-                <span>Observation Date Range</span>
-              </div>
-
-              <div class="remote-sensing-acquisition-field">
-                <label for="remoteSensingStartDate">
-                  Start date
-                </label>
-
-                <input
-                  type="date"
-                  id="remoteSensingStartDate"
-                />
-              </div>
-
-              <div class="remote-sensing-acquisition-field">
-                <label for="remoteSensingEndDate">
-                  End date
-                </label>
-
-                <input
-                  type="date"
-                  id="remoteSensingEndDate"
-                />
-              </div>
-
-              <div class="remote-sensing-acquisition-field">
-                <label for="remoteSensingMaxCloudCover">
-                  Max cloud cover
-                </label>
-
-                <input
-                  type="number"
-                  id="remoteSensingMaxCloudCover"
-                  min="0"
-                  max="100"
-                  step="1"
-                  value="20"
-                />
-              </div>
-
-              <button
-                type="button"
-                id="remoteSensingFindObservations"
-                class="remote-sensing-observation-search"
-              >
-                Find Observations
-              </button>
-            </div>
 
 
             <div
@@ -576,33 +491,178 @@
           </div>
         </section>
 
-        <section class="analysis-panel">
-<section class="analysis-panel">
-        <div class="analysis-panel-header">
-          <h2>Selected Soil Sample</h2>
 
-          <button
-            type="button"
-            class="analysis-panel-toggle"
-            id="selectedSamplePanelToggle"
-            aria-expanded="true"
-            aria-controls="selectedSamplePanelContent"
-          >
-            &#8722;
-          </button>
-        </div>
-
-        <div id="selectedSamplePanelContent" class="analysis-panel-content">
-          <div id="selectedSampleContainer">
-            <p class="analysis-empty-state">
-              Select a soil sample on the map to view details.
-            </p>
-          </div>
-        </div>
-      </section>
       </div>
 
     </aside>
+
+</aside>
+  <section
+    id="remoteSensingBottomRail"
+    class="remote-sensing-bottom-rail"
+    aria-label="Remote sensing observations"
+  >
+    <div class="remote-sensing-bottom-rail-content">
+<section
+              id="remoteSensingObservationResults"
+              class="remote-sensing-observation-results is-hidden"
+              aria-labelledby="remoteSensingObservationTitle"
+            >
+              <div class="remote-sensing-observation-header">
+                <div>
+                  <span class="remote-sensing-category-kicker">
+                    OBSERVATION DATE(S)
+                  </span>
+
+                  <h3 id="remoteSensingObservationTitle">
+                    Sentinel-2 Observations
+                  </h3>
+                </div>
+
+                <span
+                  id="remoteSensingObservationCount"
+                  class="remote-sensing-observation-count"
+                >
+                  0
+                </span>
+              </div>
+
+            <div
+              id="remoteSensingAvailabilityNotice"
+              class="remote-sensing-availability-notice"
+            >
+              Selecting another observation date may require
+              Sentinel-2 acquisition and processing and may take
+              considerably longer.
+            </div>
+              <div
+                id="remoteSensingObservationRail"
+                class="remote-sensing-observation-rail"
+                aria-label="Sentinel-2 observation dates"
+              ></div>
+
+
+              <div
+                id="remoteSensingIndexAvailability"
+                class="remote-sensing-index-availability is-hidden"
+                aria-live="polite"
+              >
+                <div class="remote-sensing-availability-header">
+                  <span class="remote-sensing-category-kicker">
+                    OBSERVATION
+                  </span>
+
+                  <h3>
+                    Observation
+                  </h3>
+                </div>
+
+                <div
+                  id="remoteSensingAvailabilityDate"
+                  class="remote-sensing-availability-date"
+                ></div>
+
+                <div
+                  id="remoteSensingAvailableProducts"
+                  class="remote-sensing-availability-group"
+                ></div>
+
+                <div
+                  id="remoteSensingProcessingProducts"
+                  class="remote-sensing-availability-group"
+                ></div>
+              </div>
+
+              <button
+                type="button"
+                id="remoteSensingSelectDateRange"
+                class="remote-sensing-observation-search"
+              >
+                Select Date Range
+              </button>
+
+              <div
+  id="remoteSensingAcquisitionControls"
+  class="remote-sensing-acquisition-controls is-hidden"
+>
+  <div class="remote-sensing-acquisition-heading">
+    <div class="remote-sensing-acquisition-title">
+      Observation Date Range
+    </div>
+    <div class="remote-sensing-acquisition-subtitle">
+      Choose the period and image quality
+    </div>
+  </div>
+
+  <div class="remote-sensing-date-fields">
+    <div class="remote-sensing-acquisition-field">
+      <label for="remoteSensingStartDate">
+        From
+      </label>
+      <input
+        type="date"
+        id="remoteSensingStartDate"
+      />
+    </div>
+
+    <div class="remote-sensing-acquisition-field">
+      <label for="remoteSensingEndDate">
+        To
+      </label>
+      <input
+        type="date"
+        id="remoteSensingEndDate"
+      />
+    </div>
+
+    <div class="remote-sensing-acquisition-field">
+      <div class="remote-sensing-cloud-header">
+        <label for="remoteSensingMaxCloudCover">
+          Max cloud cover
+        </label>
+        <span
+          class="remote-sensing-cloud-value"
+          aria-hidden="true"
+        >
+          <span id="remoteSensingMaxCloudCoverValue">20</span>%
+        </span>
+      </div>
+
+      <input
+        type="number"
+        id="remoteSensingMaxCloudCover"
+        min="0"
+        max="100"
+        step="1"
+        value="20"
+      />
+    </div>
+  </div>
+
+  <button
+    type="button"
+    id="remoteSensingFindObservations"
+    class="remote-sensing-observation-search"
+  >
+    Find Observations
+  </button>
+</div>
+
+<div
+  id="remoteSensingQueriedObservations"
+  class="remote-sensing-queried-observations is-hidden"
+>
+  <div class="remote-sensing-queried-observations-title">
+    Queried Observations
+  </div>
+
+  <div
+    id="remoteSensingQueriedObservationRail"
+    class="remote-sensing-queried-observation-rail"
+  ></div>
+</div>
+            </section>
+            </section>
 
   </div>
 
@@ -635,14 +695,14 @@
   <div class="analysis-workspace">
 
   <div class="workspace-analyze-content">
-      
+
 
       <!-- ===================================================
            SOIL ANALYSIS
            =================================================== -->
 
       <section class="analysis-panel">
-        <div class="analysis-panel-header">
+          <div class="analysis-panel-header">
           <h2>Soil Analysis</h2>
 
           <button
@@ -683,7 +743,7 @@
            =================================================== -->
 
       <section class="analysis-panel">
-        <div class="analysis-panel-header">
+          <div class="analysis-panel-header">
           <h2>Soil Interpretation &amp; Recommendations</h2>
 
           <button
@@ -730,7 +790,7 @@
            =================================================== -->
 
       <section class="analysis-panel">
-        <div class="analysis-panel-header">
+          <div class="analysis-panel-header">
           <h2>Crop Suitability</h2>
 
           <button
@@ -762,7 +822,7 @@
            =================================================== -->
 
       <section class="analysis-panel">
-        <div class="analysis-panel-header">
+          <div class="analysis-panel-header">
           <h2>Soil Management Plan</h2>
 
           <button
@@ -803,7 +863,7 @@
            =================================================== -->
 
       <section class="analysis-panel">
-        <div class="analysis-panel-header">
+          <div class="analysis-panel-header">
           <h2>Integrated Analytical GIS Report</h2>
 
           <button
@@ -1389,3 +1449,4 @@
     <script src="/js/app.js"></script>
   </body>
 </html>
+

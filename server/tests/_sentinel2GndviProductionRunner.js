@@ -10,7 +10,9 @@ const {
 );
 
 const preparedOutputDirectory =
-    path.resolve("./test-output");
+    path.resolve(
+        "./data/remote-sensing/acquisitions"
+    );
 
 const rasterOutputDirectory =
     path.resolve(

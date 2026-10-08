@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // ============================================================
 // AgriNexus GIS
@@ -403,13 +403,29 @@ function alignRasterToTargetGrid({
         );
     }
 
+    const sourceGridMatchesTarget =
+        raster.width ===
+            contract.targetGrid.width &&
+        raster.height ===
+            contract.targetGrid.height &&
+        raster.origin[0] ===
+            contract.targetGrid.origin[0] &&
+        raster.origin[1] ===
+            contract.targetGrid.origin[1] &&
+        raster.resolution[0] ===
+            contract.targetGrid.resolution[0] &&
+        raster.resolution[1] ===
+            contract.targetGrid.resolution[1];
+
     const alignedData =
-        resampleNearestNeighbor({
-            raster,
-            targetGrid:
-                contract.targetGrid,
-            noData
-        });
+        sourceGridMatchesTarget
+            ? raster.data
+            : resampleNearestNeighbor({
+                raster,
+                targetGrid:
+                    contract.targetGrid,
+                noData
+            });
 
     return {
         serviceVersion:

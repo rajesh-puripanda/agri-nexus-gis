@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // ============================================================
 // AgriNexus GIS
@@ -149,13 +149,29 @@ async function verifyOutput(
 
 async function findAvailableProduct({
     productionRoot,
+    productionRoots = null,
     acquisitionDate,
     indexCode,
 }) {
-    const directories =
-        await listProductionDirectories(
-            productionRoot
+    const roots =
+        Array.isArray(productionRoots) &&
+        productionRoots.length > 0
+            ? productionRoots
+            : [productionRoot];
+
+    const directories = [];
+
+    for (
+        const root
+        of roots
+    ) {
+        directories.push(
+            root,
+            ...(await listProductionDirectories(
+                root
+            ))
         );
+    }
 
     const normalizedDate =
         normalizeDate(
@@ -269,13 +285,21 @@ async function findAvailableProduct({
 
 async function getIndexAvailability({
     productionRoot,
+    productionRoots = null,
     acquisitionDate,
     indexCode = null,
 }) {
-    assertNonEmptyString(
-        productionRoot,
-        "productionRoot"
-    );
+    if (
+        !(
+            Array.isArray(productionRoots) &&
+            productionRoots.length > 0
+        )
+    ) {
+        assertNonEmptyString(
+            productionRoot,
+            "productionRoot"
+        );
+    }
 
     const normalizedDate =
         normalizeDate(
@@ -320,6 +344,7 @@ async function getIndexAvailability({
         const product =
             await findAvailableProduct({
                 productionRoot,
+                productionRoots,
                 acquisitionDate:
                     normalizedDate,
                 indexCode:
@@ -372,3 +397,4 @@ module.exports = {
     normalizeIndexCode,
     getIndexAvailability,
 };
+

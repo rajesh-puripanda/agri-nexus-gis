@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 /*
 ============================================================
@@ -13,8 +13,8 @@
   const CATALOG_URL =
     "/api/remote-sensing/indices";
 
-  const RASTER_OUTPUT_BASE =
-    "/api/remote-sensing/raster/output";
+  const RASTER_RENDER_BASE =
+    "/api/remote-sensing/raster/render";
 
   const MAX_RENDER_SIZE = 1200;
 
@@ -26,8 +26,11 @@
   const SENTINEL2_OBSERVATION_DISCOVERY_URL =
     "/api/remote-sensing/sentinel2-observations";
 
+  const SENTINEL2_LOCAL_OBSERVATIONS_URL =
+    "/api/remote-sensing/sentinel2-local-observations";
+
   const SENTINEL2_INDEX_PRODUCTION_URL =
-    "/api/remote-sensing/sentinel2-index-production";
+    "/api/remote-sensing/sentinel2-index-production-stream";
 
   const SENTINEL2_INDEX_AVAILABILITY_URL =
     "/api/remote-sensing/availability";
@@ -45,7 +48,9 @@
 
   let sentinel2ObservationContext = {
     observations: [],
+    queriedObservations: [],
     selectedSceneId: null,
+    selectedObservationDate: null,
     selectedSpatialCoverage: null,
   };
 
@@ -198,6 +203,10 @@
           "remoteSensingMaxCloudCover"
         ),
 
+      maxCloudCoverValue:
+        document.getElementById(
+          "remoteSensingMaxCloudCoverValue"
+        ),
       findObservations:
         document.getElementById(
           "remoteSensingFindObservations"
@@ -213,7 +222,16 @@
           "remoteSensingObservationRail"
         ),
 
-      observationCount:
+            queriedObservations:
+        document.getElementById(
+          "remoteSensingQueriedObservations"
+        ),
+
+      queriedObservationRail:
+        document.getElementById(
+          "remoteSensingQueriedObservationRail"
+        ),
+observationCount:
         document.getElementById(
           "remoteSensingObservationCount"
         ),
@@ -242,7 +260,47 @@
         document.getElementById(
           "remoteSensingProgressBar"
         ),
+
+      processingLock:
+        document.getElementById(
+          "applicationProcessingLock"
+        ),
     };
+  }
+
+  function setApplicationProcessingLock(isLocked) {
+    const { processingLock } = getElements();
+
+    if (!processingLock) {
+      return;
+    }
+
+    processingLock.classList.toggle(
+      "is-hidden",
+      !isLocked,
+    );
+
+    processingLock.setAttribute(
+      "aria-hidden",
+      isLocked ? "false" : "true",
+    );
+  }
+
+  function updateApplicationProcessingLockMessage(message) {
+    const { processingLock } = getElements();
+
+    if (!processingLock) {
+      return;
+    }
+
+    const messageElement =
+      processingLock.querySelector(
+        ".application-processing-lock-message"
+      );
+
+    if (messageElement && message) {
+      messageElement.textContent = message;
+    }
   }
 
   function updateSentinel2AcquisitionContext() {
@@ -278,6 +336,7 @@
       startDate,
       endDate,
       maxCloudCover,
+      maxCloudCoverValue,
       findObservations,
     } = getElements();
 
@@ -294,11 +353,25 @@
       }
     });
 
+    if (maxCloudCover && maxCloudCoverValue) {
+      const updateCloudCoverValue = () => {
+        maxCloudCoverValue.textContent =
+          maxCloudCover.value || "0";
+      };
+
+      maxCloudCover.addEventListener(
+        "input",
+        updateCloudCoverValue,
+      );
+
+      updateCloudCoverValue();
+    }
+
     if (findObservations) {
       findObservations.addEventListener(
         "click",
         () => {
-          discoverSentinel2Observations().catch(
+        querySentinel2Observations().catch(
             (error) => {
               updateStatus(
                 error && error.message
@@ -313,9 +386,11 @@
 
     updateSentinel2AcquisitionContext();
   }
-
   function clearSentinel2ObservationSelection() {
     sentinel2ObservationContext.selectedSceneId =
+      null;
+
+    sentinel2ObservationContext.selectedObservationDate =
       null;
 
     sentinel2ObservationContext.selectedSpatialCoverage =
@@ -346,7 +421,7 @@
     observationRail.innerHTML = "";
 
     const observations =
-      sentinel2ObservationContext.observations;
+    sentinel2ObservationContext.observations;
 
     if (observationCount) {
       observationCount.textContent =
@@ -457,6 +532,117 @@
     });
   }
 
+  function renderSentinel2QueriedObservations() {
+    const {
+      queriedObservations,
+      queriedObservationRail,
+    } = getElements();
+
+    if (!queriedObservationRail) {
+      return;
+    }
+
+    queriedObservationRail.innerHTML = "";
+
+    const observations =
+    sentinel2ObservationContext.queriedObservations;
+
+    if (!observations.length) {
+      const empty =
+        document.createElement("div");
+
+      empty.className =
+        "remote-sensing-observation-empty";
+
+      empty.textContent =
+        "No Sentinel-2 scenes match the selected observation criteria.";
+
+      queriedObservationRail.appendChild(empty);
+      return;
+    }
+
+    observations.forEach((observation) => {
+      const card =
+        document.createElement("button");
+
+      card.type = "button";
+      card.className =
+        "remote-sensing-observation-card";
+
+      if (
+        observation.sceneId ===
+        sentinel2ObservationContext.selectedSceneId
+      ) {
+        card.classList.add("is-selected");
+      }
+
+      const date =
+        document.createElement("span");
+
+      date.className =
+        "remote-sensing-observation-date";
+
+      date.textContent =
+        observation.acquisitionDate
+          ? String(
+              observation.acquisitionDate,
+            ).slice(0, 10)
+          : "Unknown date";
+
+      const satellite =
+        document.createElement("span");
+
+      satellite.className =
+        "remote-sensing-observation-satellite";
+
+      satellite.textContent =
+        observation.satellite ||
+        "Sentinel-2";
+
+      const cloud =
+        document.createElement("span");
+
+      cloud.className =
+        "remote-sensing-observation-cloud";
+
+      cloud.textContent =
+        observation.cloudCover === null ||
+        observation.cloudCover === undefined
+          ? "Cloud: unavailable"
+          : `Cloud: ${Number(
+              observation.cloudCover,
+            ).toFixed(1)}%`;
+
+      const scene =
+        document.createElement("span");
+
+      scene.className =
+        "remote-sensing-observation-scene";
+
+      scene.textContent =
+        observation.sceneId ||
+        "Unknown scene";
+
+      card.append(
+        date,
+        satellite,
+        cloud,
+        scene,
+      );
+
+      card.addEventListener(
+        "click",
+        () => {
+          selectSentinel2Observation(
+            observation,
+          );
+        },
+      );
+
+      queriedObservationRail.appendChild(card);
+    });
+  }
+
   function selectSentinel2Observation(
     observation,
   ) {
@@ -469,6 +655,8 @@
 
     sentinel2ObservationContext.selectedSceneId =
       observation.sceneId;
+      sentinel2ObservationContext.selectedObservationDate =
+        String(observation.acquisitionDate || "").slice(0, 10);
 
     sentinel2ObservationContext.selectedSpatialCoverage =
       Array.isArray(
@@ -512,7 +700,7 @@
       );
     });
   }
-  async function discoverSentinel2Observations() {
+  async function querySentinel2Observations() {
     updateSentinel2AcquisitionContext();
 
     if (
@@ -520,7 +708,7 @@
       !sentinel2AcquisitionContext.endDate
     ) {
       throw new Error(
-        "Observation start and end dates are required.",
+        "Observation start date and end date are required.",
       );
     }
 
@@ -533,10 +721,82 @@
       );
     }
 
+    const spatialContext =
+      getSentinel2SpatialContext();
+
+
+    const response = await fetch(
+      SENTINEL2_OBSERVATION_DISCOVERY_URL,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          temporalContext: {
+            startDate:
+              sentinel2AcquisitionContext.startDate,
+            endDate:
+              sentinel2AcquisitionContext.endDate,
+          },
+          spatialContext,
+          acquisitionParameters: {
+            maxCloudCover:
+              sentinel2AcquisitionContext.maxCloudCover,
+          },
+        }),
+      },
+    );
+
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        payload && payload.error
+          ? payload.error
+          : "Unable to query Sentinel-2 observations.",
+      );
+    }
+
+    sentinel2ObservationContext.queriedObservations =
+      payload &&
+      payload.result &&
+      Array.isArray(payload.result.observations)
+        ? payload.result.observations
+        : [];
+
+    renderSentinel2QueriedObservations();
+
+    const elements = getElements();
+
+    if (elements.queriedObservations) {
+      elements.queriedObservations.classList.remove("is-hidden");
+    }
+
+    updateStatus(
+      `${sentinel2ObservationContext.queriedObservations.length} Sentinel-2 observation(s) found in catalogue.`,
+    );
+
+    return sentinel2ObservationContext.queriedObservations;
+  }
+
+  async function discoverSentinel2Observations() {
+    updateSentinel2AcquisitionContext();
+    if (
+      sentinel2AcquisitionContext.startDate &&
+      sentinel2AcquisitionContext.endDate &&
+      sentinel2AcquisitionContext.startDate >
+        sentinel2AcquisitionContext.endDate
+    ) {
+      throw new Error(
+        "Observation start date must not be later than end date.",
+      );
+    }
+
     const {
       findObservations,
     } = getElements();
-
     if (findObservations) {
       findObservations.disabled = true;
     }
@@ -547,30 +807,12 @@
 
     try {
       const response = await fetch(
-        SENTINEL2_OBSERVATION_DISCOVERY_URL,
+        SENTINEL2_LOCAL_OBSERVATIONS_URL,
         {
-          method: "POST",
+          method: "GET",
           headers: {
-            "Content-Type":
-              "application/json",
+            Accept: "application/json",
           },
-          body: JSON.stringify({
-            contractVersion: "1.0",
-            sourceId:
-              "COPERNICUS_DATA_SPACE",
-            temporalContext: {
-              startDate:
-                sentinel2AcquisitionContext.startDate,
-              endDate:
-                sentinel2AcquisitionContext.endDate,
-            },
-            spatialContext:
-              getSentinel2SpatialContext(),
-            acquisitionParameters: {
-              maxCloudCover:
-                sentinel2AcquisitionContext.maxCloudCover,
-            },
-          }),
         },
       );
 
@@ -585,12 +827,44 @@
         );
       }
 
-      sentinel2ObservationContext.observations =
-        Array.isArray(payload.observations)
-          ? payload.observations
+      const groupedObservations =
+        payload &&
+        payload.result &&
+        Array.isArray(payload.result.observations)
+          ? payload.result.observations
           : [];
 
-      clearSentinel2ObservationSelection();
+      sentinel2ObservationContext.observations =
+        groupedObservations.flatMap(
+          (observation) =>
+            Array.isArray(observation.scenes)
+              ? observation.scenes
+              : [],
+        );
+
+      const observationDates =
+        groupedObservations
+          .map(
+            (observation) => observation.observationDate,
+          )
+          .filter(Boolean)
+          .sort();
+
+      const {
+        startDate,
+        endDate,
+      } = getElements();
+
+      if (startDate && observationDates.length) {
+        startDate.value = observationDates[0];
+      }
+
+      if (endDate && observationDates.length) {
+        endDate.value =
+          observationDates[observationDates.length - 1];
+      }
+
+      updateSentinel2AcquisitionContext();
 
       renderSentinel2Observations();
 
@@ -653,6 +927,32 @@
     );
   }
 
+  function isAvailabilityReusableForSelectedObservation(indexCode) {
+    const result =
+      getAvailabilityResult(indexCode);
+
+    const selectedSceneId =
+      String(
+        sentinel2ObservationContext.selectedSceneId || ""
+      );
+
+    const selectedObservationDate =
+      String(
+        sentinel2ObservationContext.selectedObservationDate || ""
+      ).slice(0, 10);
+
+    return Boolean(
+      result &&
+      result.status === "AVAILABLE" &&
+      selectedSceneId &&
+      selectedObservationDate &&
+      String(result.sceneId || "") ===
+        selectedSceneId &&
+      String(result.acquisitionDate || "").slice(0, 10) ===
+        selectedObservationDate
+    );
+  }
+
   function renderIndexAvailability() {
     const {
       indexAvailability,
@@ -692,13 +992,12 @@
     const processing = [];
 
     catalog.forEach((index) => {
-      const result =
-        getAvailabilityResult(index.code);
+      const isAvailable =
+        isAvailabilityReusableForSelectedObservation(
+          index.code
+        );
 
-      if (
-        result &&
-        result.status === "AVAILABLE"
-      ) {
+      if (isAvailable) {
         available.push(index);
       } else {
         processing.push(index);
@@ -884,12 +1183,10 @@
       button.dataset.indexCode =
         index.code;
 
-      const availabilityResult =
-        getAvailabilityResult(index.code);
-
       const isAvailable =
-        availabilityResult &&
-        availabilityResult.status === "AVAILABLE";
+        isAvailabilityReusableForSelectedObservation(
+          index.code
+        );
 
       button.classList.toggle(
         "is-available",
@@ -912,7 +1209,7 @@
 
       button.setAttribute(
         "aria-label",
-        `${index.code} — ${index.name}`
+        `${index.code} ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ${index.name}`
       );
 
       button.innerHTML = `
@@ -1254,7 +1551,7 @@
     type
   ) {
     return (
-      `${RASTER_OUTPUT_BASE}/` +
+      `${RASTER_RENDER_BASE}/` +
       `${encodeURIComponent(
         indexCode
       )}/` +
@@ -2180,7 +2477,7 @@
         renderSequence
       ) {
         updateStatus(
-          `${index.code}: raster unavailable.`
+          `${index.code}: raster unavailable  ${error && error.message ? error.message : "Unknown error."}`
         );
 
         hideRemoteSensingProgress();
@@ -2196,6 +2493,10 @@
       */
 
       setRemoteSensingBusy(
+        false
+      );
+
+      setApplicationProcessingLock(
         false
       );
     }
@@ -2431,8 +2732,42 @@
       );
     }
 
+    const selectedSceneId =
+      sentinel2ObservationContext.selectedSceneId;
+
+    const selectedObservationDate =
+      sentinel2ObservationContext.selectedObservationDate;
+
+    const availability =
+      getAvailabilityResult(indexCode);
+
+    const reusableRaster =
+      availability &&
+      availability.status === "AVAILABLE" &&
+      String(availability.sceneId || "") ===
+        String(selectedSceneId) &&
+      String(
+        availability.acquisitionDate || ""
+      ).slice(0, 10) ===
+        selectedObservationDate;
+
+    if (reusableRaster) {
+      updateStatus(
+        `${indexCode}: existing raster available for ${formatObservationDate(
+          selectedObservationDate
+        )}. Using local output.`,
+      );
+
+      updateRemoteSensingProgress(
+        100,
+        `${indexCode}: Existing local raster found. Loading...`,
+      );
+
+      return;
+    }
+
     updateStatus(
-      `${indexCode}: checking analytical output...`,
+      `${indexCode}: local raster unavailable. Starting processing...`,
     );
 
     resetRemoteSensingProgress(
@@ -2442,6 +2777,12 @@
     updateRemoteSensingProgress(
       null,
       `${indexCode}: Preparing Sentinel-2 imagery...`,
+    );
+
+    setApplicationProcessingLock(true);
+
+    updateApplicationProcessingLockMessage(
+      `Processing ${indexCode} production indices. Please wait...`,
     );
 
     const response = await fetch(
@@ -2537,7 +2878,12 @@
               : `Processing ${indexCode}...`;
 
           updateRemoteSensingProgress(
-            null,
+            progress &&
+            Number.isFinite(
+              Number(progress.percent)
+            )
+              ? Number(progress.percent)
+              : null,
             `${indexCode}: ${message}`,
           );
 
@@ -2569,7 +2915,6 @@
       `${indexCode} built. Loading ${indexCode}...`,
     );
   }
-
   function openRemoteSensingTool() {
     const {
       rail,
@@ -2591,6 +2936,13 @@
     }
 
     loadRemoteSensingCatalog();
+
+    discoverSentinel2Observations().catch((error) => {
+      console.error(
+        "Unable to automatically discover Sentinel-2 observations:",
+        error,
+      );
+    });
 
     return true;
   }
@@ -2673,6 +3025,8 @@
     hideRemoteSensingProgress();
 
     bindSentinel2AcquisitionControls();
+
+
   }
 
   window.openRemoteSensingTool =

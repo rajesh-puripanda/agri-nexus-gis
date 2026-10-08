@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 // ============================================================
 // server/services/remoteSensing/raster/rasterIndexPostProcessingService.js
@@ -320,3 +320,4 @@ module.exports = {
     buildOutputPaths,
     processAndWriteRasterIndexOutputs
 };
+
