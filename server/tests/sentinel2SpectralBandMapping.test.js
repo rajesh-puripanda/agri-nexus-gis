@@ -126,6 +126,7 @@ test(
                 NIR: "NIR",
                 SWIR: "SWIR1",
                 SWIR1: "SWIR1",
+                SWIR2: "SWIR2",
             }
         );
 
@@ -142,11 +143,11 @@ test(
         assert.throws(
             () =>
                 resolveSentinel2SpectralBand(
-                    "SWIR2"
+                    "SWIR3"
                 ),
             {
                 message:
-                    "Unsupported Sentinel-2 canonical spectral band: SWIR2",
+                    "Unsupported Sentinel-2 canonical spectral band: SWIR3",
             }
         );
     }

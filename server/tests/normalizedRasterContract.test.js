@@ -111,7 +111,8 @@ test("normalized raster contract defines canonical spectral band names", () => {
             "Red",
             "NIR",
             "SWIR",
-            "SWIR1"
+            "SWIR1",
+            "SWIR2"
         ]
     );
 });

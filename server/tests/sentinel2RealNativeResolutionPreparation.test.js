@@ -44,7 +44,7 @@ const {
 
 const TEST_DATA_DIRECTORY =
     path.resolve(
-        "./data/remote-sensing/production/bsi-20260908"
+        "./data/remote-sensing/acquisitions"
     );
 
 const TEST_OUTPUT_DIRECTORY =

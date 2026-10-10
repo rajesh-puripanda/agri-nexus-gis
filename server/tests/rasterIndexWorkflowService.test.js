@@ -499,7 +499,7 @@ test(
 
             assert.equal(
                 continuousCitation.sourceRasterContractVersion,
-                "1.0"
+                "1.1"
             );
 
             assert.equal(
@@ -623,7 +623,7 @@ test(
 
             assert.equal(
                 classificationCitation.sourceRasterContractVersion,
-                "1.0"
+                "1.1"
             );
 
             assert.equal(
@@ -1089,7 +1089,7 @@ test(
                 assert.equal(
                     continuousCitation
                         .sourceRasterContractVersion,
-                    "1.0"
+                    "1.1"
                 );
 
                 assert.equal(
@@ -1195,7 +1195,7 @@ test(
                 assert.equal(
                     classificationCitation
                         .sourceRasterContractVersion,
-                    "1.0"
+                    "1.1"
                 );
 
                 assert.equal(
