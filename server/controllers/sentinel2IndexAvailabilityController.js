@@ -1,7 +1,8 @@
 "use strict";
 
 const {
-    getIndexAvailability
+    getIndexAvailability,
+    listAvailableProductDates
 } = require(
     "../services/remoteSensing/catalog/" +
     "sentinel2IndexAvailabilityService"
@@ -10,6 +11,7 @@ const {
 const DEFAULT_PRODUCTION_ROOTS = [
     "./data/remote-sensing/outputs",
     "./data/remote-sensing/production",
+    "./data/remote-sensing/production/ssmi",
 ];
 
 async function getSentinel2IndexAvailability(
@@ -23,6 +25,9 @@ async function getSentinel2IndexAvailability(
 
         const indexCode =
             req.query?.indexCode || null;
+
+        const sceneId =
+            req.query?.sceneId || null;
 
         if (
             typeof acquisitionDate !== "string" ||
@@ -44,7 +49,9 @@ async function getSentinel2IndexAvailability(
 
                 acquisitionDate,
 
-                indexCode
+                indexCode,
+
+                sceneId
             });
 
         return res.status(200).json({
@@ -78,8 +85,44 @@ async function getSentinel2IndexAvailability(
     }
 }
 
+
+async function getSentinel2AvailableProductDates(
+    req,
+    res
+) {
+    try {
+        const results =
+            await listAvailableProductDates({
+                productionRoots: DEFAULT_PRODUCTION_ROOTS,
+            });
+
+        return res.status(200).json({
+            success: true,
+            serviceVersion: "1.0",
+            results,
+        });
+    } catch (error) {
+        console.error(
+            "Sentinel-2 processed dates error:",
+            error
+        );
+
+        return res.status(
+            Number.isInteger(error.statusCode)
+                ? error.statusCode
+                : 500
+        ).json({
+            success: false,
+            code:
+                error.code ||
+                "SENTINEL2_PROCESSED_DATES_ERROR",
+            message:
+                error.message ||
+                "Failed to list processed Sentinel-2 dates.",
+        });
+    }
+}
 module.exports = {
-    getSentinel2IndexAvailability
+    getSentinel2IndexAvailability,
+    getSentinel2AvailableProductDates
 };
-
-

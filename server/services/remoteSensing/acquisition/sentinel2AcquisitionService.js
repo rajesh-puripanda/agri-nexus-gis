@@ -462,7 +462,15 @@ async function acquireSentinel2Bands({
         };
     }
 
-        const acquisition = {
+    const orderedBands = {};
+
+    for (const bandName of bandNames) {
+        if (bands[bandName]) {
+            orderedBands[bandName] = bands[bandName];
+        }
+    }
+
+    const acquisition = {
         sceneId:
             item.id,
 
@@ -477,7 +485,7 @@ async function acquireSentinel2Bands({
                 ? item.bbox.slice()
                 : null,
 
-        bands
+        bands: orderedBands
     };
 
     await writeAcquisitionMetadata({

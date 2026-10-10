@@ -35,6 +35,9 @@
   const SENTINEL2_INDEX_AVAILABILITY_URL =
     "/api/remote-sensing/availability";
 
+  const SENTINEL2_PROCESSED_DATES_URL =
+    "/api/remote-sensing/availability/dates";
+
   let sentinel2IndexAvailability = {
     observationDate: null,
     results: [],
@@ -162,6 +165,16 @@
       availabilityNotice:
         document.getElementById(
           "remoteSensingAvailabilityNotice"
+        ),
+
+      processedDatesStatus:
+        document.getElementById(
+          "remoteSensingProcessedDatesStatus"
+        ),
+
+      processedDatesList:
+        document.getElementById(
+          "remoteSensingProcessedDatesList"
         ),
 
       status:
@@ -1945,7 +1958,8 @@ observationCount:
     values,
     width,
     height,
-    isClassification
+    isClassification,
+    indexCode
   ) {
     const canvas =
       document.createElement(
@@ -2007,18 +2021,17 @@ observationCount:
         }
       }
 
-      if (
-        !Number.isFinite(
-          min
-        ) ||
-        !Number.isFinite(
-          max
-        ) ||
-        min === max
-      ) {
-        min = -1;
-        max = 1;
-      }
+        if (indexCode === "SSMI") {
+          min = -1;
+          max = 1;
+        } else if (
+          !Number.isFinite(min) ||
+          !Number.isFinite(max) ||
+          min === max
+        ) {
+          min = -1;
+          max = 1;
+        }
     }
 
     for (
@@ -2385,14 +2398,13 @@ observationCount:
       return;
     }
 
-    const canvas =
-      createRasterCanvas(
-        raster,
-        renderWidth,
-        renderHeight,
-        type ===
-          "classification"
-      );
+    const canvas = createRasterCanvas(
+      raster,
+      renderWidth,
+      renderHeight,
+      type === "classification",
+      index.code
+    );
 
     const imageUrl =
       canvas.toDataURL(
@@ -3027,6 +3039,116 @@ observationCount:
     return true;
   }
 
+  function renderSentinel2ProcessedDates(results) {
+    const elements = getElements();
+    const status = elements.processedDatesStatus;
+    const list = elements.processedDatesList;
+
+    if (!status || !list) {
+      return;
+    }
+
+    list.replaceChildren();
+
+    if (!Array.isArray(results) || results.length === 0) {
+      status.textContent =
+        "No verified processed index products were found.";
+      return;
+    }
+
+    status.textContent =
+      "Dates below are for products already processed and verified.";
+
+    results.forEach((item) => {
+      const row = document.createElement("div");
+      const title = document.createElement("strong");
+      const dates = document.createElement("div");
+
+      row.className = "remote-sensing-processed-date-item";
+      title.textContent =
+        item.indexName || item.indexCode || "Unknown index";
+      dates.className = "remote-sensing-processed-date-values";
+
+      const availableDates = Array.isArray(item.dates)
+        ? item.dates
+        : [];
+
+      if (availableDates.length === 0) {
+        dates.textContent = "No verified processed dates";
+      } else {
+        dates.textContent = availableDates.map((value) => {
+          const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+          if (!match) {
+            return value;
+          }
+
+          const date = new Date(
+            Number(match[1]),
+            Number(match[2]) - 1,
+            Number(match[3])
+          );
+
+          return date.toLocaleDateString(undefined, {
+            day: "numeric",
+            month: "short",
+            year: "numeric"
+          });
+        }).join(", ");
+      }
+
+      row.append(title, dates);
+      list.appendChild(row);
+    });
+  }
+
+  async function loadSentinel2ProcessedDates() {
+    const elements = getElements();
+
+    if (!elements.processedDatesStatus ||
+        !elements.processedDatesList) {
+      return;
+    }
+
+    elements.processedDatesStatus.textContent =
+      "Loading processed dates...";
+
+    try {
+      const response = await fetch(
+        SENTINEL2_PROCESSED_DATES_URL,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json"
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Processed-dates request failed (${response.status}).`
+        );
+      }
+
+      const payload = await response.json();
+
+      if (payload.success !== true ||
+          !Array.isArray(payload.results)) {
+        throw new Error("Unexpected processed-dates response.");
+      }
+
+      renderSentinel2ProcessedDates(payload.results);
+    } catch (error) {
+      console.error(
+        "Unable to load previously processed dates:",
+        error
+      );
+
+      elements.processedDatesStatus.textContent =
+        "Processed dates could not be loaded. Please refresh to try again.";
+      elements.processedDatesList.replaceChildren();
+    }
+  }
   function initializeRemoteSensingTool() {
     const {
       close,
@@ -3074,6 +3196,8 @@ observationCount:
     bindSentinel2AcquisitionControls();
 
 
+
+    loadSentinel2ProcessedDates();
   }
 
   window.openRemoteSensingTool =

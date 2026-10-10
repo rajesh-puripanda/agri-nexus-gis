@@ -1094,6 +1094,11 @@ test(
             /_B02_10m\.jp2$/
         );
 
+        assert.deepEqual(
+            Object.keys(result.bands),
+            ["Blue", "Red", "NIR"]
+        );
+
         assert.equal(
             result.bands.Blue.source,
             "download"

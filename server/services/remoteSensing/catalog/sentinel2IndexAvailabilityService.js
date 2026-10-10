@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 // ============================================================
 // AgriNexus GIS
@@ -75,25 +75,27 @@ function assertNonEmptyString(value, name) {
 async function listProductionDirectories(
     productionRoot
 ) {
-    const entries =
-        await fs.readdir(
+    let entries;
+
+    try {
+        entries = await fs.readdir(
             productionRoot,
             {
                 withFileTypes: true,
             }
         );
+    } catch (error) {
+        if (error.code === "ENOENT") {
+            return [];
+        }
+
+        throw error;
+    }
 
     return entries
-        .filter(
-            (entry) =>
-                entry.isDirectory()
-        )
-        .map(
-            (entry) =>
-                path.join(
-                    productionRoot,
-                    entry.name
-                )
+        .filter((entry) => entry.isDirectory())
+        .map((entry) =>
+            path.join(productionRoot, entry.name)
         );
 }
 
@@ -152,6 +154,7 @@ async function findAvailableProduct({
     productionRoots = null,
     acquisitionDate,
     indexCode,
+    sceneId = null,
 }) {
     const roots =
         Array.isArray(productionRoots) &&
@@ -183,6 +186,11 @@ async function findAvailableProduct({
             indexCode
         );
 
+    const normalizedSceneId =
+        typeof sceneId === "string" && sceneId.trim()
+            ? sceneId.trim()
+            : null;
+
     for (
         const productionDirectory
         of directories
@@ -209,6 +217,13 @@ async function findAvailableProduct({
                 normalizeDate(
                     product.acquisitionDate
                 ) !== normalizedDate
+            ) {
+                continue;
+            }
+
+            if (
+                normalizedSceneId &&
+                String(product.sceneId || "").trim() !== normalizedSceneId
             ) {
                 continue;
             }
@@ -283,11 +298,88 @@ async function findAvailableProduct({
     return null;
 }
 
+async function listAvailableProductDates({
+    productionRoot,
+    productionRoots = null,
+}) {
+    const roots =
+        Array.isArray(productionRoots) &&
+        productionRoots.length > 0
+            ? productionRoots
+            : [productionRoot];
+
+    const definitions = getAllIndexDefinitions();
+    const knownCodes = new Set(
+        definitions.map((definition) => definition.code)
+    );
+    const available = new Map();
+
+    for (const root of roots) {
+        const directories = [
+            root,
+            ...(await listProductionDirectories(root)),
+        ];
+
+        for (const directory of directories) {
+            const manifest =
+                await readManifestIfPresent(directory);
+
+            if (!manifest || !Array.isArray(manifest.products)) {
+                continue;
+            }
+
+            for (const product of manifest.products) {
+                const code = normalizeIndexCode(product.indexCode);
+                const date = normalizeDate(product.acquisitionDate);
+
+                if (
+                    !knownCodes.has(code) ||
+                    !date ||
+                    !product.outputs
+                ) {
+                    continue;
+                }
+
+                const continuousAvailable =
+                    await verifyOutput(
+                        directory,
+                        product.outputs.continuous
+                    );
+                const classificationAvailable =
+                    await verifyOutput(
+                        directory,
+                        product.outputs.classification
+                    );
+
+                if (
+                    !continuousAvailable ||
+                    !classificationAvailable
+                ) {
+                    continue;
+                }
+
+                if (!available.has(code)) {
+                    available.set(code, new Set());
+                }
+
+                available.get(code).add(date);
+            }
+        }
+    }
+
+    return definitions.map((definition) => ({
+        indexCode: definition.code,
+        indexName: definition.name,
+        dates: [...(available.get(definition.code) || [])]
+            .sort((a, b) => b.localeCompare(a)),
+    }));
+}
 async function getIndexAvailability({
     productionRoot,
     productionRoots = null,
     acquisitionDate,
     indexCode = null,
+    sceneId = null,
 }) {
     if (
         !(
@@ -349,6 +441,7 @@ async function getIndexAvailability({
                     normalizedDate,
                 indexCode:
                     definition.code,
+                sceneId,
             });
 
         if (!product) {
@@ -396,5 +489,6 @@ module.exports = {
     normalizeDate,
     normalizeIndexCode,
     getIndexAvailability,
+    listAvailableProductDates,
 };
 

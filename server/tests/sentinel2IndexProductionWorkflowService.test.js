@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -22,7 +22,7 @@ test(
             return {
                 workflowVersion: "1.0",
                 sceneId: "S2C_SSMI_TEST_SCENE",
-                acquisitionDate: "2026-09-08",
+                acquisitionDate: "2026-09-28T04:47:01.025000Z",
                 outputDirectory: request.outputDirectory,
                 outputs: {
                     20: {
@@ -52,6 +52,21 @@ test(
                     sourceBand: source.sourceBand,
                     inputPath: source.inputPath,
                 })),
+                result: {
+                    results: {
+                        raster: {
+                            width: 2,
+                            height: 2,
+                            pixelCount: 4,
+                            bands: {
+                                SSMI: {
+                                    dataType: "Float32",
+                                    data: [0.1, 0.2, 0.3, 0.4],
+                                },
+                            },
+                        },
+                    },
+                },
             };
         };
 
@@ -75,6 +90,7 @@ test(
         assert.equal(result.indexCode, "SSMI");
         assert.equal(result.indexName, "Surface Soil Moisture Indicator");
         assert.equal(result.targetResolution, 20);
+        assert.equal(result.acquisitionDate, "2026-09-28");
 
         assert.deepEqual(preparationRequest.bandNames, [
             "SWIR1",
@@ -85,12 +101,12 @@ test(
             {
                 band: "SWIR1",
                 inputPath: "prepared-20m.tif",
-                sourceBand: 1,
+                sourceBand: 5,
             },
             {
                 band: "SWIR2",
                 inputPath: "prepared-20m.tif",
-                sourceBand: 2,
+                sourceBand: 6,
             },
         ]);
 
@@ -285,13 +301,13 @@ test(
                     band: "NIR",
                     inputPath:
                         "prepared-10m.tif",
-                    sourceBand: 1,
+                    sourceBand: 4,
                 },
                 {
                     band: "SWIR",
                     inputPath:
                         "prepared-20m.tif",
-                    sourceBand: 1,
+                    sourceBand: 5,
                 },
             ]
         );
@@ -536,14 +552,14 @@ test(
                     band: "NIR",
                     inputPath:
                         "prepared-10m.tif",
-                    sourceBand: 1,
+                    sourceBand: 4,
                 },
 
                 {
                     band: "Red",
                     inputPath:
                         "prepared-10m.tif",
-                    sourceBand: 2,
+                    sourceBand: 3,
                 },
             ]
         );
@@ -814,21 +830,21 @@ test(
                     band: "Red",
                     inputPath:
                         "prepared-10m.tif",
-                    sourceBand: 2,
+                    sourceBand: 3,
                 },
 
                 {
                     band: "NIR",
                     inputPath:
                         "prepared-10m.tif",
-                    sourceBand: 3,
+                    sourceBand: 4,
                 },
 
                 {
                     band: "SWIR1",
                     inputPath:
                         "prepared-20m.tif",
-                    sourceBand: 1,
+                    sourceBand: 5,
                 },
             ]
         );
@@ -1059,17 +1075,17 @@ test(
                 {
                     band: "Green",
                     inputPath: "prepared-10m.tif",
-                    sourceBand: 1,
+                    sourceBand: 2,
                 },
                 {
                     band: "Red",
                     inputPath: "prepared-10m.tif",
-                    sourceBand: 2,
+                    sourceBand: 3,
                 },
                 {
                     band: "NIR",
                     inputPath: "prepared-10m.tif",
-                    sourceBand: 3,
+                    sourceBand: 4,
                 },
             ]
         );
@@ -1306,12 +1322,12 @@ test(
         {
           band: "NIR",
           inputPath: "prepared-10m.tif",
-          sourceBand: 1,
+          sourceBand: 4,
         },
         {
           band: "SWIR1",
           inputPath: "prepared-20m.tif",
-          sourceBand: 1,
+          sourceBand: 5,
         },
       ]
     );
@@ -1373,4 +1389,364 @@ test(
       }
     );
   }
+);
+
+test(
+    "publishes scene archive outputs to stable analytical paths",
+    async () => {
+        const fs = require("node:fs/promises");
+        const os = require("node:os");
+        const path = require("node:path");
+
+        const temporaryRoot = await fs.mkdtemp(
+            path.join(os.tmpdir(), "agrinexus-publication-test-")
+        );
+
+        try {
+            const acquisitionDirectory = path.join(
+                temporaryRoot,
+                "acquisition"
+            );
+            const productionRoot = path.join(
+                temporaryRoot,
+                "production"
+            );
+            const analyticalDirectory = path.join(
+                temporaryRoot,
+                "analytical"
+            );
+            const sceneId = "S2C_PUBLICATION_TEST_SCENE";
+            const sceneDirectory = path.join(
+                productionRoot,
+                sceneId
+            );
+
+            const rasterBytes = {
+                continuous: "test-continuous-raster",
+                classification: "test-classification-raster",
+            };
+
+            let postProcessingRequest = null;
+
+            const preparationImpl = async (request) => ({
+                workflowVersion: "1.0",
+                sceneId,
+                acquisitionDate: "2026-09-08",
+                outputDirectory: request.outputDirectory,
+                outputs: {
+                    10: {
+                        resolution: 10,
+                        bands: ["Blue", "Green", "Red", "NIR"],
+                        outputPath: "prepared-10m.tif",
+                    },
+                    20: {
+                        resolution: 20,
+                        bands: [
+                            "RedEdge1",
+                            "RedEdge2",
+                            "RedEdge3",
+                            "RedEdge4",
+                            "SWIR1",
+                            "SWIR2",
+                        ],
+                        outputPath: "prepared-20m.tif",
+                    },
+                },
+            });
+
+            const indexWorkflowImpl = async () => ({
+                result: {
+                    results: {
+                        raster: {
+                            contractVersion: "1.0",
+                            width: 2,
+                            height: 2,
+                            pixelCount: 4,
+                            bands: {
+                                NDSI: {
+                                    dataType: "Float32",
+                                    data: [0.1, 0.2, 0.3, 0.4],
+                                },
+                            },
+                        },
+                    },
+                    analysisVersion: "1.0",
+                    timestamp: "2026-09-08T00:00:00.000Z",
+                },
+            });
+
+            const postProcessingImpl = async (request) => {
+                postProcessingRequest = request;
+
+                await fs.mkdir(request.outputDirectory, {
+                    recursive: true,
+                });
+
+                const continuousPath = path.join(
+                    request.outputDirectory,
+                    "NDSI_index.tif"
+                );
+                const classificationPath = path.join(
+                    request.outputDirectory,
+                    "NDSI_classification.tif"
+                );
+
+                await fs.writeFile(
+                    continuousPath,
+                    rasterBytes.continuous
+                );
+                await fs.writeFile(
+                    classificationPath,
+                    rasterBytes.classification
+                );
+
+                return {
+                    outputPaths: {
+                        continuous: continuousPath,
+                        classification: classificationPath,
+                    },
+                };
+            };
+
+            await processSentinel2IndexProductionWorkflow({
+                request: {
+                    indexCode: "NDSI",
+                    parameters: {},
+                },
+                outputDirectory: acquisitionDirectory,
+                productionDirectory: productionRoot,
+                analyticalOutputDirectory: analyticalDirectory,
+                targetResolution: 10,
+                preparationImpl,
+                indexWorkflowImpl,
+                postProcessingImpl,
+            });
+
+            assert.equal(
+                postProcessingRequest.outputDirectory,
+                sceneDirectory
+            );
+
+            const expectedFiles = [
+                ["NDSI_index.tif", rasterBytes.continuous],
+                [
+                    "NDSI_classification.tif",
+                    rasterBytes.classification,
+                ],
+            ];
+
+            for (const [fileName, expectedContent] of expectedFiles) {
+                assert.equal(
+                    await fs.readFile(
+                        path.join(sceneDirectory, fileName),
+                        "utf8"
+                    ),
+                    expectedContent,
+                    `scene archive file ${fileName}`
+                );
+
+                assert.equal(
+                    await fs.readFile(
+                        path.join(analyticalDirectory, fileName),
+                        "utf8"
+                    ),
+                    expectedContent,
+                    `stable analytical file ${fileName}`
+                );
+            }
+
+            // Verify the scene-specific production manifest.
+            const manifestPath = path.join(
+                sceneDirectory,
+                "production_metadata.json"
+            );
+
+            const manifest = JSON.parse(
+                await fs.readFile(manifestPath, "utf8")
+            );
+
+            assert.equal(
+                manifest.observation.sceneId,
+                sceneId,
+                "manifest observation should identify the scene"
+            );
+
+            assert.equal(
+                manifest.observation.acquisitionDate,
+                "2026-09-08",
+                "manifest observation should record the acquisition date"
+            );
+
+            assert.ok(
+                Array.isArray(manifest.products),
+                "manifest should contain a products array"
+            );
+
+            assert.ok(
+                manifest.products.some(
+                    (product) =>
+                        product.indexCode === "NDSI" &&
+                        product.sceneId === sceneId &&
+                        product.acquisitionDate === "2026-09-08" &&
+                        product.outputs?.continuous === "NDSI_index.tif" &&
+                        product.outputs?.classification ===
+                            "NDSI_classification.tif"
+                ),
+                "manifest should record both NDSI output files"
+            );
+        } finally {
+            await fs.rm(temporaryRoot, {
+                recursive: true,
+                force: true,
+            });
+        }
+    }
+);
+
+
+
+
+test(
+    "does not publish either stable output when a source file is missing",
+    async () => {
+        const fs = require("node:fs/promises");
+        const os = require("node:os");
+        const path = require("node:path");
+
+        const temporaryRoot = await fs.mkdtemp(
+            path.join(os.tmpdir(), "agrinexus-publication-failure-")
+        );
+
+        try {
+            const productionRoot = path.join(
+                temporaryRoot,
+                "production"
+            );
+            const analyticalDirectory = path.join(
+                temporaryRoot,
+                "analytical"
+            );
+            const sourceDirectory = path.join(
+                temporaryRoot,
+                "sources"
+            );
+            const sceneId = "S2C_PUBLICATION_FAILURE_SCENE";
+
+            await fs.mkdir(sourceDirectory, { recursive: true });
+            await fs.mkdir(analyticalDirectory, { recursive: true });
+
+            const stableContinuous = path.join(
+                analyticalDirectory,
+                "NDSI_index.tif"
+            );
+            const stableClassification = path.join(
+                analyticalDirectory,
+                "NDSI_classification.tif"
+            );
+            const validContinuousSource = path.join(
+                sourceDirectory,
+                "NDSI_index.tif"
+            );
+            const missingClassificationSource = path.join(
+                sourceDirectory,
+                "missing-classification.tif"
+            );
+
+            await fs.writeFile(stableContinuous, "old-continuous");
+            await fs.writeFile(stableClassification, "old-classification");
+            await fs.writeFile(validContinuousSource, "new-continuous");
+
+            const preparationImpl = async (request) => ({
+                workflowVersion: "1.0",
+                sceneId,
+                acquisitionDate: "2026-09-08",
+                outputDirectory: request.outputDirectory,
+                outputs: {
+                    10: {
+                        resolution: 10,
+                        bands: ["Blue", "Green", "Red", "NIR"],
+                        outputPath: "prepared-10m.tif",
+                    },
+                    20: {
+                        resolution: 20,
+                        bands: [
+                            "RedEdge1",
+                            "RedEdge2",
+                            "RedEdge3",
+                            "RedEdge4",
+                            "SWIR1",
+                            "SWIR2",
+                        ],
+                        outputPath: "prepared-20m.tif",
+                    },
+                },
+            });
+
+            const indexWorkflowImpl = async () => ({
+                result: {
+                    results: {
+                        raster: {
+                            contractVersion: "1.0",
+                            width: 2,
+                            height: 2,
+                            pixelCount: 4,
+                            bands: {
+                                NDSI: {
+                                    dataType: "Float32",
+                                    data: [0.1, 0.2, 0.3, 0.4],
+                                },
+                            },
+                        },
+                    },
+                    analysisVersion: "1.0",
+                    timestamp: "2026-09-08T00:00:00.000Z",
+                },
+            });
+
+            const postProcessingImpl = async () => ({
+                outputPaths: {
+                    continuous: validContinuousSource,
+                    classification: missingClassificationSource,
+                },
+            });
+
+            await assert.rejects(
+                processSentinel2IndexProductionWorkflow({
+                    request: {
+                        indexCode: "NDSI",
+                        parameters: {},
+                    },
+                    outputDirectory: path.join(temporaryRoot, "acquisition"),
+                    productionDirectory: productionRoot,
+                    analyticalOutputDirectory: analyticalDirectory,
+                    targetResolution: 10,
+                    preparationImpl,
+                    indexWorkflowImpl,
+                    postProcessingImpl,
+                }),
+                (error) => error && error.code === "ENOENT"
+            );
+
+            assert.equal(
+                await fs.readFile(stableContinuous, "utf8"),
+                "old-continuous"
+            );
+            assert.equal(
+                await fs.readFile(stableClassification, "utf8"),
+                "old-classification"
+            );
+
+            const stableFiles = await fs.readdir(analyticalDirectory);
+            assert.equal(
+                stableFiles.some((name) => name.includes(".tmp-")),
+                false,
+                "temporary publication files should be cleaned up"
+            );
+        } finally {
+            await fs.rm(temporaryRoot, {
+                recursive: true,
+                force: true,
+            });
+        }
+    }
 );

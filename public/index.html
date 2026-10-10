@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -536,6 +536,27 @@
               considerably longer.
             </div>
               <div
+                id="remoteSensingProcessedDates"
+                class="remote-sensing-index-availability"
+                aria-live="polite"
+              >
+                <div class="remote-sensing-availability-header">
+                  <span class="remote-sensing-category-kicker">
+                    PROCESSED PRODUCTS
+                  </span>
+                  <h3>Previously Processed Dates</h3>
+                </div>
+                <div
+                  id="remoteSensingProcessedDatesStatus"
+                  role="status"
+                >Loading processed dates...</div>
+                <div
+                  id="remoteSensingProcessedDatesList"
+                  class="remote-sensing-availability-group"
+                ></div>
+              </div>
+
+<div
                 id="remoteSensingObservationRail"
                 class="remote-sensing-observation-rail"
                 aria-label="Sentinel-2 observation dates"
@@ -1449,4 +1470,3 @@
     <script src="/js/app.js"></script>
   </body>
 </html>
-

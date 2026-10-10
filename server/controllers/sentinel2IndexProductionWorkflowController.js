@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const {
     validateSentinel2IndexProductionRequest,
@@ -101,6 +101,8 @@ async function processSentinel2IndexProductionWorkflowRequest(
                     request.outputDirectory,
                 analyticalOutputDirectory:
                     request.analyticalOutputDirectory,
+                    productionDirectory:
+                    request.productionDirectory,
                 targetResolution:
                     request.targetResolution,
                 outputNoData:
@@ -182,17 +184,21 @@ async function processSentinel2IndexProductionWorkflowStreamRequest(
 
         console.log("=== BEFORE WORKFLOW AWAIT ===");
 
-        req.on("close", () => {
-            console.log("=== SSE REQUEST CLOSED ===");
-        });
+        if (typeof req.on === "function") {
+            req.on("close", () => {
+                console.log("=== SSE REQUEST CLOSED ===");
+            });
+        }
 
-        res.on("close", () => {
-            console.log("=== SSE RESPONSE CLOSED ===");
-        });
+        if (typeof res.on === "function") {
+            res.on("close", () => {
+                console.log("=== SSE RESPONSE CLOSED ===");
+            });
 
-        res.on("error", (error) => {
-            console.error("=== SSE RESPONSE ERROR ===", error);
-        });
+            res.on("error", (error) => {
+                console.error("=== SSE RESPONSE ERROR ===", error);
+            });
+        }
 
         const result =
             await workflowImpl({
@@ -201,6 +207,8 @@ async function processSentinel2IndexProductionWorkflowStreamRequest(
                     request.outputDirectory,
                 analyticalOutputDirectory:
                     request.analyticalOutputDirectory,
+                    productionDirectory:
+                    request.productionDirectory,
                 targetResolution:
                     request.targetResolution,
                 outputNoData:

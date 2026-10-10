@@ -396,6 +396,15 @@ function validateSentinel2IndexProductionRequest(
         );
     }
 
+    if (
+        value.productionDirectory !== undefined &&
+        !isNonEmptyString(value.productionDirectory)
+    ) {
+        errors.push(
+            "productionDirectory must be a non-empty string."
+        );
+    }
+
     errors.push(
         ...validateIndexCode(
             value.indexCode
@@ -478,6 +487,13 @@ function createSentinel2IndexProductionRequestContract(
                 ? request.analyticalOutputDirectory.trim()
                 : request &&
                   request.analyticalOutputDirectory,
+
+        productionDirectory:
+            request &&
+            isNonEmptyString(request.productionDirectory)
+                ? request.productionDirectory.trim()
+                : request &&
+                  request.productionDirectory,
 
         indexCode:
             request &&
