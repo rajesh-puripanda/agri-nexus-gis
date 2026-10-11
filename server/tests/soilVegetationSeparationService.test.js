@@ -1,5 +1,6 @@
 const {
     analyzePairedEvidence,
+    classifyPairedEvidence,
     processSoilVegetationSeparation
 } = require("../services/remoteSensing/soilVegetation/soilVegetationSeparationService");
 
@@ -38,17 +39,27 @@ function assertClose(actual, expected, tolerance = 1e-6) {
     }
 }
 
-function assertThrows(fn, message) {
-    let threw = false;
+function assertThrows(fn, message, expectedErrorText) {
+    let caughtError = null;
 
     try {
         fn();
     } catch (error) {
-        threw = true;
+        caughtError = error;
     }
 
-    if (!threw) {
+    if (!caughtError) {
         throw new Error(message);
+    }
+
+    if (
+        expectedErrorText &&
+        !caughtError.message.includes(expectedErrorText)
+    ) {
+        throw new Error(
+            `${message} Expected error containing "${expectedErrorText}", ` +
+            `received "${caughtError.message}".`
+        );
     }
 }
 
@@ -104,13 +115,14 @@ function assertThrows(fn, message) {
             method: "evidence_comparison",
             interpretationMode: "context_dependent",
             inputs: {
-                ndvi,
-                bsi
+                ndvi: { raster: ndvi },
+                bsi: { raster: bsi }
             },
             spatialContext: {},
             parameters: {}
         }),
-        "Expected spatial mismatch to be rejected."
+        "Expected spatial mismatch to be rejected.",
+        "spatialReference.resolution mismatch"
     );
 
     console.log("PASS: spatial mismatch rejected");
@@ -135,13 +147,14 @@ function assertThrows(fn, message) {
             method: "evidence_comparison",
             interpretationMode: "context_dependent",
             inputs: {
-                ndvi,
-                bsi
+                ndvi: { raster: ndvi },
+                bsi: { raster: bsi }
             },
             spatialContext: {},
             parameters: {}
         }),
-        "Expected coordinate-reference mismatch to be rejected."
+        "Expected coordinate-reference mismatch to be rejected.",
+        "spatialReference.geoKeys mismatch"
     );
 
     console.log("PASS: coordinate-reference mismatch rejected");
@@ -200,4 +213,75 @@ function assertThrows(fn, message) {
     console.log("PASS: full processing contract success");
 }
 
+
+// 5. Provisional classification, threshold boundaries, and NoData
+{
+    const ndvi = createRaster(
+        "NDVI",
+        [0.5, 0.19, 0.2, -9999]
+    );
+    const bsi = createRaster(
+        "BSI",
+        [0.19, 0.2, 0.2, 0.4]
+    );
+
+    const result = classifyPairedEvidence({
+        ndviRaster: ndvi,
+        bsiRaster: bsi
+    });
+
+    if (!(result.data instanceof Uint8Array)) {
+        throw new Error("Expected a Uint8Array classification raster.");
+    }
+
+    if (Array.from(result.data).join(",") !== "1,2,3,0") {
+        throw new Error("Unexpected class codes at thresholds or NoData.");
+    }
+
+    const stats = result.statistics;
+
+    if (stats.validPixelCount !== 3 || stats.noDataPixelCount !== 1) {
+        throw new Error("Incorrect classification valid/NoData counts.");
+    }
+
+    if (stats.calibrationStatus !== "provisional_uncalibrated") {
+        throw new Error("Classification must be marked provisional.");
+    }
+
+    const expectedCounts = [1, 1, 1];
+    const expectedPercentages = [100 / 3, 100 / 3, 100 / 3];
+
+    stats.classes.forEach((item, index) => {
+        if (item.pixelCount !== expectedCounts[index]) {
+            throw new Error(`Incorrect count for class ${item.code}.`);
+        }
+        assertClose(item.percentage, expectedPercentages[index]);
+    });
+
+    console.log("PASS: classification boundaries and NoData");
+}
+
+// 6. Non-finite input values are also classified as NoData
+{
+    const ndvi = createRaster("NDVI", [0.6, NaN, 0.1, 0.3]);
+    const bsi = createRaster("BSI", [0.1, 0.1, 0.3, Infinity]);
+
+    const result = classifyPairedEvidence({
+        ndviRaster: ndvi,
+        bsiRaster: bsi
+    });
+
+    if (Array.from(result.data).join(",") !== "1,0,2,0") {
+        throw new Error("Non-finite paired values should produce NoData code 0.");
+    }
+
+    if (
+        result.statistics.validPixelCount !== 2 ||
+        result.statistics.noDataPixelCount !== 2
+    ) {
+        throw new Error("Incorrect counts for non-finite input values.");
+    }
+
+    console.log("PASS: non-finite values handled as NoData");
+}
 console.log("ALL SOILVEGETATION SERVICE TESTS: PASS");

@@ -156,6 +156,81 @@ function calculatePearsonCorrelation(
     );
 }
 
+const SOIL_VEGETATION_CLASSES = Object.freeze([
+    {
+        code: 1,
+        label: "vegetation_dominant_evidence",
+        rule: "NDVI >= 0.5 AND BSI < 0.2"
+    },
+    {
+        code: 2,
+        label: "bare_soil_dominant_evidence",
+        rule: "NDVI < 0.2 AND BSI >= 0.2"
+    },
+    {
+        code: 3,
+        label: "mixed_or_other_evidence",
+        rule: "All other valid NDVI/BSI pairs"
+    }
+]);
+
+function classifyPairedEvidence({ ndviRaster, bsiRaster }) {
+    const ndviBand = ndviRaster.bands.NDVI;
+    const bsiBand = bsiRaster.bands.BSI;
+    const pixelCount = ndviRaster.pixelCount;
+    const data = new Uint8Array(pixelCount);
+
+    const counts = { 1: 0, 2: 0, 3: 0 };
+    let validPixelCount = 0;
+    let noDataPixelCount = 0;
+
+    for (let index = 0; index < pixelCount; index += 1) {
+        const ndvi = ndviBand.data[index];
+        const bsi = bsiBand.data[index];
+
+        if (
+            isNoDataValue(ndvi, ndviRaster.noData) ||
+            isNoDataValue(bsi, bsiRaster.noData) ||
+            !Number.isFinite(ndvi) ||
+            !Number.isFinite(bsi)
+        ) {
+            noDataPixelCount += 1;
+            continue;
+        }
+
+        let code = 3;
+
+        if (ndvi >= 0.5 && bsi < 0.2) {
+            code = 1;
+        } else if (ndvi < 0.2 && bsi >= 0.2) {
+            code = 2;
+        }
+
+        data[index] = code;
+        counts[code] += 1;
+        validPixelCount += 1;
+    }
+
+    const classes = SOIL_VEGETATION_CLASSES.map((definition) => ({
+        ...definition,
+        pixelCount: counts[definition.code],
+        percentage: validPixelCount === 0
+            ? 0
+            : (counts[definition.code] / validPixelCount) * 100
+    }));
+
+    return {
+        data,
+        statistics: {
+            method: "provisional_ndvi_bsi_evidence_rules",
+            calibrationStatus: "provisional_uncalibrated",
+            noDataValue: 0,
+            validPixelCount,
+            noDataPixelCount,
+            classes
+        }
+    };
+}
 function analyzePairedEvidence({
     ndviRaster,
     bsiRaster
@@ -291,7 +366,14 @@ function processSoilVegetationSeparation(
             bsiRaster
         });
 
+    const classification =
+        classifyPairedEvidence({
+            ndviRaster,
+            bsiRaster
+        });
+
     const results = {
+        classification: classification.statistics,
         analysisType:
             ANALYSIS_TYPE,
 
@@ -341,6 +423,7 @@ module.exports = {
     calculateMin,
     calculateMax,
     calculatePearsonCorrelation,
+    classifyPairedEvidence,
     analyzePairedEvidence,
     processSoilVegetationSeparation
 };
