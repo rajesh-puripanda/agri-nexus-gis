@@ -44,6 +44,9 @@
     loading: false,
     error: null,
   };
+
+  let sentinel2AvailabilityPromise = null;
+
   let sentinel2AcquisitionContext = {
     startDate: null,
     endDate: null,
@@ -705,14 +708,17 @@ observationCount:
       `Selected Sentinel-2 scene: ${observation.sceneId}`,
     );
 
+  sentinel2AvailabilityPromise =
     loadSentinel2IndexAvailability(
       observation.acquisitionDate,
       observation.sceneId,
-    ).catch((error) => {
-      console.error(
-        "Unable to load Sentinel-2 index availability:",
-        error,
-      );
+    );
+
+    sentinel2AvailabilityPromise.catch((error) => {
+    console.error(
+      "Unable to load Sentinel-2 index availability:",
+      error,
+    );
     });
   }
   async function querySentinel2Observations() {
@@ -2372,24 +2378,16 @@ observationCount:
         )
       );
 
+    console.time(`${index.code} readRasters`);
     const raster =
-      await image.readRasters(
-        {
-          samples: [0],
-
-          width:
-            renderWidth,
-
-          height:
-            renderHeight,
-
-          resampleMethod:
-            "nearest",
-
-          interleave:
-            true,
-        }
-      );
+      await image.readRasters({
+        samples: [0],
+        width: renderWidth,
+        height: renderHeight,
+        resampleMethod: "nearest",
+        interleave: true,
+      });
+    console.timeEnd(`${index.code} readRasters`);
 
     if (
       sequence !==
@@ -2398,6 +2396,7 @@ observationCount:
       return;
     }
 
+    console.time(`${index.code} createRasterCanvas`);
     const canvas = createRasterCanvas(
       raster,
       renderWidth,
@@ -2405,11 +2404,11 @@ observationCount:
       type === "classification",
       index.code
     );
+    console.timeEnd(`${index.code} createRasterCanvas`);
 
-    const imageUrl =
-      canvas.toDataURL(
-        "image/png"
-      );
+    console.time(`${index.code} toDataURL`);
+    const imageUrl = canvas.toDataURL("image/png");
+    console.timeEnd(`${index.code} toDataURL`);
 
     const bounds =
       getLatLngBoundsFromGeoTIFF(
@@ -2484,6 +2483,13 @@ observationCount:
     */
 
     if (remoteSensingBusy) {
+      return;
+    }
+
+    if (!sentinel2ObservationContext.selectedSceneId) {
+      updateStatus(
+        "Select a Sentinel-2 observation before choosing an index."
+      );
       return;
     }
 
@@ -2679,7 +2685,7 @@ observationCount:
       }
 
       const payload =
-        JSON.parse(data);
+        JSON.parse(data.replace(/^\uFEFF/, ""));
 
       if (
         eventName ===
@@ -2801,6 +2807,15 @@ observationCount:
     const selectedObservationDate =
       sentinel2ObservationContext.selectedObservationDate;
 
+    await loadSentinel2IndexAvailability(
+      selectedObservationDate,
+      selectedSceneId
+    );
+
+    if (sequence !== renderSequence) {
+      return;
+    }
+
     const availability =
       getAvailabilityResult(indexCode);
 
@@ -2847,6 +2862,7 @@ observationCount:
     updateApplicationProcessingLockMessage(
       `Processing ${indexCode} production indices. Please wait...`,
     );
+
 
     const response = await fetch(
       SENTINEL2_INDEX_PRODUCTION_URL,
