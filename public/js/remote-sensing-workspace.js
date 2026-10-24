@@ -3165,6 +3165,154 @@ observationCount:
       elements.processedDatesList.replaceChildren();
     }
   }
+
+  async function loadSoilVegetationClassification() {
+    const button = document.getElementById(
+      "remoteSensingSoilVegetationButton"
+    );
+    const sceneId =
+      sentinel2ObservationContext &&
+      sentinel2ObservationContext.selectedSceneId;
+
+    if (!sceneId) {
+      updateStatus("Select a Sentinel-2 observation first.");
+      return;
+    }
+
+    const map =
+      typeof window.getMap === "function"
+        ? window.getMap()
+        : null;
+
+    if (!map || typeof GeoTIFF === "undefined") {
+      updateStatus("The map or GeoTIFF reader is unavailable.");
+      return;
+    }
+
+    const sequence = ++renderSequence;
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Loading classification...";
+    }
+
+    updateStatus("Loading soil and vegetation classification...");
+
+    try {
+      const url =
+        "/api/remote-sensing/raster/analysis/soil-vegetation/" +
+        encodeURIComponent(sceneId);
+
+      const response = await fetch(url, {
+        headers: { Accept: "image/tiff" }
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          response.status === 404
+            ? "No classification raster exists for this scene."
+            : `Raster request failed (${response.status}).`
+        );
+      }
+
+      const buffer = await response.arrayBuffer();
+      if (sequence !== renderSequence) return;
+
+      const tiff = await GeoTIFF.fromArrayBuffer(buffer);
+      const image = await tiff.getImage();
+      const width = image.getWidth();
+      const height = image.getHeight();
+
+      const scale = Math.min(
+        1,
+        MAX_RENDER_SIZE / Math.max(width, height)
+      );
+      const renderWidth = Math.max(1, Math.round(width * scale));
+      const renderHeight = Math.max(1, Math.round(height * scale));
+
+      const values = await image.readRasters({
+        samples: [0],
+        width: renderWidth,
+        height: renderHeight,
+        resampleMethod: "nearest",
+        interleave: true
+      });
+
+      if (sequence !== renderSequence) return;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = renderWidth;
+      canvas.height = renderHeight;
+
+      const context = canvas.getContext("2d");
+      const pixels = context.createImageData(renderWidth, renderHeight);
+
+      for (let i = 0; i < values.length; i++) {
+        const offset = i * 4;
+        const value = Number(values[i]);
+
+        // Class 0 is NoData; keep it fully transparent.
+        if (!Number.isFinite(value) || value === 0) {
+          pixels.data[offset + 3] = 0;
+          continue;
+        }
+
+        let color;
+        if (value === 1) {
+          color = [46, 139, 87];       // Vegetation dominant
+        } else if (value === 2) {
+          color = [190, 145, 91];      // Bare soil dominant
+        } else if (value === 3) {
+          color = [222, 145, 65];      // Mixed/other evidence
+        } else {
+          pixels.data[offset + 3] = 0;
+          continue;
+        }
+
+        pixels.data[offset] = color[0];
+        pixels.data[offset + 1] = color[1];
+        pixels.data[offset + 2] = color[2];
+        pixels.data[offset + 3] = 190;
+      }
+
+      context.putImageData(pixels, 0, 0);
+
+      const bounds = getLatLngBoundsFromGeoTIFF(image);
+      if (sequence !== renderSequence) return;
+
+      clearRemoteSensingLayer();
+
+      remoteSensingLayer = L.imageOverlay(
+        canvas.toDataURL("image/png"),
+        bounds,
+        {
+          opacity: remoteSensingOpacity,
+          interactive: false,
+          className: "remote-sensing-raster-layer"
+        }
+      );
+
+      if (remoteSensingLayerVisible) {
+        remoteSensingLayer.addTo(map);
+      }
+
+      updateRemoteSensingLayerControls(true);
+      map.fitBounds(bounds, { maxZoom: 13 });
+      updateStatus(
+        "Soil & vegetation classification loaded. Provisional  uncalibrated."
+      );
+    } catch (error) {
+      if (sequence === renderSequence) {
+        console.error("Classification load failed:", error);
+        updateStatus(error.message || "Unable to load classification.");
+      }
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Show Soil & Vegetation Classification";
+      }
+    }
+  }
   function initializeRemoteSensingTool() {
     const {
       close,
@@ -3172,6 +3320,15 @@ observationCount:
       opacity
     } = getElements();
 
+    const classificationButton = document.getElementById(
+      "remoteSensingSoilVegetationButton"
+    );
+    if (classificationButton) {
+      classificationButton.addEventListener(
+        "click",
+        loadSoilVegetationClassification
+      );
+    }
     if (close) {
       close.addEventListener(
         "click",

@@ -195,13 +195,18 @@ function assertCompatibleSpatialReference(
         "spatialReference.boundingBox"
     );
 
-    if (
-        JSON.stringify(ndviSpatial.geoKeys) !==
-        JSON.stringify(bsiSpatial.geoKeys)
-    ) {
-        throw new Error(
-            "spatialReference.geoKeys mismatch between NDVI and BSI."
-        );
+    const spatialGeoKeyNames = [
+        "GTModelTypeGeoKey",
+        "GTRasterTypeGeoKey",
+        "ProjectedCSTypeGeoKey"
+    ];
+
+    for (const key of spatialGeoKeyNames) {
+        if (ndviSpatial.geoKeys?.[key] !== bsiSpatial.geoKeys?.[key]) {
+            throw new Error(
+                `spatialReference.geoKeys.${key} mismatch between NDVI and BSI.`
+            );
+        }
     }
 }
 

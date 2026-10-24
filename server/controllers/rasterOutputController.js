@@ -295,9 +295,51 @@ async function serveRasterRender(req, res) {
     }
 }
 
+async function serveSoilVegetationClassification(req, res) {
+    try {
+        const sceneId = String(req.params.sceneId || "");
+
+        if (!/^[A-Za-z0-9_-]+$/.test(sceneId)) {
+            return res.status(400).json({
+                success: false,
+                code: "INVALID_SCENE_ID",
+                message: "Invalid scene ID."
+            });
+        }
+
+        const outputPath = path.join(
+            PRODUCTION_DIRECTORY,
+            sceneId,
+            "soil_vegetation_classification.tif"
+        );
+
+        const stat = await fsp.stat(outputPath).catch(error => {
+            if (error.code === "ENOENT") return null;
+            throw error;
+        });
+
+        if (!stat?.isFile() || stat.size === 0) {
+            return res.status(404).json({
+                success: false,
+                code: "ANALYSIS_CLASSIFICATION_NOT_FOUND",
+                message: "Soil/vegetation classification is unavailable."
+            });
+        }
+
+        return res.sendFile(outputPath);
+    } catch (error) {
+        return sendError(
+            res,
+            error,
+            "ANALYSIS_CLASSIFICATION_DELIVERY_ERROR",
+            "Failed to deliver soil/vegetation classification."
+        );
+    }
+}
 module.exports = {
     getOutputPath,
     findProductionOutputPath,
     serveRasterOutput,
-    serveRasterRender
+    serveRasterRender,
+    serveSoilVegetationClassification
 };

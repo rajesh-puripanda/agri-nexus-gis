@@ -6,7 +6,8 @@ const router = express.Router();
 
 const {
     serveRasterOutput,
-    serveRasterRender
+    serveRasterRender,
+    serveSoilVegetationClassification
 } = require(
     "../controllers/rasterOutputController"
 );
@@ -19,6 +20,11 @@ router.get(
 router.get(
     "/render/:indexCode/:type",
     serveRasterRender
+);
+
+router.get(
+    "/analysis/soil-vegetation/:sceneId",
+    serveSoilVegetationClassification
 );
 
 module.exports = router;
