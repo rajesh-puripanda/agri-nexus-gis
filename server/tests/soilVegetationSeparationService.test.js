@@ -154,7 +154,7 @@ function assertThrows(fn, message, expectedErrorText) {
             parameters: {}
         }),
         "Expected coordinate-reference mismatch to be rejected.",
-        "spatialReference.geoKeys mismatch"
+        "spatialReference.geoKeys.ProjectedCSTypeGeoKey mismatch"
     );
 
     console.log("PASS: coordinate-reference mismatch rejected");
