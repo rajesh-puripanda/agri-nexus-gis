@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -357,23 +357,6 @@
               </h2>
             </div>
           </div>
-
-          <section class="remote-sensing-classification-panel">
-            <button
-              id="remoteSensingSoilVegetationButton"
-              class="remote-sensing-classification-button"
-              type="button"
-            >Show Soil &amp; Vegetation Classification</button>
-            <p class="remote-sensing-classification-warning">
-              Provisional  uncalibrated. Rule-based evidence classes; not a validated land-cover map.
-            </p>
-            <div class="remote-sensing-classification-legend">
-              <div><span class="classification-swatch vegetation"></span>Vegetation dominant</div>
-              <div><span class="classification-swatch bare-soil"></span>Bare soil dominant</div>
-              <div><span class="classification-swatch mixed-evidence"></span>Mixed / other evidence</div>
-              <div><span class="classification-swatch nodata"></span>NoData (transparent)</div>
-            </div>
-          </section>
 <div
             id="remoteSensingRailContent"
             class="agri-intelligence-panel-content"
@@ -433,7 +416,43 @@
             </section>
 
             </div>
+              <section class="remote-sensing-classification-panel">
+                <button
+                  id="remoteSensingSoilVegetationButton"
+                  class="remote-sensing-classification-button"
+                  type="button"
+                >Show Soil &amp; Vegetation Classification</button>
+                <p class="remote-sensing-classification-warning">
+                  Provisional  uncalibrated. Rule-based evidence classes; not a validated land-cover map.
+                </p>
+                <div class="remote-sensing-classification-legend">
+                  <div><span class="classification-swatch vegetation"></span>Vegetation dominant</div>
+                  <div><span class="classification-swatch bare-soil"></span>Bare soil dominant</div>
+                  <div><span class="classification-swatch mixed-evidence"></span>Mixed / other evidence</div>
+                  <div><span class="classification-swatch nodata"></span>NoData (transparent)</div>
+                </div>
+              </section>
 
+                <section class="remote-sensing-classification-panel">
+      <h3>Bare Soil Frequency</h3>
+
+      <p>Observation range: 8–28 September 2026</p>
+
+      <button
+        id="remoteSensingBareSoilFrequencyButton"
+        class="remote-sensing-classification-button"
+        type="button"
+      >
+        Show Bare Soil Frequency
+      </button>
+
+      <p class="remote-sensing-classification-warning">
+        Provisional and uncalibrated. Estimates use NDVI and BSI evidence rules;
+        ground validation has not been established.
+      </p>
+
+      <p>Scale: 0% (lower frequency) to 100% (higher frequency).</p>
+    </section>
 
 
             <div

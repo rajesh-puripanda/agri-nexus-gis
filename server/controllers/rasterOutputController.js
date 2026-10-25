@@ -336,10 +336,43 @@ async function serveSoilVegetationClassification(req, res) {
         );
     }
 }
+
+async function serveBareSoilFrequency(req, res) {
+    try {
+        const outputPath = path.resolve(
+            __dirname,
+            "../../data/remote-sensing/temporal-analysis/bare-soil-frequency-20260908-20260928/BARE_SOIL_FREQUENCY.tif"
+        );
+
+        const stat = await fsp.stat(outputPath).catch(error => {
+            if (error.code === "ENOENT") return null;
+            throw error;
+        });
+
+        if (!stat?.isFile() || stat.size === 0) {
+            return res.status(404).json({
+                success: false,
+                code: "BARE_SOIL_FREQUENCY_NOT_FOUND",
+                message: "Bare Soil Frequency raster is unavailable."
+            });
+        }
+
+        return res.sendFile(outputPath);
+    } catch (error) {
+        return sendError(
+            res,
+            error,
+            "BARE_SOIL_FREQUENCY_DELIVERY_ERROR",
+            "Failed to deliver Bare Soil Frequency raster."
+        );
+    }
+}
+
 module.exports = {
     getOutputPath,
     findProductionOutputPath,
     serveRasterOutput,
     serveRasterRender,
-    serveSoilVegetationClassification
+    serveSoilVegetationClassification,
+    serveBareSoilFrequency
 };

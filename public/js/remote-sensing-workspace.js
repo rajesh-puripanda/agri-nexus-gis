@@ -2027,6 +2027,21 @@ observationCount:
         }
       }
 
+        if (indexCode === "BARE_SOIL_FREQUENCY") {
+          min = 0;
+          max = 100;
+        } else if (indexCode === "SSMI") {
+          min = -1;
+          max = 1;
+        } else if (
+          !Number.isFinite(min) ||
+          !Number.isFinite(max) ||
+          min === max
+        ) {
+          min = -1;
+          max = 1;
+        }
+
         if (indexCode === "SSMI") {
           min = -1;
           max = 1;
@@ -2151,7 +2166,8 @@ observationCount:
   async function renderRasterOutput(
     index,
     type,
-    sequence
+    sequence,
+    sourceUrl = null
   ) {
     if (
       typeof GeoTIFF ===
@@ -2175,6 +2191,7 @@ observationCount:
     }
 
     const url =
+      sourceUrl ||
       getRasterUrl(
         index.code,
         type
@@ -3055,67 +3072,98 @@ observationCount:
     return true;
   }
 
-  function renderSentinel2ProcessedDates(results) {
-    const elements = getElements();
-    const status = elements.processedDatesStatus;
-    const list = elements.processedDatesList;
 
-    if (!status || !list) {
-      return;
-    }
+  function renderSentinel2ProcessedDates(results) {
+    const { processedDatesStatus: status, processedDatesList: list } =
+      getElements();
 
     list.replaceChildren();
 
     if (!Array.isArray(results) || results.length === 0) {
-      status.textContent =
-        "No verified processed index products were found.";
+      status.textContent = "No verified processed index products were found.";
       return;
     }
 
-    status.textContent =
-      "Dates below are for products already processed and verified.";
+    status.textContent = "Verified products are ready for the dates shown below.";
+
+    const available = [];
+    const unavailable = [];
 
     results.forEach((item) => {
-      const row = document.createElement("div");
-      const title = document.createElement("strong");
-      const dates = document.createElement("div");
-
-      row.className = "remote-sensing-processed-date-item";
-      title.textContent =
-        item.indexName || item.indexCode || "Unknown index";
-      dates.className = "remote-sensing-processed-date-values";
-
-      const availableDates = Array.isArray(item.dates)
-        ? item.dates
-        : [];
-
-      if (availableDates.length === 0) {
-        dates.textContent = "No verified processed dates";
-      } else {
-        dates.textContent = availableDates.map((value) => {
-          const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-
-          if (!match) {
-            return value;
-          }
-
-          const date = new Date(
-            Number(match[1]),
-            Number(match[2]) - 1,
-            Number(match[3])
-          );
-
-          return date.toLocaleDateString(undefined, {
-            day: "numeric",
-            month: "short",
-            year: "numeric"
-          });
-        }).join(", ");
-      }
-
-      row.append(title, dates);
-      list.appendChild(row);
+      const dates = Array.isArray(item.dates) ? item.dates : [];
+      (dates.length ? available : unavailable).push({ item, dates });
     });
+
+    function formatDate(value) {
+      const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+      if (!match) return value;
+
+      return new Date(
+        Number(match[1]),
+        Number(match[2]) - 1,
+        Number(match[3])
+      ).toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      });
+    }
+
+    function createRows(items) {
+      const column = document.createElement("div");
+      column.className = "remote-sensing-processed-column";
+
+      items.forEach(({ item, dates }) => {
+        const row = document.createElement("div");
+        const title = document.createElement("strong");
+        const values = document.createElement("div");
+
+        row.className = "remote-sensing-processed-date-item";
+        title.textContent = item.indexName || item.indexCode || "Unknown index";
+        values.className = "remote-sensing-processed-date-values";
+        values.textContent = dates.length
+          ? dates.map(formatDate).join(", ")
+          : "No verified processed dates";
+
+        row.append(title, values);
+        column.appendChild(row);
+      });
+
+      return column;
+    }
+
+    const leftColumn = createRows(available);
+    leftColumn.classList.add("verified-products-column");
+    list.appendChild(leftColumn);
+
+    const rightColumn = document.createElement("div");
+    rightColumn.className = "remote-sensing-processed-column unavailable-products-column";
+
+    if (unavailable.length) {
+      const toggle = document.createElement("button");
+      const details = createRows(unavailable);
+
+      toggle.type = "button";
+      toggle.className = "remote-sensing-show-all-products";
+      toggle.textContent = `Show ${unavailable.length} products without verified dates`;
+      toggle.setAttribute("aria-expanded", "false");
+      details.hidden = true;
+
+      toggle.addEventListener("click", () => {
+        const expanded = toggle.getAttribute("aria-expanded") === "true";
+        toggle.setAttribute("aria-expanded", String(!expanded));
+        details.hidden = expanded;
+        toggle.textContent = expanded
+          ? `Show ${unavailable.length} products without verified dates`
+          : "Hide products without verified dates";
+      });
+
+      rightColumn.append(toggle, details);
+    } else {
+      rightColumn.textContent = "All listed products have verified dates.";
+    }
+
+    list.appendChild(rightColumn);
   }
 
   async function loadSentinel2ProcessedDates() {
@@ -3313,12 +3361,72 @@ observationCount:
       }
     }
   }
+
+  async function loadBareSoilFrequency() {
+    const button = document.getElementById(
+      "remoteSensingBareSoilFrequencyButton"
+    );
+
+    const map =
+      typeof window.getMap === "function"
+        ? window.getMap()
+        : null;
+
+    if (!map || typeof GeoTIFF === "undefined") {
+      updateStatus("The map or GeoTIFF reader is unavailable.");
+      return;
+    }
+
+    const sequence = ++renderSequence;
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Loading Bare Soil Frequency...";
+    }
+
+    try {
+      await renderRasterOutput(
+        {
+          code: "BARE_SOIL_FREQUENCY",
+          name: "Bare Soil Frequency (8–28 Sep 2026)"
+        },
+        "index",
+        sequence,
+        "/api/remote-sensing/raster/analysis/bare-soil-frequency"
+      );
+    } catch (error) {
+      console.error("Bare Soil Frequency loading failed:", error);
+
+      if (sequence === renderSequence) {
+        updateStatus(
+          error.message || "Failed to load Bare Soil Frequency."
+        );
+      }
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Show Bare Soil Frequency";
+      }
+    }
+  }
+
   function initializeRemoteSensingTool() {
     const {
       close,
       layerToggle,
       opacity
     } = getElements();
+
+    const bareSoilFrequencyButton = document.getElementById(
+      "remoteSensingBareSoilFrequencyButton"
+    );
+
+    if (bareSoilFrequencyButton) {
+      bareSoilFrequencyButton.addEventListener(
+        "click",
+        loadBareSoilFrequency
+      );
+    }
 
     const classificationButton = document.getElementById(
       "remoteSensingSoilVegetationButton"
