@@ -14,6 +14,13 @@ const DEFAULT_PRODUCTION_ROOTS = [
     "./data/remote-sensing/production/ssmi",
 ];
 
+const {
+    getTemporalProductEligibility
+} = require(
+    "../services/remoteSensing/catalog/" +
+    "temporalProductEligibilityService"
+);
+
 async function getSentinel2IndexAvailability(
     req,
     res
@@ -122,7 +129,30 @@ async function getSentinel2AvailableProductDates(
         });
     }
 }
+
+async function getSentinel2TemporalProductEligibility(req, res) {
+    try {
+        const result = await getTemporalProductEligibility({
+            productionRoots: DEFAULT_PRODUCTION_ROOTS
+        });
+
+        return res.status(200).json({
+            success: true,
+            ...result
+        });
+    } catch (error) {
+        console.error("Temporal product eligibility error:", error);
+
+        return res.status(500).json({
+            success: false,
+            code: "TEMPORAL_PRODUCT_ELIGIBILITY_ERROR",
+            message: "Failed to determine temporal product eligibility."
+        });
+    }
+}
+
 module.exports = {
     getSentinel2IndexAvailability,
-    getSentinel2AvailableProductDates
+    getSentinel2AvailableProductDates,
+    getSentinel2TemporalProductEligibility
 };

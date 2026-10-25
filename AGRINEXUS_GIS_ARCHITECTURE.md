@@ -1547,6 +1547,31 @@ Includes:
 
 The existing temporal remote-sensing implementation was audited against the Phase 5 architecture and validated without source-code changes.
 
+### Phase 5.1 - Bare Soil Frequency Temporal Product
+
+**Status:** Implemented / tested / provisional and uncalibrated
+
+A separate temporal-analysis product estimates the frequency of bare-soil evidence across multiple Sentinel-2 observations. It operates independently of the spectral-index registry and does not modify existing production index rasters.
+
+**Observation range:** 8-28 September 2026
+
+**Inputs:**
+- Sentinel-2 NDVI and BSI production rasters for 8 September 2026 and 28 September 2026.
+- Spatially aligned observations on a common grid.
+
+**Provisional evidence rule:**
+- NDVI < 0.2
+- BSI >= 0.2
+
+**Output:** data/remote-sensing/temporal-analysis/bare-soil-frequency-20260908-20260928/BARE_SOIL_FREQUENCY.tif
+
+**Output grid:** EPSG:32644, 10 m resolution, NoData -9999.
+
+**Validation:** Calculation, raster-writer, streaming-writer, and streaming-workflow tests passed.
+
+**Scientific limitation:** This is a provisional, uncalibrated evidence-frequency product, not a calibrated bare-soil probability. Thresholds and results require ground validation before agronomic interpretation.
+
+
 ---
 
 ## Phase 6 — Crop Intelligence
