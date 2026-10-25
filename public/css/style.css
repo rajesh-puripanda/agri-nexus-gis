@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
 public/css/style.css
 ====================
 
@@ -3716,4 +3716,92 @@ PRINT
 
 #remoteSensingProcessedDatesList {
   margin-top: 8px;
+}
+.classification-swatch.frequency-zero {
+  background: rgb(0, 0, 255);
+}
+
+.classification-swatch.frequency-half {
+  background: rgb(128, 255, 128);
+}
+
+.classification-swatch.frequency-full {
+  background: rgb(255, 0, 0);
+}
+.remote-sensing-index-legend {
+  margin-top: 12px;
+  font-size: 0.8rem;
+}
+
+.remote-sensing-index-legend-ramp {
+  height: 12px;
+  margin-top: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, blue, lime, red);
+}
+
+.remote-sensing-index-legend-range {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.remote-sensing-index-legend-note {
+  margin-top: 3px;
+  opacity: 0.75;
+}
+
+/* Combined Soil & Vegetation Analysis */
+#remoteSensingRail .remote-sensing-analysis {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+#remoteSensingAnalysisDetails {
+  border: 1px solid #d4e1d9;
+  border-radius: 6px;
+  background: #fff;
+}
+
+#remoteSensingAnalysisDetails > summary {
+  padding: 9px 10px;
+  cursor: pointer;
+  font-weight: 700;
+  color: #123c2f;
+  background: #edf4ef;
+  border-radius: 6px;
+}
+
+.remote-sensing-analysis-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 6px 6px 0;
+}
+
+.remote-sensing-analysis-tab {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 4px;
+  border: 1px solid #d4e1d9;
+  border-radius: 5px;
+  background: #f5f8f6;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.remote-sensing-analysis-tab.is-active {
+  background: #dfeee7;
+  border-color: #2d725a;
+  font-weight: 700;
+}
+
+#remoteSensingRail .remote-sensing-analysis-panel {
+  max-height: 130px;
+  margin: 6px;
+  overflow-y: auto;
+}
+
+#remoteSensingRail .remote-sensing-analysis-panel[hidden] {
+  display: none !important;
 }

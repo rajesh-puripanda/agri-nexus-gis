@@ -205,6 +205,18 @@
           "remoteSensingOpacityValue"
         ),
 
+      indexLegend:
+        document.getElementById("remoteSensingIndexLegend"),
+
+      indexLegendTitle:
+        document.getElementById("remoteSensingIndexLegendTitle"),
+
+      indexLegendMin:
+        document.getElementById("remoteSensingIndexLegendMin"),
+
+      indexLegendMax:
+        document.getElementById("remoteSensingIndexLegendMax"),
+
       startDate:
         document.getElementById(
           "remoteSensingStartDate"
@@ -3388,7 +3400,7 @@ observationCount:
       await renderRasterOutput(
         {
           code: "BARE_SOIL_FREQUENCY",
-          name: "Bare Soil Frequency (8–28 Sep 2026)"
+          name: "Bare Soil Frequency (8-28 Sep 2026)"
         },
         "index",
         sequence,
@@ -3437,6 +3449,47 @@ observationCount:
         loadSoilVegetationClassification
       );
     }
+    const classificationTab = document.getElementById(
+      "remoteSensingClassificationTab"
+    );
+    const frequencyTab = document.getElementById(
+      "remoteSensingFrequencyTab"
+    );
+    const classificationPanel = document.getElementById(
+      "remoteSensingClassificationPanel"
+    );
+    const frequencyPanel = document.getElementById(
+      "remoteSensingFrequencyPanel"
+    );
+
+    function selectAnalysisTab(showFrequency) {
+      if (
+        !classificationTab ||
+        !frequencyTab ||
+        !classificationPanel ||
+        !frequencyPanel
+      ) return;
+
+      classificationPanel.hidden = showFrequency;
+      frequencyPanel.hidden = !showFrequency;
+
+      classificationTab.classList.toggle("is-active", !showFrequency);
+      frequencyTab.classList.toggle("is-active", showFrequency);
+
+      classificationTab.setAttribute("aria-selected", String(!showFrequency));
+      frequencyTab.setAttribute("aria-selected", String(showFrequency));
+    }
+
+    classificationTab?.addEventListener(
+      "click",
+      () => selectAnalysisTab(false)
+    );
+    frequencyTab?.addEventListener(
+      "click",
+      () => selectAnalysisTab(true)
+    );
+
+    selectAnalysisTab(false);
     if (close) {
       close.addEventListener(
         "click",

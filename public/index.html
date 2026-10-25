@@ -406,7 +406,6 @@
                 class="remote-sensing-index-grid"
                 aria-label="Soil-focused indices"
               ></div>
-
               <div
                 id="remoteSensingSoilEmpty"
                 class="remote-sensing-category-empty"
@@ -414,46 +413,41 @@
                 No soil-focused indices available.
               </div>
             </section>
+          </div>
+            <div class="remote-sensing-analysis">
+              <details id="remoteSensingAnalysisDetails">
+                <summary>Soil &amp; Vegetation Analysis</summary>
 
-            </div>
-              <section class="remote-sensing-classification-panel">
-                <button
-                  id="remoteSensingSoilVegetationButton"
-                  class="remote-sensing-classification-button"
-                  type="button"
-                >Show Soil &amp; Vegetation Classification</button>
-                <p class="remote-sensing-classification-warning">
-                  Provisional  uncalibrated. Rule-based evidence classes; not a validated land-cover map.
-                </p>
-                <div class="remote-sensing-classification-legend">
-                  <div><span class="classification-swatch vegetation"></span>Vegetation dominant</div>
-                  <div><span class="classification-swatch bare-soil"></span>Bare soil dominant</div>
-                  <div><span class="classification-swatch mixed-evidence"></span>Mixed / other evidence</div>
-                  <div><span class="classification-swatch nodata"></span>NoData (transparent)</div>
+                <div class="remote-sensing-analysis-tabs" role="tablist" aria-label="Soil and vegetation analysis">
+                  <button id="remoteSensingClassificationTab" class="remote-sensing-analysis-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="remoteSensingClassificationPanel">Classification</button>
+                  <button id="remoteSensingFrequencyTab" class="remote-sensing-analysis-tab" type="button" role="tab" aria-selected="false" aria-controls="remoteSensingFrequencyPanel">Bare Soil Frequency</button>
                 </div>
-              </section>
 
-                <section class="remote-sensing-classification-panel">
-      <h3>Bare Soil Frequency</h3>
+                <section id="remoteSensingClassificationPanel" class="remote-sensing-classification-panel remote-sensing-analysis-panel" role="tabpanel" aria-labelledby="remoteSensingClassificationTab">
+                  <button id="remoteSensingSoilVegetationButton" class="remote-sensing-classification-button" type="button">Show Soil &amp; Vegetation Classification</button>
+                  <p class="remote-sensing-classification-warning">Provisional, uncalibrated. Rule-based evidence classes; not a validated land-cover map.</p>
+                  <div class="remote-sensing-classification-legend">
+                    <div><span class="classification-swatch vegetation"></span>Vegetation dominant</div>
+                    <div><span class="classification-swatch bare-soil"></span>Bare soil dominant</div>
+                    <div><span class="classification-swatch mixed-evidence"></span>Mixed / other evidence</div>
+                    <div><span class="classification-swatch nodata"></span>NoData (transparent)</div>
+                  </div>
+                </section>
 
-      <p>Observation range: 8–28 September 2026</p>
-
-      <button
-        id="remoteSensingBareSoilFrequencyButton"
-        class="remote-sensing-classification-button"
-        type="button"
-      >
-        Show Bare Soil Frequency
-      </button>
-
-      <p class="remote-sensing-classification-warning">
-        Provisional and uncalibrated. Estimates use NDVI and BSI evidence rules;
-        ground validation has not been established.
-      </p>
-
-      <p>Scale: 0% (lower frequency) to 100% (higher frequency).</p>
-    </section>
-
+                <section id="remoteSensingFrequencyPanel" class="remote-sensing-classification-panel remote-sensing-analysis-panel" role="tabpanel" aria-labelledby="remoteSensingFrequencyTab" hidden>
+                  <h3>Bare Soil Frequency</h3>
+                  <p>Observation range: 8–28 September 2026</p>
+                  <button id="remoteSensingBareSoilFrequencyButton" class="remote-sensing-classification-button" type="button">Show Bare Soil Frequency</button>
+                  <p class="remote-sensing-classification-warning">Provisional and uncalibrated. Bare-soil evidence uses NDVI &lt; 0.2 and BSI &ge; 0.2. Frequency represents the proportion of 2 observations meeting these rules; ground validation has not been established.</p>
+                  <div class="remote-sensing-classification-legend bare-soil-frequency-legend">
+                    <div><span class="classification-swatch frequency-zero"></span>0% — 0 of 2 observations</div>
+                    <div><span class="classification-swatch frequency-half"></span>50% — 1 of 2 observations</div>
+                    <div><span class="classification-swatch frequency-full"></span>100% — 2 of 2 observations</div>
+                    <div><span class="classification-swatch nodata"></span>NoData (transparent)</div>
+                  </div>
+                </section>
+              </details>
+            </div>
 
             <div
               id="remoteSensingLayerControls"
@@ -491,6 +485,19 @@
                   disabled
                 />
               </div>
+              <div id="remoteSensingIndexLegend" class="remote-sensing-index-legend is-hidden">
+              <div id="remoteSensingIndexLegendTitle" class="remote-sensing-control-label">
+                Index value
+              </div>
+              <div class="remote-sensing-index-legend-ramp"></div>
+              <div class="remote-sensing-index-legend-range">
+                <span id="remoteSensingIndexLegendMin">Min</span>
+                <span id="remoteSensingIndexLegendMax">Max</span>
+              </div>
+              <div class="remote-sensing-index-legend-note">
+                Blue → Green → Red
+              </div>
+            </div>
             </div>
 
             <div
