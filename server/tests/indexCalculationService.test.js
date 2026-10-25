@@ -205,6 +205,36 @@ test("custom EVI parameters are accepted", () => {
   assert.ok(Number.isFinite(value));
 });
 
+test("MSI calculates SWIR1 divided by NIR", () => {
+  assert.equal(
+    calculateScalarIndex({
+      indexCode: "MSI",
+      inputs: { SWIR1: 0.3, NIR: 0.6 },
+    }),
+    0.5
+  );
+});
+
+test("MSI rejects a zero NIR denominator", () => {
+  assert.throws(
+    () => calculateScalarIndex({
+      indexCode: "MSI",
+      inputs: { SWIR1: 0.3, NIR: 0 },
+    }),
+    (error) => error.code === "INDEX_ZERO_DENOMINATOR"
+      && error.indexCode === "MSI"
+  );
+});
+
+test("MSI rejects non-finite band values", () => {
+  assert.throws(
+    () => calculateScalarIndex({
+      indexCode: "MSI",
+      inputs: { SWIR1: Number.NaN, NIR: 0.6 },
+    }),
+    /finite/
+  );
+});
 test("non-finite band values are rejected", () => {
   assert.throws(
     () =>
@@ -433,5 +463,34 @@ test("NDSI rejects non-finite band values", () => {
         },
       }),
     /Band SWIR1 must be a finite number/
+  );
+});
+
+test("NBR calculates correctly", () => {
+  const value = calculateScalarIndex({
+    indexCode: "NBR",
+    inputs: { NIR: 0.8, SWIR2: 0.2 },
+  });
+
+  assertApproximately(value, 0.6);
+});
+
+test("NBR zero denominator is rejected", () => {
+  assert.throws(
+    () => calculateScalarIndex({
+      indexCode: "NBR",
+      inputs: { NIR: 0, SWIR2: 0 },
+    }),
+    /NIR \+ SWIR2 equals zero/
+  );
+});
+
+test("NBR rejects non-finite band values", () => {
+  assert.throws(
+    () => calculateScalarIndex({
+      indexCode: "NBR",
+      inputs: { NIR: NaN, SWIR2: 0.2 },
+    }),
+    /Band NIR must be a finite number/
   );
 });

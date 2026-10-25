@@ -33,6 +33,8 @@ const bsiDefinition = require("./bsi");
 const sbiDefinition = require("./sbi");
 const ndsiDefinition = require("./ndsi");
 const ssmiDefinition = require("./ssmi");
+const msiDefinition = require("./msi");
+const nbrDefinition = require("./nbr");
 
 const INDEX_DEFINITIONS = Object.freeze([
   ndviDefinition,
@@ -46,6 +48,8 @@ const INDEX_DEFINITIONS = Object.freeze([
   sbiDefinition,
   ndsiDefinition,
   ssmiDefinition,
+  msiDefinition,
+  nbrDefinition,
 ]);
 
 const INDEX_BY_CODE = Object.freeze(
@@ -112,5 +116,3 @@ module.exports = {
   hasIndexDefinition,
   validateIndexRegistry,
 };
-
-

@@ -186,6 +186,21 @@ function calculateNDWI(inputs) {
   );
 }
 
+function calculateMSI(inputs) {
+  assertFiniteBandValue("SWIR1", inputs.SWIR1);
+  assertFiniteBandValue("NIR", inputs.NIR);
+
+  if (inputs.NIR === 0) {
+    const error = new Error("Cannot calculate MSI: NIR denominator equals zero.");
+    error.code = "INDEX_ZERO_DENOMINATOR";
+    error.indexCode = "MSI";
+    error.numeratorBand = "SWIR1";
+    error.denominatorBand = "NIR";
+    throw error;
+  }
+
+  return inputs.SWIR1 / inputs.NIR;
+}
 function calculateNDMI(inputs) {
   return calculateNormalizedDifference(
     inputs.NIR,
@@ -209,6 +224,14 @@ function calculateSSMI(inputs) {
     inputs.SWIR1,
     inputs.SWIR2,
     "SWIR1",
+    "SWIR2"
+  );
+}
+function calculateNBR(inputs) {
+  return calculateNormalizedDifference(
+    inputs.NIR,
+    inputs.SWIR2,
+    "NIR",
     "SWIR2"
   );
 }
@@ -316,6 +339,9 @@ function calculateScalarIndex({
       value = calculateNDWI(inputs);
       break;
 
+    case "MSI":
+      value = calculateMSI(inputs);
+      break;
     case "NDMI":
       value = calculateNDMI(inputs);
       break;
@@ -325,6 +351,10 @@ function calculateScalarIndex({
       break;
     case "NDSI":
       value = calculateNDSI(inputs);
+      break;
+
+    case "NBR":
+      value = calculateNBR(inputs);
       break;
 
     case "BSI":
@@ -414,5 +444,3 @@ module.exports = {
   calculateScalarIndex,
   calculateRemoteSensingIndex,
 };
-
-

@@ -16,8 +16,8 @@ test("index registry exposes a version", () => {
   assert.equal(INDEX_REGISTRY_VERSION, "1.0");
 });
 
-test("index registry contains the eleven registered definitions", () => {
-  assert.equal(INDEX_DEFINITIONS.length, 11);
+test("index registry contains the thirteen registered definitions", () => {
+  assert.equal(INDEX_DEFINITIONS.length, 13);
 });
 
 test("index registry contains unique index codes", () => {
@@ -42,13 +42,15 @@ test("index registry contains unique index codes", () => {
     "SBI",
     "NDSI",
     "SSMI",
+    "MSI",
+      "NBR",
   ]);
 });
 
 test("getAllIndexDefinitions returns the registry definitions", () => {
   const definitions = getAllIndexDefinitions();
 
-  assert.equal(definitions.length, 11);
+  assert.equal(definitions.length, 13);
   assert.equal(definitions[0].code, "NDVI");
   assert.equal(definitions[6].code, "NDMI");
   assert.equal(definitions[7].code, "BSI");
@@ -95,7 +97,7 @@ test("index registry passes scientific definition validation", () => {
 
   assert.equal(result.valid, true);
   assert.deepEqual(result.errors, []);
-  assert.equal(result.count, 11);
+  assert.equal(result.count, 13);
 });
 
 test("index registry definitions remain immutable", () => {

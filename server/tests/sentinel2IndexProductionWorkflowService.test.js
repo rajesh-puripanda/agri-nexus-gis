@@ -1750,3 +1750,221 @@ test(
         }
     }
 );
+
+test(
+    "processSentinel2IndexProductionWorkflow resolves MSI NIR and SWIR1 across 10m and 20m",
+    async () => {
+        let preparationRequest = null;
+        let rasterRequest = null;
+
+        const preparationImpl = async (request) => {
+            preparationRequest = request;
+
+            return {
+                workflowVersion: "1.0",
+                sceneId: "S2C_MSI_TEST_SCENE",
+                acquisitionDate: "2026-09-08",
+                outputDirectory: request.outputDirectory,
+                outputs: {
+                    10: {
+                        resolution: 10,
+                        bands: ["Blue", "Green", "Red", "NIR"],
+                        outputPath: "prepared-10m.tif",
+                    },
+                    20: {
+                        resolution: 20,
+                        bands: [
+                            "RedEdge1",
+                            "RedEdge2",
+                            "RedEdge3",
+                            "RedEdge4",
+                            "SWIR1",
+                            "SWIR2",
+                        ],
+                        outputPath: "prepared-20m.tif",
+                    },
+                },
+            };
+        };
+
+        const indexWorkflowImpl = async (request) => {
+            rasterRequest = request;
+
+            return {
+                indexCode: request.indexCode,
+                targetResolution: request.targetResolution,
+                sources: request.sources,
+                result: {
+                    results: {
+                        raster: {
+                            width: 2,
+                            height: 2,
+                            pixelCount: 4,
+                            bands: {
+                                MSI: {
+                                    dataType: "Float32",
+                                    data: [1.2, 1.3, 1.4, 1.5],
+                                },
+                            },
+                        },
+                    },
+                },
+            };
+        };
+
+        const result = await processSentinel2IndexProductionWorkflow({
+            request: {
+                indexCode: "MSI",
+                parameters: {},
+            },
+            outputDirectory: "test-output",
+            targetResolution: 10,
+            preparationImpl,
+            indexWorkflowImpl,
+            postProcessingImpl: async () => ({
+                outputPaths: {
+                    continuous: "MSI_index.tif",
+                    classification: "MSI_classification.tif",
+                },
+            }),
+        });
+
+        assert.equal(result.indexCode, "MSI");
+        assert.equal(result.targetResolution, 10);
+
+        assert.deepEqual(preparationRequest.bandNames, ["SWIR1", "NIR"]);
+
+        assert.deepEqual(
+            result.sources.map(({ band, inputPath, sourceBand }) => ({
+                band,
+                inputPath,
+                sourceBand,
+            })),
+            [
+                {
+                    band: "SWIR1",
+                    inputPath: "prepared-20m.tif",
+                    sourceBand: 5,
+                },
+                {
+                    band: "NIR",
+                    inputPath: "prepared-10m.tif",
+                    sourceBand: 4,
+                },
+            ]
+        );
+
+        assert.equal(rasterRequest.indexCode, "MSI");
+        assert.equal(rasterRequest.targetResolution, 10);
+        assert.deepEqual(rasterRequest.sources, result.sources);
+    }
+);
+
+test(
+    "processSentinel2IndexProductionWorkflow resolves NBR NIR and SWIR2 across 10m and 20m",
+    async () => {
+        let preparationRequest = null;
+        let rasterRequest = null;
+
+        const preparationImpl = async (request) => {
+            preparationRequest = request;
+
+            return {
+                workflowVersion: "1.0",
+                sceneId: "S2C_NBR_TEST_SCENE",
+                acquisitionDate: "2026-09-08",
+                outputDirectory: request.outputDirectory,
+                outputs: {
+                    10: {
+                        resolution: 10,
+                        bands: ["Blue", "Green", "Red", "NIR"],
+                        outputPath: "prepared-10m.tif",
+                    },
+                    20: {
+                        resolution: 20,
+                        bands: [
+                            "RedEdge1",
+                            "RedEdge2",
+                            "RedEdge3",
+                            "RedEdge4",
+                            "SWIR1",
+                            "SWIR2",
+                        ],
+                        outputPath: "prepared-20m.tif",
+                    },
+                },
+            };
+        };
+
+        const indexWorkflowImpl = async (request) => {
+            rasterRequest = request;
+
+            return {
+                indexCode: request.indexCode,
+                targetResolution: request.targetResolution,
+                sources: request.sources,
+                result: {
+                    results: {
+                        raster: {
+                            width: 2,
+                            height: 2,
+                            pixelCount: 4,
+                            bands: {
+                                NBR: {
+                                    dataType: "Float32",
+                                    data: [1.2, 1.3, 1.4, 1.5],
+                                },
+                            },
+                        },
+                    },
+                },
+            };
+        };
+
+        const result = await processSentinel2IndexProductionWorkflow({
+            request: {
+                indexCode: "NBR",
+                parameters: {},
+            },
+            outputDirectory: "test-output",
+            targetResolution: 10,
+            preparationImpl,
+            indexWorkflowImpl,
+            postProcessingImpl: async () => ({
+                outputPaths: {
+                    continuous: "NBR_index.tif",
+                    classification: "NBR_classification.tif",
+                },
+            }),
+        });
+
+        assert.equal(result.indexCode, "NBR");
+        assert.equal(result.targetResolution, 10);
+
+        assert.deepEqual(preparationRequest.bandNames, ["NIR", "SWIR2"]);
+
+        assert.deepEqual(
+            result.sources.map(({ band, inputPath, sourceBand }) => ({
+                band,
+                inputPath,
+                sourceBand,
+            })),
+            [
+                {
+                    band: "NIR",
+                    inputPath: "prepared-10m.tif",
+                    sourceBand: 4,
+                },
+                {
+                    band: "SWIR2",
+                    inputPath: "prepared-20m.tif",
+                    sourceBand: 6,
+                },
+            ]
+        );
+
+        assert.equal(rasterRequest.indexCode, "NBR");
+        assert.equal(rasterRequest.targetResolution, 10);
+        assert.deepEqual(rasterRequest.sources, result.sources);
+    }
+);
