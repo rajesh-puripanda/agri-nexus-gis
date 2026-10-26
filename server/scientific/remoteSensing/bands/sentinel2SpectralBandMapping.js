@@ -34,7 +34,8 @@ const SENTINEL2_SPECTRAL_BAND_MAPPING =
         Green: "Green",
         Red: "Red",
         NIR: "NIR",
-
+        RedEdge1: "RedEdge1",
+        RedEdge4: "RedEdge4",
         // Backward-compatible generic SWIR alias.
         SWIR: "SWIR1",
 

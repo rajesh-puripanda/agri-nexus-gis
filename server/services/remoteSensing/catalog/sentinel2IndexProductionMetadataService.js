@@ -22,6 +22,10 @@ const SENTINEL2_INDEX_PRODUCTION_METADATA_VERSION = "1.0";
 const METADATA_FILE_NAME =
     "production_metadata.json";
 
+const {
+    getIndexDefinition
+} = require("../../../scientific/remoteSensing/indices/indexRegistry");
+
 function assertNonEmptyString(value, name) {
     if (
         typeof value !== "string" ||
@@ -60,7 +64,7 @@ function buildProductMetadata({
     workflowResult,
     outputDirectory
 }) {
-    assertObject(
+        assertObject(
         workflowResult,
         "workflowResult"
     );
@@ -78,14 +82,10 @@ function buildProductMetadata({
             "workflowResult.outputProcessing is required."
         );
     }
-
     const outputPaths =
-        workflowResult.outputProcessing.outputPaths;
+        workflowResult.outputProcessing?.outputPaths;
 
-    if (
-        !outputPaths ||
-        typeof outputPaths !== "object"
-    ) {
+    if (!outputPaths || typeof outputPaths !== "object") {
         throw new Error(
             "workflowResult.outputProcessing.outputPaths is required."
         );
@@ -96,48 +96,45 @@ function buildProductMetadata({
         "outputPaths.continuous"
     );
 
-    assertNonEmptyString(
-        outputPaths.classification,
-        "outputPaths.classification"
+    const definition = getIndexDefinition(
+        workflowResult.indexCode
     );
 
+    const supportsClassification =
+        Array.isArray(
+            definition?.classificationRules?.classes
+        ) &&
+        definition.classificationRules.classes.length > 0;
+
+    if (supportsClassification) {
+        assertNonEmptyString(
+            outputPaths.classification,
+            "outputPaths.classification"
+        );
+    }
+
     return {
-        indexCode:
-            workflowResult.indexCode,
-
-        indexName:
-            workflowResult.indexName,
-
-        sceneId:
-            workflowResult.sceneId,
-
-        acquisitionDate:
-            normalizeDate(
-                workflowResult.acquisitionDate
-            ),
-
-        targetResolution:
-            workflowResult.targetResolution,
-
-        workflowVersion:
-            workflowResult.workflowVersion,
-
-        requiredBands:
-            workflowResult.requiredBands,
+        indexCode: workflowResult.indexCode,
+        indexName: workflowResult.indexName,
+        sceneId: workflowResult.sceneId,
+        acquisitionDate: normalizeDate(
+            workflowResult.acquisitionDate
+        ),
+        targetResolution: workflowResult.targetResolution,
+        workflowVersion: workflowResult.workflowVersion,
+        requiredBands: workflowResult.requiredBands,
 
         outputs: {
-            continuous:
-                path.basename(
-                    outputPaths.continuous
-                ),
+            continuous: path.basename(outputPaths.continuous),
 
-            classification:
-                path.basename(
-                    outputPaths.classification
-                )
-        },
-
-
+            ...(supportsClassification
+                ? {
+                    classification: path.basename(
+                        outputPaths.classification
+                    )
+                }
+                : {})
+        }
     };
 }
 
@@ -256,9 +253,11 @@ async function writeProductionMetadata({
     filteredProducts.push({
         ...product,
 
-        availability: {
+       availability: {
             continuous: true,
-            classification: true
+            classification: Boolean(
+                product.outputs?.classification
+            )
         }
     });
 

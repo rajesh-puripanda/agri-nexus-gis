@@ -142,6 +142,15 @@ function calculateGNDVI(inputs) {
   );
 }
 
+function calculateNDRE(inputs) {
+  return calculateNormalizedDifference(
+    inputs.RedEdge4,
+    inputs.RedEdge1,
+    "RedEdge4",
+    "RedEdge1"
+  );
+}
+
 function calculateARVI(inputs, parameters) {
   assertFiniteBandValue("NIR", inputs.NIR);
   assertFiniteBandValue("Red", inputs.Red);
@@ -323,9 +332,12 @@ function calculateScalarIndex({
         resolvedParameters
       );
       break;
-
     case "GNDVI":
       value = calculateGNDVI(inputs);
+      break;
+
+    case "NDRE":
+      value = calculateNDRE(inputs);
       break;
 
     case "ARVI":

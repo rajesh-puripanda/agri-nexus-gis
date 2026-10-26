@@ -1968,3 +1968,116 @@ test(
         assert.deepEqual(rasterRequest.sources, result.sources);
     }
 );
+
+test(
+    "processSentinel2IndexProductionWorkflow resolves NDRE bands at 20m without classification",
+    async () => {
+        let rasterRequest;
+        let postProcessingRequest;
+
+        const preparationImpl = async (request) => ({
+            workflowVersion: "1.0",
+            sceneId: "S2C_TEST_SCENE",
+            acquisitionDate: "2026-09-08",
+            outputDirectory: request.outputDirectory,
+            outputs: {
+                20: {
+                    resolution: 20,
+                    bands: [
+                        "RedEdge1",
+                        "RedEdge2",
+                        "RedEdge3",
+                        "RedEdge4",
+                        "SWIR1",
+                        "SWIR2",
+                    ],
+                    outputPath: "prepared-20m.tif",
+                },
+            },
+        });
+
+        const calculationResult = {
+            results: {
+                raster: {
+                    contractVersion: "1.0",
+                    width: 2,
+                    height: 2,
+                    pixelCount: 4,
+                    bands: {
+                        NDRE: {
+                            dataType: "Float32",
+                            data: [0.1, 0.2, 0.3, 0.4],
+                        },
+                    },
+                },
+            },
+            analysisVersion: "1.0",
+            timestamp: "2026-09-08T00:00:00.000Z",
+        };
+
+        const indexWorkflowImpl = async (request) => {
+            rasterRequest = request;
+            return {
+                indexCode: request.indexCode,
+                targetResolution: request.targetResolution,
+                result: calculationResult,
+            };
+        };
+
+        const postProcessingImpl = async (request) => {
+            postProcessingRequest = request;
+            return {
+                outputPaths: {
+                    continuous: "NDRE_index.tif",
+                },
+            };
+        };
+
+        const result =
+            await processSentinel2IndexProductionWorkflow({
+                request: {
+                    indexCode: "NDRE",
+                    parameters: {},
+                },
+                outputDirectory: "test-output",
+                targetResolution: 20,
+                preparationImpl,
+                indexWorkflowImpl,
+                postProcessingImpl,
+            });
+
+        assert.equal(result.indexCode, "NDRE");
+        assert.equal(result.targetResolution, 20);
+
+        assert.deepEqual(
+            result.sources.map(({ band, inputPath, sourceBand }) => ({
+                band,
+                inputPath,
+                sourceBand,
+            })),
+            [
+                {
+                    band: "RedEdge4",
+                    inputPath: "prepared-20m.tif",
+                    sourceBand: 4,
+                },
+                {
+                    band: "RedEdge1",
+                    inputPath: "prepared-20m.tif",
+                    sourceBand: 1,
+                },
+            ]
+        );
+
+        assert.deepEqual(
+            rasterRequest.sources,
+            result.sources
+        );
+
+        assert.equal(postProcessingRequest.indexCode, "NDRE");
+        assert.deepEqual(
+            result.outputProcessing.outputPaths,
+            { continuous: "NDRE_index.tif" }
+        );
+    }
+);

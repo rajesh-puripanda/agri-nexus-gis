@@ -494,3 +494,34 @@ test("NBR rejects non-finite band values", () => {
     /Band NIR must be a finite number/
   );
 });
+
+test("NDRE calculates normalized difference of RedEdge4 and RedEdge1", () => {
+  assert.ok(
+    Math.abs(
+      calculateScalarIndex({
+        indexCode: "NDRE",
+        inputs: { RedEdge4: 0.6, RedEdge1: 0.2 },
+      }) - 0.5
+    ) < 1e-12
+  );
+});
+
+test("NDRE rejects a zero denominator", () => {
+  assert.throws(
+    () => calculateScalarIndex({
+      indexCode: "NDRE",
+      inputs: { RedEdge4: 0, RedEdge1: 0 },
+    }),
+    (error) => error.code === "INDEX_ZERO_DENOMINATOR"
+  );
+});
+
+test("NDRE rejects non-finite band values", () => {
+  assert.throws(
+    () => calculateScalarIndex({
+      indexCode: "NDRE",
+      inputs: { RedEdge4: Number.NaN, RedEdge1: 0.2 },
+    }),
+    /finite/
+  );
+});

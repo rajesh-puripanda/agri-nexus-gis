@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const fs = require("node:fs/promises");
 const path = require("node:path");
@@ -117,6 +117,10 @@ async function publishProductionOutputs({
 }) {
     const paths = outputProcessing &&
         outputProcessing.outputPaths;
+    const definition = getIndexDefinition(indexCode);
+    const supportsClassification =
+        Array.isArray(definition?.classificationRules?.classes) &&
+        definition.classificationRules.classes.length > 0;
 
     assertNonEmptyString(
         paths && paths.continuous,
@@ -135,22 +139,29 @@ async function publishProductionOutputs({
     const pathModule = require("node:path");
     const { randomUUID } = require("node:crypto");
 
+    const outputDirectory = pathModule.resolve(
+    analyticalOutputDirectory
+);
+
     const outputs = [
         {
             source: pathModule.resolve(paths.continuous),
             destination: pathModule.join(
-                pathModule.resolve(analyticalOutputDirectory),
+                outputDirectory,
                 `${indexCode}_index.tif`
             ),
         },
-        {
+    ];
+
+    if (supportsClassification) {
+        outputs.push({
             source: pathModule.resolve(paths.classification),
             destination: pathModule.join(
-                pathModule.resolve(analyticalOutputDirectory),
+                outputDirectory,
                 `${indexCode}_classification.tif`
             ),
-        },
-    ];
+        });
+    }
 
     // Preflight every source before staging or replacing stable files.
     for (const output of outputs) {
@@ -461,10 +472,15 @@ function validateOutputProcessing(outputProcessing, indexCode) {
     }
 
     const paths = outputProcessing.outputPaths;
+    const definition = getIndexDefinition(indexCode);
+    const supportsClassification =
+        Array.isArray(definition?.classificationRules?.classes) &&
+        definition.classificationRules.classes.length > 0;
 
-    if (!paths || typeof paths !== "object") {
-        throw new Error(
-            `${indexCode} post-processing returned no outputPaths.`
+    if (supportsClassification) {
+        assertNonEmptyString(
+            paths && paths.classification,
+            `${indexCode} classification production output path`
         );
     }
 
@@ -473,10 +489,6 @@ function validateOutputProcessing(outputProcessing, indexCode) {
         `${indexCode} continuous output path`
     );
 
-    assertNonEmptyString(
-        paths.classification,
-        `${indexCode} classification output path`
-    );
 }
 
 async function processSentinel2IndexProductionWorkflow({

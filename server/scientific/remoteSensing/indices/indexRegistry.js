@@ -23,6 +23,7 @@ const ndviDefinition = require("./ndvi");
 const eviDefinition = require("./evi");
 const saviDefinition = require("./savi");
 const gndviDefinition = require("./gndvi");
+const ndreDefinition = require("./ndre");
 const arviDefinition = require("./arvi");
 const ndwiDefinition = require("./ndwi");
 const ndmiDefinition = require("./ndmi");
@@ -41,6 +42,7 @@ const INDEX_DEFINITIONS = Object.freeze([
   eviDefinition,
   saviDefinition,
   gndviDefinition,
+  ndreDefinition,
   arviDefinition,
   ndwiDefinition,
   ndmiDefinition,

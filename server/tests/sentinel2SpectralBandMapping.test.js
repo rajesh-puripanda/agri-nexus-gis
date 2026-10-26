@@ -127,6 +127,8 @@ test(
                 SWIR: "SWIR1",
                 SWIR1: "SWIR1",
                 SWIR2: "SWIR2",
+                RedEdge1: "RedEdge1",
+                RedEdge4: "RedEdge4",
             }
         );
 
