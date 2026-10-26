@@ -180,6 +180,9 @@
         }
       );
 
+      const remoteBottomRail = document.getElementById("remoteSensingBottomRail");
+      remoteBottomRail?.classList.toggle("workspace-hidden", workspace !== "remote");
+
       activeWorkspace =
         workspace;
 
@@ -303,6 +306,9 @@
         "workspace-report-focus"
       );
     }
+
+    const remoteBottomRail = document.getElementById("remoteSensingBottomRail");
+    remoteBottomRail?.classList.toggle("workspace-hidden", workspace !== "remote");
 
     activeWorkspace =
       workspace;

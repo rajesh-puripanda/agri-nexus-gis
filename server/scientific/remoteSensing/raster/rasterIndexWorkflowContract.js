@@ -36,8 +36,7 @@ const REQUIRED_WORKFLOW_FIELDS = [
     "indexCode",
     "input",
     "processing",
-    "continuousOutput",
-    "classificationOutput"
+    "continuousOutput"
 ];
 
 const REQUIRED_INPUT_FIELDS = [
@@ -49,8 +48,7 @@ const REQUIRED_INPUT_FIELDS = [
 
 const REQUIRED_PROCESSING_FIELDS = [
     "indexCode",
-    "indexName",
-    "classificationMethod"
+    "indexName"
 ];
 
 const REQUIRED_OUTPUT_FIELDS = [
@@ -92,6 +90,15 @@ function normalizeIndexCode(indexCode) {
     }
 
     return indexCode.trim().toUpperCase();
+}
+
+function supportsClassification(definition) {
+    return (
+        Array.isArray(
+            definition?.classificationRules?.classes
+        ) &&
+        definition.classificationRules.classes.length > 0
+    );
 }
 
 function validateRequiredFields(
@@ -287,9 +294,12 @@ function validateProcessing(
     }
 
     if (
-        typeof processing.classificationMethod !==
-            "string" ||
-        !processing.classificationMethod.trim()
+        supportsClassification(definition) &&
+        (
+            typeof processing.classificationMethod !==
+                "string" ||
+            !processing.classificationMethod.trim()
+        )
     ) {
         errors.push(
             "processing.classificationMethod must be a non-empty string"
@@ -543,11 +553,23 @@ function validateRasterIndexWorkflowResult(
         );
     }
 
-    if (
+    const hasClassificationOutput =
         Object.prototype.hasOwnProperty.call(
             result,
             "classificationOutput"
-        ) &&
+        );
+
+    if (
+        supportsClassification(definition) &&
+        !hasClassificationOutput
+    ) {
+        errors.push(
+            "result.classificationOutput is required for classified indices"
+        );
+    }
+
+    if (
+        hasClassificationOutput &&
         indexCode
     ) {
         errors.push(
@@ -654,7 +676,9 @@ function createRasterIndexWorkflowResultContract({
         input,
         processing,
         continuousOutput,
-        classificationOutput
+        ...(classificationOutput !== undefined
+            ? { classificationOutput }
+            : {})
     };
 }
 

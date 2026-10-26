@@ -9,29 +9,13 @@
 // Shared Raster Index Post-Processing Service
 //
 // Responsibilities:
-//   - Classify an already-calculated continuous index raster.
 //   - Build continuous output raster representation.
-//   - Build classification output raster representation.
 //   - Write continuous index GeoTIFF.
-//   - Write classification GeoTIFF.
+//   - Classify and write classification GeoTIFF when supported.
 //
-// This service does NOT:
-//   - read input rasters
-//   - validate source rasters
-//   - normalize source rasters
-//   - resample
-//   - reproject
-//   - calculate scientific indices
-//   - redefine classification thresholds
-//
-// Scientific calculation remains in:
-//   rasterIndexProcessingService
-//
-// Classification remains in:
-//   rasterIndexClassificationService
-//
-// GeoTIFF writing remains in:
-//   rasterOutputService
+// Scientific calculation remains in rasterIndexProcessingService.
+// Classification remains in rasterIndexClassificationService.
+// GeoTIFF writing remains in rasterOutputService.
 // ============================================================
 
 const path = require("node:path");
@@ -48,6 +32,12 @@ const {
     RASTER_INDEX_CLASSIFICATION_CONTRACT_VERSION
 } = require(
     "../../../scientific/remoteSensing/raster/rasterIndexClassificationContract"
+);
+
+const {
+    getIndexDefinition
+} = require(
+    "../../../scientific/remoteSensing/indices/indexRegistry"
 );
 
 function assertNonEmptyString(value, name) {
@@ -67,10 +57,8 @@ function createContinuousOutputRaster({
 }) {
     return {
         ...raster,
-
         bands: {
             ...raster.bands,
-
             [indexCode]: {
                 ...raster.bands[indexCode],
                 dataType: "Float32"
@@ -85,10 +73,8 @@ function createClassificationOutputRaster({
 }) {
     return {
         ...raster,
-
         bands: {
             ...raster.bands,
-
             [indexCode]: {
                 ...raster.bands[indexCode],
                 dataType: "Uint8"
@@ -101,28 +87,18 @@ function buildOutputPaths({
     outputDirectory,
     indexCode
 }) {
-    assertNonEmptyString(
-        outputDirectory,
-        "outputDirectory"
-    );
-
-    assertNonEmptyString(
-        indexCode,
-        "indexCode"
-    );
+    assertNonEmptyString(outputDirectory, "outputDirectory");
+    assertNonEmptyString(indexCode, "indexCode");
 
     return {
-        continuous:
-            path.join(
-                outputDirectory,
-                `${indexCode}_index.tif`
-            ),
-
-        classification:
-            path.join(
-                outputDirectory,
-                `${indexCode}_classification.tif`
-            )
+        continuous: path.join(
+            outputDirectory,
+            `${indexCode}_index.tif`
+        ),
+        classification: path.join(
+            outputDirectory,
+            `${indexCode}_classification.tif`
+        )
     };
 }
 
@@ -134,20 +110,9 @@ async function processAndWriteRasterIndexOutputs({
     processingContext,
     spatialContext
 }) {
-    assertNonEmptyString(
-        indexCode,
-        "indexCode"
-    );
-
-    assertNonEmptyString(
-        indexName,
-        "indexName"
-    );
-
-    assertNonEmptyString(
-        outputDirectory,
-        "outputDirectory"
-    );
+    assertNonEmptyString(indexCode, "indexCode");
+    assertNonEmptyString(indexName, "indexName");
+    assertNonEmptyString(outputDirectory, "outputDirectory");
 
     if (
         !calculationResult ||
@@ -158,157 +123,111 @@ async function processAndWriteRasterIndexOutputs({
         );
     }
 
-    if (
-        !calculationResult.results ||
-        !calculationResult.results.raster
-    ) {
+    if (!calculationResult.results?.raster) {
         throw new Error(
             "calculationResult must contain results.raster"
         );
     }
+
+    const definition = getIndexDefinition(indexCode);
+
+    if (!definition) {
+        throw new Error(`Unknown raster index: ${indexCode}`);
+    }
+
+    const supportsClassification =
+        Array.isArray(definition.classificationRules?.classes) &&
+        definition.classificationRules.classes.length > 0;
 
     const continuousRaster =
         calculationResult.results.raster;
 
     const continuousOutputRaster =
         createContinuousOutputRaster({
-            raster:
-                continuousRaster,
-
+            raster: continuousRaster,
             indexCode
         });
+
+    const outputPaths = buildOutputPaths({
+        outputDirectory,
+        indexCode
+    });
+
+    const continuousOutputMetadata = {
+        format: "GeoTIFF",
+        indexName,
+        processingType: "pixelwise_scalar_index",
+        analysisVersion: calculationResult.analysisVersion,
+        sourceRasterContractVersion: continuousRaster.contractVersion,
+        timestamp: calculationResult.timestamp
+    };
+
+    const continuousOutput = await writeRasterOutput({
+        request: {
+            outputType: "continuous_index",
+            indexCode,
+            raster: continuousOutputRaster,
+            outputMetadata: continuousOutputMetadata
+        },
+        outputPath: outputPaths.continuous
+    });
+
+    if (!supportsClassification) {
+        return {
+            continuousRaster,
+            continuousOutputRaster,
+            outputPaths,
+            continuousOutput
+        };
+    }
 
     const classificationResult =
         processRasterIndexClassification({
             indexCode,
-
-            raster:
-                continuousRaster,
-
+            raster: continuousRaster,
             processingContext,
-
             spatialContext
         });
 
-    const classificationRaster =
-        classificationResult
-            .classification
-            .raster;
-
     const classificationOutputRaster =
         createClassificationOutputRaster({
-            raster:
-                classificationRaster,
-
+            raster: classificationResult.classification.raster,
             indexCode
-        });
-
-    const outputPaths =
-        buildOutputPaths({
-            outputDirectory,
-            indexCode
-        });
-
-    const continuousOutputMetadata = {
-        format: "GeoTIFF",
-
-        indexName,
-
-        processingType:
-            "pixelwise_scalar_index",
-
-        analysisVersion:
-            calculationResult.analysisVersion,
-
-        sourceRasterContractVersion:
-            continuousRaster.contractVersion,
-
-        timestamp:
-            calculationResult.timestamp
-    };
-
-    const continuousOutput =
-        await writeRasterOutput({
-            request: {
-                outputType:
-                    "continuous_index",
-
-                indexCode,
-
-                raster:
-                    continuousOutputRaster,
-
-                outputMetadata:
-                    continuousOutputMetadata
-            },
-
-            outputPath:
-                outputPaths.continuous
         });
 
     const classificationOutputMetadata = {
         format: "GeoTIFF",
-
         indexName,
-
-        processingType:
-            "pixelwise_raster_classification",
-
+        processingType: "pixelwise_raster_classification",
         classificationMethod:
-            classificationResult
-                .classification
-                .method,
-
+            classificationResult.classification.method,
         analysisVersion:
             RASTER_INDEX_CLASSIFICATION_CONTRACT_VERSION,
-
-        sourceRasterContractVersion:
-            continuousRaster.contractVersion,
-
-        timestamp:
-            classificationResult.timestamp
+        sourceRasterContractVersion: continuousRaster.contractVersion,
+        timestamp: classificationResult.timestamp
     };
 
-    const classificationOutput =
-        await writeRasterOutput({
-            request: {
-                outputType:
-                    "classification",
-
-                indexCode,
-
-                raster:
-                    classificationOutputRaster,
-
-                classification: {
-                    method:
-                        classificationResult
-                            .classification
-                            .method,
-
-                    classDefinitions:
-                        classificationResult
-                            .classification
-                            .classDefinitions
-                },
-
-                outputMetadata:
-                    classificationOutputMetadata
+    const classificationOutput = await writeRasterOutput({
+        request: {
+            outputType: "classification",
+            indexCode,
+            raster: classificationOutputRaster,
+            classification: {
+                method: classificationResult.classification.method,
+                classDefinitions:
+                    classificationResult.classification.classDefinitions
             },
-
-            outputPath:
-                outputPaths.classification
-        });
+            outputMetadata: classificationOutputMetadata
+        },
+        outputPath: outputPaths.classification
+    });
 
     return {
         continuousRaster,
         classificationResult,
-
         continuousOutputRaster,
         classificationOutputRaster,
-
         outputPaths,
-
         continuousOutput,
         classificationOutput
     };
@@ -320,4 +239,3 @@ module.exports = {
     buildOutputPaths,
     processAndWriteRasterIndexOutputs
 };
-

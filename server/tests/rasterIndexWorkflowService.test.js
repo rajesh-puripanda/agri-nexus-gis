@@ -857,12 +857,28 @@ test(
                         NIR: 4,
                         SWIR: 5
                     }
+                },
+
+                {
+                    indexCode: "MSI",
+                    bandMapping: {
+                        NIR: 4,
+                        SWIR1: 5
+                    }
+                },
+
+                {
+                    indexCode: "NBR",
+                    bandMapping: {
+                        NIR: 4,
+                        SWIR2: 5
+                    }
                 }
             ];
 
             assert.equal(
                 indexCases.length,
-                7
+                9
             );
 
             for (const indexCase of indexCases) {
@@ -880,6 +896,10 @@ test(
                     definition,
                     `Missing registry definition for ${indexCode}`
                 );
+
+                const supportsClassification =
+                    Array.isArray(definition.classificationRules?.classes) &&
+                    definition.classificationRules.classes.length > 0;
 
                 const result =
                     await processRasterIndexWorkflow({
@@ -938,10 +958,15 @@ test(
                     definition.name
                 );
 
-                assert.equal(
-                    result.processing.classificationMethod,
-                    "baseline_qualitative"
-                );
+                if (supportsClassification) {
+                    assert.equal(
+                        result.processing.classificationMethod,
+                        "baseline_qualitative"
+                    );
+                } else {
+                    assert.equal(result.processing.classificationMethod, undefined);
+                    assert.equal(result.classificationOutput, undefined);
+                }
 
                 // --------------------------------------------
                 // Output contract
@@ -954,22 +979,21 @@ test(
                     `${indexCode}_index.tif`
                 );
 
-                assert.equal(
-                    path.basename(
-                        result.classificationOutput.outputPath
-                    ),
-                    `${indexCode}_classification.tif`
-                );
+                if (supportsClassification) {
+                    assert.equal(
+                        path.basename(result.classificationOutput.outputPath),
+                        `${indexCode}_classification.tif`
+                    );
+                }
 
                 assert.equal(
                     result.continuousOutput.dataType,
                     "Float32"
                 );
 
-                assert.equal(
-                    result.classificationOutput.dataType,
-                    "Uint8"
-                );
+                if (supportsClassification) {
+                    assert.equal(result.classificationOutput.dataType, "Uint8");
+                }
 
                 assert.ok(
                     await fs.promises
@@ -981,15 +1005,14 @@ test(
                     `${indexCode} continuous output missing`
                 );
 
-                assert.ok(
-                    await fs.promises
-                        .access(
-                            result.classificationOutput.outputPath
-                        )
-                        .then(() => true)
-                        .catch(() => false),
-                    `${indexCode} classification output missing`
-                );
+                if (supportsClassification) {
+                    assert.ok(
+                        await fs.promises.access(result.classificationOutput.outputPath)
+                            .then(() => true)
+                            .catch(() => false),
+                        `${indexCode} classification output missing`
+                    );
+                }
 
                 // --------------------------------------------
                 // Continuous GeoTIFF
@@ -1097,6 +1120,7 @@ test(
                     null
                 );
 
+                if (supportsClassification) {
                 // --------------------------------------------
                 // Classification GeoTIFF
                 // --------------------------------------------
@@ -1203,6 +1227,7 @@ test(
                         .classificationMethod,
                     "baseline_qualitative"
                 );
+                }
             }
         } finally {
             await fs.promises.rm(

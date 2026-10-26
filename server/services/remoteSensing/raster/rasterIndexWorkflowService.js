@@ -319,24 +319,28 @@ async function processRasterIndexWorkflow({
             indexCode: normalizedIndexCode
         });
 
-    const classificationResult =
-        processRasterIndexClassification({
-            indexCode: normalizedIndexCode,
-            raster: continuousRaster,
-            processingContext,
-            spatialContext
-        });
+    const supportsClassification =
+        Array.isArray(definition?.classificationRules?.classes) &&
+        definition.classificationRules.classes.length > 0;
 
-    const classificationRaster =
-    classificationResult
-        .classification
-        .raster;
+    let classificationResult;
+    let classificationOutputRaster;
 
-    const classificationOutputRaster =
-        createClassificationOutputRaster({
-            raster: classificationRaster,
-            indexCode: normalizedIndexCode
-        });
+    if (supportsClassification) {
+        classificationResult =
+            processRasterIndexClassification({
+                indexCode: normalizedIndexCode,
+                raster: continuousRaster,
+                processingContext,
+                spatialContext
+            });
+
+        classificationOutputRaster =
+            createClassificationOutputRaster({
+                raster: classificationResult.classification.raster,
+                indexCode: normalizedIndexCode
+            });
+    }
 
     const outputPaths =
         buildOutputPaths({
@@ -373,49 +377,33 @@ async function processRasterIndexWorkflow({
                 outputPaths.continuous
         });
 
-    const classificationOutputMetadata = {
-        format: "GeoTIFF",
-        indexName: definition.name,
-        processingType:
-            "pixelwise_raster_classification",
-        classificationMethod:
-            classificationResult
-                .classification
-                .method,
-        analysisVersion:
-            RASTER_INDEX_CLASSIFICATION_CONTRACT_VERSION,
-        sourceRasterContractVersion:
-            continuousRaster.contractVersion,
-        timestamp:
-            classificationResult.timestamp
-    };
+    let classificationOutput;
 
-    const classificationOutput =
-        await writeRasterOutput({
+    if (supportsClassification) {
+        const classificationOutputMetadata = {
+            format: "GeoTIFF",
+            indexName: definition.name,
+            processingType: "pixelwise_raster_classification",
+            classificationMethod: classificationResult.classification.method,
+            analysisVersion: RASTER_INDEX_CLASSIFICATION_CONTRACT_VERSION,
+            sourceRasterContractVersion: continuousRaster.contractVersion,
+            timestamp: classificationResult.timestamp
+        };
+
+        classificationOutput = await writeRasterOutput({
             request: {
-                outputType:
-                    "classification",
-                indexCode:
-                    normalizedIndexCode,
-                raster:
-                    classificationOutputRaster,
+                outputType: "classification",
+                indexCode: normalizedIndexCode,
+                raster: classificationOutputRaster,
                 classification: {
-                    method:
-                        classificationResult
-                            .classification
-                            .method,
-                    classDefinitions:
-                        classificationResult
-                            .classification
-                            .classDefinitions
+                    method: classificationResult.classification.method,
+                    classDefinitions: classificationResult.classification.classDefinitions
                 },
-                outputMetadata:
-                    classificationOutputMetadata
+                outputMetadata: classificationOutputMetadata
             },
-            outputPath:
-                outputPaths.classification
+            outputPath: outputPaths.classification
         });
-
+    }
     const workflowResult =
         createRasterIndexWorkflowResultContract({
         workflowVersion:
@@ -440,10 +428,12 @@ async function processRasterIndexWorkflow({
             indexName:
                 definition.name,
 
-            classificationMethod:
-                classificationResult
-                    .classification
-                    .method
+                    ...(supportsClassification
+                        ? {
+                            classificationMethod:
+                                classificationResult.classification.method
+                        }
+                        : {})
         },
 
         continuousOutput,
