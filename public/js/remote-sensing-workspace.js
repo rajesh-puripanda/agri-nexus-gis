@@ -2054,7 +2054,7 @@ observationCount:
           max = 1;
         }
 
-        if (indexCode === "SSMI") {
+        if (["NDRE", "SSMI"].includes(indexCode)) {
           min = -1;
           max = 1;
         } else if (
@@ -2927,7 +2927,7 @@ observationCount:
             productionDirectory:
             "./data/remote-sensing/production",
           indexCode,
-          targetResolution: indexCode === "SSMI" ? 20 : 10,
+          targetResolution: ["NDRE", "SSMI"].includes(indexCode) ? 20 : 10,
           outputNoData: -9999,
           parameters: {},
         }),

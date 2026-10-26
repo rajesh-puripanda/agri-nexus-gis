@@ -32,6 +32,8 @@ const CANONICAL_BAND_NAMES = Object.freeze([
     "Green",
     "Red",
     "NIR",
+    "RedEdge1",
+    "RedEdge4",
     "SWIR",
     "SWIR1",
     "SWIR2"
