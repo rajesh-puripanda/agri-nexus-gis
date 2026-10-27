@@ -12,7 +12,7 @@
 // Responsibilities:
 //   - Validate raster output contract
 //   - Convert canonical raster spatial metadata to GeoTIFF tags
-//   - Write continuous Float32 index rasters
+//   - Write continuous Float32 index/product rasters
 //   - Write Uint8 classification rasters
 //   - Preserve NoData
 //   - Preserve CRS / GeoKeys
@@ -58,11 +58,15 @@ function normalizeOutputPath(outputPath) {
     return path.resolve(outputPath);
 }
 
-function getOutputBand(raster, indexCode) {
-    const band = raster.bands[indexCode];
+function getOutputCode(request) {
+    return request.productCode || request.indexCode;
+}
+
+function getOutputBand(raster, outputCode) {
+    const band = raster.bands[outputCode];
 
     if (!band) {
-        throw new Error(`Raster output band ${indexCode} is missing`);
+        throw new Error(`Raster output band ${outputCode} is missing`);
     }
 
     return band;
@@ -128,8 +132,14 @@ function createGeoKeyMetadata(geoKeys) {
     }
 
     if (
-        !Object.prototype.hasOwnProperty.call(metadata, "GeographicTypeGeoKey") &&
-        !Object.prototype.hasOwnProperty.call(metadata, "ProjectedCSTypeGeoKey")
+        !Object.prototype.hasOwnProperty.call(
+            metadata,
+            "GeographicTypeGeoKey"
+        ) &&
+        !Object.prototype.hasOwnProperty.call(
+            metadata,
+            "ProjectedCSTypeGeoKey"
+        )
     ) {
         throw new Error(
             "Raster geoKeys must contain GeographicTypeGeoKey or ProjectedCSTypeGeoKey"
@@ -156,13 +166,21 @@ function createGeoKeyMetadata(geoKeys) {
 function createAnalyticalCitation({
     outputType,
     indexCode,
-    outputMetadata,
+    productCode,
+    outputMetadata = {},
     raster
 }) {
     const analyticalMetadata = {
         application: "AgriNexus GIS",
         outputType,
-        indexCode,
+        ...(productCode
+            ? {
+                productCode,
+                productType: "biophysical"
+            }
+            : {
+                indexCode
+            }),
         indexName: outputMetadata.indexName || null,
         processingType: outputMetadata.processingType || null,
         analysisVersion: outputMetadata.analysisVersion || null,
@@ -171,8 +189,7 @@ function createAnalyticalCitation({
         classificationMethod:
             outputMetadata.classificationMethod || null,
         timestamp: outputMetadata.timestamp || null,
-        sourceType:
-            raster.metadata?.sourceType || null
+        sourceType: raster.metadata?.sourceType || null
     };
 
     return `AgriNexus GIS | ${JSON.stringify(analyticalMetadata)}`;
@@ -182,18 +199,22 @@ function createWriterMetadata(request) {
     const {
         outputType,
         indexCode,
+        productCode,
         raster,
         outputMetadata = {}
     } = request;
 
-    const band = getOutputBand(raster, indexCode);
+    const outputCode = getOutputCode(request);
+    const band = getOutputBand(raster, outputCode);
 
     const writerMetadata = {
         width: raster.width,
         height: raster.height,
 
         SamplesPerPixel: [1],
-        BitsPerSample: [band.dataType === "Float32" ? 32 : 8],
+        BitsPerSample: [
+            band.dataType === "Float32" ? 32 : 8
+        ],
         SampleFormat: [
             DATA_TYPE_TO_SAMPLE_FORMAT[band.dataType]
         ],
@@ -202,10 +223,14 @@ function createWriterMetadata(request) {
         PhotometricInterpretation: 1,
 
         ModelPixelScale:
-            createModelPixelScale(raster.spatialReference.resolution),
+            createModelPixelScale(
+                raster.spatialReference.resolution
+            ),
 
         ModelTiepoint:
-            createModelTiepoint(raster.spatialReference.origin),
+            createModelTiepoint(
+                raster.spatialReference.origin
+            ),
 
         ...createGeoKeyMetadata(
             raster.spatialReference.geoKeys
@@ -215,6 +240,7 @@ function createWriterMetadata(request) {
             createAnalyticalCitation({
                 outputType,
                 indexCode,
+                productCode,
                 outputMetadata,
                 raster
             })
@@ -227,8 +253,15 @@ function createWriterMetadata(request) {
     return writerMetadata;
 }
 
-function validateOutputPathMatchesIndex(outputPath, indexCode, outputType) {
-    const base = path.basename(outputPath, path.extname(outputPath));
+function validateOutputPathMatchesIndex(
+    outputPath,
+    outputCode,
+    outputType
+) {
+    const base = path.basename(
+        outputPath,
+        path.extname(outputPath)
+    );
 
     const expectedSuffix =
         outputType === "continuous_index"
@@ -236,11 +269,11 @@ function validateOutputPathMatchesIndex(outputPath, indexCode, outputType) {
             : "_classification";
 
     const expected =
-        `${indexCode}${expectedSuffix}`.toLowerCase();
+        `${outputCode}${expectedSuffix}`.toLowerCase();
 
     if (base.toLowerCase() !== expected) {
         throw new Error(
-            `Output filename must be ${indexCode}${expectedSuffix}.tif or .tiff`
+            `Output filename must be ${outputCode}${expectedSuffix}.tif or .tiff`
         );
     }
 }
@@ -264,19 +297,22 @@ async function writeRasterOutput({
         );
     }
 
+    const outputCode =
+        validation.rasterCode || getOutputCode(request);
+
     const normalizedPath =
         normalizeOutputPath(outputPath);
 
     validateOutputPathMatchesIndex(
         normalizedPath,
-        request.indexCode,
+        outputCode,
         request.outputType
     );
 
     const band =
         getOutputBand(
             request.raster,
-            request.indexCode
+            outputCode
         );
 
     const writerMetadata =
@@ -304,7 +340,9 @@ async function writeRasterOutput({
     return {
         outputPath: normalizedPath,
         outputType: request.outputType,
-        indexCode: request.indexCode,
+        ...(request.productCode
+            ? { productCode: request.productCode }
+            : { indexCode: request.indexCode }),
         dataType: band.dataType,
         width: request.raster.width,
         height: request.raster.height,
@@ -328,5 +366,3 @@ module.exports = {
     normalizeOutputPath,
     writeRasterOutput
 };
-
-

@@ -37,10 +37,11 @@ const DATA_TYPES = [
 
 const RESULT_REQUIRED_FIELDS = [
     "outputType",
-    "indexCode",
     "raster",
     "outputMetadata"
 ];
+
+const BIOPHYSICAL_PRODUCT_CODES = Object.freeze(["LAI"]);
 
 function isPlainObject(value) {
     return (
@@ -413,20 +414,19 @@ function validateRasterOutputRequest(request) {
         )
     );
 
-    let outputType = null;
+        let outputType = null;
     let indexCode = null;
+    let productCode = null;
     let definition = null;
+    let rasterCode = null;
 
     if (
         typeof request.outputType !== "string" ||
         !request.outputType.trim()
     ) {
-        errors.push(
-            "outputType must be a non-empty string"
-        );
+        errors.push("outputType must be a non-empty string");
     } else {
-        outputType =
-            request.outputType.trim().toLowerCase();
+        outputType = request.outputType.trim().toLowerCase();
 
         if (!OUTPUT_TYPES.includes(outputType)) {
             errors.push(
@@ -435,43 +435,48 @@ function validateRasterOutputRequest(request) {
         }
     }
 
-    if (
-        Object.prototype.hasOwnProperty.call(
-            request,
-            "indexCode"
-        )
-    ) {
+    if (request.indexCode !== undefined &&
+        request.productCode !== undefined) {
+        errors.push("Specify indexCode or productCode, not both");
+    } else if (request.productCode !== undefined) {
+        if (
+            typeof request.productCode !== "string" ||
+            !request.productCode.trim()
+        ) {
+            errors.push("productCode must be a non-empty string");
+        } else {
+            productCode = request.productCode.trim().toUpperCase();
+            rasterCode = productCode;
+
+            if (!BIOPHYSICAL_PRODUCT_CODES.includes(productCode)) {
+                errors.push(`Unknown biophysical product: ${productCode}`);
+            }
+
+            if (outputType !== "continuous_index") {
+                errors.push("Biophysical products require continuous_index output");
+            }
+        }
+    } else if (request.indexCode !== undefined) {
         try {
-            indexCode =
-                normalizeIndexCode(request.indexCode);
+            indexCode = normalizeIndexCode(request.indexCode);
+            rasterCode = indexCode;
         } catch (error) {
             errors.push(error.message);
         }
-    }
 
-    if (indexCode) {
-        definition =
-            getIndexDefinition(indexCode);
+        if (indexCode) {
+            definition = getIndexDefinition(indexCode);
 
-        if (!definition) {
-            errors.push(
-                `Unknown remote sensing index: ${indexCode}`
-            );
+            if (!definition) {
+                errors.push(`Unknown remote sensing index: ${indexCode}`);
+            }
         }
+    } else {
+        errors.push("request must specify indexCode or productCode");
     }
 
-    if (
-        request.raster !== undefined &&
-        outputType &&
-        indexCode
-    ) {
-        errors.push(
-            ...validateRaster(
-                request.raster,
-                indexCode,
-                outputType
-            )
-        );
+    if (request.raster !== undefined && outputType && rasterCode) {
+        errors.push(...validateRaster(request.raster, rasterCode, outputType));
     }
 
     if (
@@ -506,6 +511,8 @@ function validateRasterOutputRequest(request) {
         errors,
         outputType,
         indexCode,
+        productCode,
+        rasterCode,
         definition
     };
 }
@@ -521,6 +528,7 @@ module.exports = {
     RASTER_OUTPUT_CONTRACT_VERSION,
     OUTPUT_TYPES,
     DATA_TYPES,
+    BIOPHYSICAL_PRODUCT_CODES,
     validateRasterOutputRequest,
     validateRasterOutputResult
 };

@@ -346,6 +346,63 @@ test("continuous GeoTIFF round-trips through reader", async () => {
     );
 });
 
+test("writes and reads LAI biophysical product GeoTIFF", async (t) => {
+    const tempDirectory = await fs.mkdtemp(
+        path.join(os.tmpdir(), "agrinexus-lai-output-")
+    );
+    t.after(() => fs.rm(tempDirectory, { recursive: true, force: true }));
+
+    const outputPath = path.join(tempDirectory, "LAI_index.tif");
+    const values = new Float32Array([0.5, 1.0, 1.5, 2.0]);
+
+    const request = {
+        outputType: "continuous_index",
+        productCode: "LAI",
+        raster: {
+            width: 2,
+            height: 2,
+            pixelCount: 4,
+            bands: {
+                LAI: {
+                    data: values,
+                    dataType: "Float32"
+                }
+            },
+            noData: -9999,
+            spatialReference,
+            metadata: {
+                sourceType: "Derived Biophysical Product"
+            }
+        },
+        outputMetadata: {
+            processingType: "ndvi_to_lai_empirical_model",
+            analysisVersion: "1.0",
+            timestamp: "2026-09-25T00:00:00.000Z"
+        }
+    };
+
+    const result = await writeRasterOutput({ request, outputPath });
+
+    assert.equal(result.productCode, "LAI");
+    assert.equal(result.indexCode, undefined);
+    assert.equal(path.basename(result.outputPath), "LAI_index.tif");
+    assert.equal(result.dataType, "Float32");
+
+    const raster = await readGeoTiff(outputPath);
+    const analyticalMetadata = readAnalyticalCitation(raster);
+
+    assert.equal(raster.width, 2);
+    assert.equal(raster.height, 2);
+        assert.deepEqual(
+        Array.from(raster.data[0]),
+        Array.from(values)
+    );
+
+    assert.equal(analyticalMetadata.productCode, "LAI");
+    assert.equal(analyticalMetadata.productType, "biophysical");
+    assert.equal(analyticalMetadata.outputType, "continuous_index");
+});
+
 test("writes Uint8 classification GeoTIFF", async () => {
     const tempDirectory =
         await fs.mkdtemp(

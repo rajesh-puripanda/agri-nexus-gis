@@ -58,8 +58,16 @@ async function findProductionOutputPath({
     const normalizedType = String(type || "").trim().toLowerCase();
     const date = normalizeDate(acquisitionDate);
 
-    if (!hasIndexDefinition(code)) {
+    if (!hasIndexDefinition(code) && code !== "LAI") {
         const error = new Error("Unknown raster index code.");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (code === "LAI" && normalizedType !== OUTPUT_TYPES.index) {
+        const error = new Error(
+            "LAI supports continuous raster output only."
+        );
         error.statusCode = 400;
         throw error;
     }
@@ -112,7 +120,7 @@ async function findProductionOutputPath({
             ) {
                 for (const product of manifest.products) {
                     if (
-                        String(product.indexCode || "").toUpperCase() !== code ||
+                        String(product.indexCode || product.productCode || "").toUpperCase() !== code ||
                         String(product.sceneId || "") !== String(sceneId) ||
                         normalizeDate(product.acquisitionDate) !== date
                     ) {

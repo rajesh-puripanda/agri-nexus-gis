@@ -297,7 +297,93 @@ async function findAvailableProduct({
 
     return null;
 }
+async function findAvailableBiophysicalProduct({
+    productionRoot,
+    productionRoots = null,
+    acquisitionDate,
+    productCode,
+    sceneId = null,
+}) {
+    const roots =
+        Array.isArray(productionRoots) && productionRoots.length > 0
+            ? productionRoots
+            : [productionRoot];
 
+    const normalizedDate = normalizeDate(acquisitionDate);
+    const normalizedCode = normalizeIndexCode(productCode);
+
+    if (!normalizedDate) {
+        throw new TypeError(
+            "acquisitionDate must be a non-empty date string."
+        );
+    }
+
+    if (!normalizedCode) {
+        throw new TypeError(
+            "productCode must be a non-empty string."
+        );
+    }
+
+    if (normalizedCode !== "LAI") {
+        throw new Error(
+            `Unknown biophysical product code: ${productCode}`
+        );
+    }
+
+    for (const root of roots) {
+        const directories = [
+            root,
+            ...(await listProductionDirectories(root)),
+        ];
+
+        for (const productionDirectory of directories) {
+            const metadata =
+                await readManifestIfPresent(productionDirectory);
+
+            if (!Array.isArray(metadata?.products)) {
+                continue;
+            }
+
+            for (const product of metadata.products) {
+                if (
+                    normalizeIndexCode(product.productCode) !== normalizedCode ||
+                    normalizeDate(product.acquisitionDate) !== normalizedDate ||
+                    (
+                        sceneId &&
+                        String(product.sceneId || "").trim() !== sceneId.trim()
+                    )
+                ) {
+                    continue;
+                }
+
+                const continuousAvailable = await verifyOutput(
+                    productionDirectory,
+                    product.outputs?.continuous
+                );
+
+                return {
+                    status: continuousAvailable ? "AVAILABLE" : "INCOMPLETE",
+                    productCode: product.productCode,
+                    productName: product.productName,
+                    productType: product.productType,
+                    acquisitionDate: normalizedDate,
+                    sceneId: product.sceneId,
+                    targetResolution: product.targetResolution,
+                    productionDirectory,
+                    outputs: {
+                        continuous: product.outputs?.continuous || null,
+                    },
+                    availability: {
+                        continuous: continuousAvailable,
+                    },
+                    model: product.model || null,
+                };
+            }
+        }
+    }
+
+    return null;
+}
 async function listAvailableProductDates({
     productionRoot,
     productionRoots = null,
@@ -372,6 +458,70 @@ async function listAvailableProductDates({
         indexName: definition.name,
         dates: [...(available.get(definition.code) || [])]
             .sort((a, b) => b.localeCompare(a)),
+    }));
+}
+async function listAvailableBiophysicalProductDates({
+    productionRoot,
+    productionRoots = null,
+}) {
+    const roots =
+        Array.isArray(productionRoots) && productionRoots.length > 0
+            ? productionRoots
+            : [productionRoot];
+
+    const available = new Map();
+
+    for (const root of roots) {
+        const directories = [
+            root,
+            ...(await listProductionDirectories(root)),
+        ];
+
+        for (const directory of directories) {
+            const manifest = await readManifestIfPresent(directory);
+
+            if (!manifest || !Array.isArray(manifest.products)) {
+                continue;
+            }
+
+            for (const product of manifest.products) {
+                if (product.productType !== "biophysical") {
+                    continue;
+                }
+
+                const code = normalizeIndexCode(product.productCode);
+                const date = normalizeDate(product.acquisitionDate);
+
+                if (!code || !date || !product.outputs?.continuous) {
+                    continue;
+                }
+
+                const continuousAvailable = await verifyOutput(
+                    directory,
+                    product.outputs.continuous
+                );
+
+                if (!continuousAvailable) {
+                    continue;
+                }
+
+                if (!available.has(code)) {
+                    available.set(code, {
+                        productCode: code,
+                        productName: product.productName || code,
+                        productType: "biophysical",
+                        dates: new Set(),
+                    });
+                }
+
+                available.get(code).dates.add(date);
+            }
+        }
+    }
+
+    return [...available.values()].map((product) => ({
+        ...product,
+        dates: [...product.dates].sort((a, b) => b.localeCompare(a)),
     }));
 }
 async function getIndexAvailability({
@@ -488,7 +638,8 @@ module.exports = {
     SENTINEL2_INDEX_AVAILABILITY_SERVICE_VERSION,
     normalizeDate,
     normalizeIndexCode,
+    listAvailableBiophysicalProductDates,
     getIndexAvailability,
     listAvailableProductDates,
+    findAvailableBiophysicalProduct,
 };
-

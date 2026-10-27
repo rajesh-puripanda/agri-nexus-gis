@@ -38,6 +38,15 @@
   const SENTINEL2_PROCESSED_DATES_URL =
     "/api/remote-sensing/availability/dates";
 
+  const SENTINEL2_BIOPHYSICAL_AVAILABILITY_URL =
+    "/api/remote-sensing/availability/biophysical";
+
+  let sentinel2BiophysicalAvailability = {
+    product: null,
+    loading: false,
+    error: null,
+  };
+
   let sentinel2IndexAvailability = {
     observationDate: null,
     results: [],
@@ -136,9 +145,14 @@
           "remoteSensingSpectralGrid"
         ),
 
-      soilGrid:
+            soilGrid:
         document.getElementById(
           "remoteSensingSoilGrid"
+        ),
+
+      biophysicalGrid:
+        document.getElementById(
+          "remoteSensingBiophysicalGrid"
         ),
 
       soilEmpty:
@@ -726,6 +740,11 @@ observationCount:
       observation.sceneId,
     );
 
+    loadSentinel2BiophysicalAvailability(
+      observation.acquisitionDate,
+      observation.sceneId,
+    );
+
     sentinel2AvailabilityPromise.catch((error) => {
     console.error(
       "Unable to load Sentinel-2 index availability:",
@@ -1181,11 +1200,109 @@ observationCount:
       renderCatalog();
     }
   }
+
+  async function loadSentinel2BiophysicalAvailability(
+    observationDate,
+    sceneId = null
+  ) {
+    sentinel2BiophysicalAvailability = {
+      product: null,
+      loading: Boolean(observationDate),
+      error: null,
+    };
+
+    if (!observationDate) {
+      renderBiophysicalAvailability();
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        observationDate: String(observationDate).slice(0, 10),
+        productCode: "LAI",
+      });
+
+      if (sceneId) {
+        params.set("sceneId", sceneId);
+      }
+
+      const response = await fetch(
+        `${SENTINEL2_BIOPHYSICAL_AVAILABILITY_URL}?${params}`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `LAI availability request failed: ${response.status}`
+        );
+      }
+
+      const payload = await response.json();
+
+      if (!payload || payload.success !== true) {
+        throw new Error("Invalid LAI availability response.");
+      }
+
+      sentinel2BiophysicalAvailability.product =
+        payload.result || null;
+    } catch (error) {
+      console.error("Sentinel-2 LAI availability failed:", error);
+
+      sentinel2BiophysicalAvailability.error =
+        error instanceof Error
+          ? error.message
+          : "Unknown LAI availability error.";
+    } finally {
+      sentinel2BiophysicalAvailability.loading = false;
+      renderBiophysicalAvailability();
+    }
+  }
+  function renderBiophysicalAvailability() {
+  const container = document.getElementById(
+    "remoteSensingBiophysicalProducts"
+  );
+
+  if (!container) {
+    return;
+  }
+
+  const state = sentinel2BiophysicalAvailability;
+
+  if (state.loading) {
+    container.textContent = "Checking biophysical products�";
+    return;
+  }
+
+  if (state.error) {
+    container.textContent = "LAI availability could not be verified.";
+    return;
+  }
+
+  const product = state.product;
+
+  if (product?.status === "AVAILABLE") {
+    container.innerHTML = `
+      <strong>Biophysical products � Available locally</strong>
+      <div class="remote-sensing-availability-list">
+        <span>LAI</span>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <strong>Biophysical products � LAI unavailable locally</strong>
+  `;
+}
   function renderCatalog() {
-    const {
+        const {
       spectralGrid,
       soilGrid,
       soilEmpty,
+      biophysicalGrid,
     } = getElements();
 
     if (!spectralGrid || !soilGrid) {
@@ -1194,6 +1311,10 @@ observationCount:
 
     spectralGrid.innerHTML = "";
     soilGrid.innerHTML = "";
+
+    if (biophysicalGrid) {
+      biophysicalGrid.innerHTML = "";
+    }
 
     const spectralIndexes =
       catalog.filter(
@@ -1317,6 +1438,42 @@ observationCount:
         );
       }
     );
+
+        if (biophysicalGrid) {
+      const laiAvailable =
+        sentinel2BiophysicalAvailability.product?.status ===
+        "AVAILABLE";
+
+      const laiCard = document.createElement("button");
+      laiCard.type = "button";
+      laiCard.className = "remote-sensing-index-card";
+      laiCard.dataset.indexCode = "LAI";
+      laiCard.disabled = remoteSensingBusy || !laiAvailable;
+      laiCard.classList.toggle("is-available", laiAvailable);
+      laiCard.classList.toggle("requires-processing", !laiAvailable);
+      laiCard.title =
+        "Leaf Area Index � provisional, uncalibrated NDVI-based model";
+
+      laiCard.innerHTML = `
+        <span class="remote-sensing-index-icon" aria-hidden="true">??</span>
+        <span class="remote-sensing-index-code">LAI</span>
+        <span class="remote-sensing-index-name">Leaf Area Index</span>
+        <span class="remote-sensing-index-availability">
+          ${laiAvailable ? "Available" : "Unavailable"}
+        </span>
+      `;
+
+      laiCard.addEventListener("click", () => {
+        selectBiophysicalProduct({
+          code: "LAI",
+          name: "Leaf Area Index",
+          category: "biophysical",
+          description: laiCard.title,
+        });
+      });
+
+      biophysicalGrid.appendChild(laiCard);
+    }
 
     if (soilEmpty) {
       soilEmpty.classList.toggle(
@@ -1574,33 +1731,70 @@ observationCount:
     );
   }
 
-  function selectRemoteSensingIndex(
-    index
-  ) {
-    /*
-    ----------------------------------------------------------
-     Hard guard against a second spectral-index request.
-    ----------------------------------------------------------
-    */
-
+  function selectRemoteSensingIndex(index) {
     if (remoteSensingBusy) {
       return;
     }
 
-    selectedIndex =
-      index;
-
+    selectedIndex = index;
     renderCatalog();
 
     updateStatus(
       `${index.code}  ${index.name} selected.`
     );
 
-    loadRemoteSensingMap(
-      index
-    );
+    loadRemoteSensingMap(index);
   }
 
+  async function selectBiophysicalProduct(product) {
+    if (remoteSensingBusy || !product?.code) return;
+
+    const sceneId = sentinel2ObservationContext.selectedSceneId;
+    const observationDate =
+      sentinel2ObservationContext.selectedObservationDate;
+    const availability =
+      sentinel2BiophysicalAvailability.product;
+
+    if (!sceneId || !observationDate) {
+      updateStatus("Select a Sentinel-2 observation first.");
+      return;
+    }
+
+    if (
+      availability?.status !== "AVAILABLE" ||
+      availability.productCode !== product.code ||
+      availability.sceneId !== sceneId
+    ) {
+      updateStatus("LAI is unavailable for the selected observation.");
+      return;
+    }
+
+    const sequence = ++renderSequence;
+    setRemoteSensingBusy(true);
+    clearRemoteSensingLayer();
+    updateRemoteSensingLayerControls(false);
+
+    try {
+      const index = {
+        code: product.code,
+        name: product.name,
+        description: product.description,
+        category: "biophysical",
+      };
+
+      await renderRasterOutput(index, "index", sequence);
+    } catch (error) {
+      console.error("LAI raster loading failed:", error);
+
+      if (sequence === renderSequence) {
+        updateStatus(`LAI raster unavailable: ${error.message}`);
+        hideRemoteSensingProgress();
+      }
+    } finally {
+      setRemoteSensingBusy(false);
+      setApplicationProcessingLock(false);
+    }
+  }
   function getRasterUrl(
     indexCode,
     type
@@ -2841,6 +3035,11 @@ observationCount:
       selectedSceneId
     );
 
+    await loadSentinel2BiophysicalAvailability(
+      selectedObservationDate,
+      selectedSceneId
+    );
+
     if (sequence !== renderSequence) {
       return;
     }
@@ -3085,14 +3284,17 @@ observationCount:
   }
 
 
-  function renderSentinel2ProcessedDates(results) {
+  function renderSentinel2ProcessedDates(results, biophysicalProducts = []) {
     const { processedDatesStatus: status, processedDatesList: list } =
       getElements();
 
     list.replaceChildren();
 
-    if (!Array.isArray(results) || results.length === 0) {
-      status.textContent = "No verified processed index products were found.";
+    if (
+      (!Array.isArray(results) || results.length === 0) &&
+      (!Array.isArray(biophysicalProducts) || biophysicalProducts.length === 0)
+    ) {
+      status.textContent = "No verified processed products were found.";
       return;
     }
 
@@ -3121,9 +3323,9 @@ observationCount:
       });
     }
 
-    function createRows(items) {
+    function createRows(items, className = "") {
       const column = document.createElement("div");
-      column.className = "remote-sensing-processed-column";
+      column.className = `remote-sensing-processed-column ${className}`.trim();
 
       items.forEach(({ item, dates }) => {
         const row = document.createElement("div");
@@ -3144,38 +3346,44 @@ observationCount:
       return column;
     }
 
-    const leftColumn = createRows(available);
-    leftColumn.classList.add("verified-products-column");
-    list.appendChild(leftColumn);
-
-    const rightColumn = document.createElement("div");
-    rightColumn.className = "remote-sensing-processed-column unavailable-products-column";
+    list.appendChild(createRows(available, "verified-products-column"));
 
     if (unavailable.length) {
-      const toggle = document.createElement("button");
-      const details = createRows(unavailable);
-
-      toggle.type = "button";
-      toggle.className = "remote-sensing-show-all-products";
-      toggle.textContent = `Show ${unavailable.length} products without verified dates`;
-      toggle.setAttribute("aria-expanded", "false");
-      details.hidden = true;
-
-      toggle.addEventListener("click", () => {
-        const expanded = toggle.getAttribute("aria-expanded") === "true";
-        toggle.setAttribute("aria-expanded", String(!expanded));
-        details.hidden = expanded;
-        toggle.textContent = expanded
-          ? `Show ${unavailable.length} products without verified dates`
-          : "Hide products without verified dates";
-      });
-
-      rightColumn.append(toggle, details);
-    } else {
-      rightColumn.textContent = "All listed products have verified dates.";
+      list.appendChild(
+        createRows(unavailable, "unavailable-products-column")
+      );
     }
 
-    list.appendChild(rightColumn);
+    if (Array.isArray(biophysicalProducts) && biophysicalProducts.length) {
+      const section = document.createElement("section");
+      const heading = document.createElement("h4");
+      const column = document.createElement("div");
+
+      section.className = "remote-sensing-biophysical-products";
+      heading.textContent = "Biophysical Products";
+      column.className = "remote-sensing-processed-column";
+
+      biophysicalProducts.forEach((product) => {
+        const row = document.createElement("div");
+        const title = document.createElement("strong");
+        const values = document.createElement("div");
+        const dates = Array.isArray(product.dates) ? product.dates : [];
+
+        row.className = "remote-sensing-processed-date-item";
+        title.textContent =
+          `${product.productName || product.productCode} (${product.productCode})`;
+        values.className = "remote-sensing-processed-date-values";
+        values.textContent = dates.length
+          ? dates.map(formatDate).join(", ")
+          : "No verified processed dates";
+
+        row.append(title, values);
+        column.appendChild(row);
+      });
+
+      section.append(heading, column);
+      list.appendChild(section);
+    }
   }
 
   async function loadSentinel2ProcessedDates() {
@@ -3213,7 +3421,10 @@ observationCount:
         throw new Error("Unexpected processed-dates response.");
       }
 
-      renderSentinel2ProcessedDates(payload.results);
+      renderSentinel2ProcessedDates(
+      payload.results,
+      payload.biophysicalProducts || []
+    );
     } catch (error) {
       console.error(
         "Unable to load previously processed dates:",

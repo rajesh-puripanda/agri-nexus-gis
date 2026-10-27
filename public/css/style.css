@@ -3678,7 +3678,10 @@ PRINT
   gap: 22px;
   min-width: 0;
 }
-
+.remote-sensing-biophysical-products {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
 .remote-sensing-processed-column {
   min-width: 0;
 }
@@ -3692,11 +3695,35 @@ PRINT
   margin-top: 3px;
 }
 
+
 .remote-sensing-show-all-products {
+  display: block;
+  width: 100%;
   max-width: 100%;
+  margin: 8px 0 12px;
+  padding: 8px 10px;
+  border: 1px solid #78958a;
+  border-radius: 5px;
+  background: #edf2ef;
+  color: #245f49;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
   white-space: normal;
   text-align: left;
+  cursor: pointer;
 }
+
+.remote-sensing-show-all-products:hover {
+  background: #dce9e1;
+}
+
+.remote-sensing-show-all-products:focus-visible {
+  outline: 2px solid #245f49;
+  outline-offset: 2px;
+}
+
 
 @media (max-width: 600px) {
   #remoteSensingProcessedDatesList {
@@ -3717,9 +3744,16 @@ PRINT
 #remoteSensingProcessedDatesList {
   margin-top: 8px;
 }
+
+.remote-sensing-biophysical-products {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
 .classification-swatch.frequency-zero {
   background: rgb(0, 0, 255);
 }
+
 
 .classification-swatch.frequency-half {
   background: rgb(128, 255, 128);
@@ -3804,4 +3838,199 @@ PRINT
 
 #remoteSensingRail .remote-sensing-analysis-panel[hidden] {
   display: none !important;
+}
+#remoteSensingProcessedDates.remote-sensing-index-availability {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#remoteSensingProcessedDatesList {
+  width: 100%;
+  box-sizing: border-box;
+}
+#remoteSensingProcessedDates.remote-sensing-index-availability {
+  display: block;
+  width: 100%;
+  height: 160px;
+  max-height: 160px;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 0;
+  outline: none;
+  border-radius: 0;
+  box-shadow: none;
+  box-sizing: border-box;
+  margin-bottom: 14px;
+}
+
+#remoteSensingProcessedDatesList {
+  width: 100%;
+  margin-top: 8px;
+  padding: 0;
+}
+
+.remote-sensing-biophysical-products {
+  grid-column: 1 / -1;
+  margin-top: 0;
+  padding-top: 0;
+}
+#remoteSensingProcessedDatesList {
+  row-gap: 4px;
+}
+
+/* Previously Processed Dates — dashboard card layout */
+#remoteSensingProcessedDates.remote-sensing-index-availability {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  margin-bottom: 14px;
+  padding: 10px 8px;
+  overflow: visible;
+  border: 0;
+  outline: none;
+  border-radius: 0;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+#remoteSensingProcessedDatesList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 22px 16px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 0;
+  overflow: visible;
+  box-sizing: border-box;
+}
+
+.remote-sensing-processed-column {
+  min-width: 0;
+  border: 1px solid #d4e1dc;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.remote-sensing-processed-column .remote-sensing-processed-date-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e0e8e4;
+  overflow-wrap: anywhere;
+}
+
+.remote-sensing-processed-column .remote-sensing-processed-date-item:last-child {
+  border-bottom: 0;
+}
+
+.remote-sensing-processed-column .remote-sensing-processed-date-values {
+  margin-top: 0;
+  color: #607b8b;
+  font-size: 13px;
+}
+
+.unavailable-products-column {
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+
+.remote-sensing-biophysical-products {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 4px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #78958a;
+}
+
+.remote-sensing-biophysical-products > h4 {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid #d4e1dc;
+  border-radius: 8px 8px 0 0;
+  background: #edf3f0;
+  color: #145b46;
+  font-size: 17px;
+}
+
+.remote-sensing-biophysical-products > .remote-sensing-processed-column {
+  border-radius: 0 0 8px 8px;
+}
+
+@media (max-width: 700px) {
+  #remoteSensingProcessedDatesList {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .remote-sensing-biophysical-products {
+    grid-column: 1;
+  }
+}
+
+/* Compact product rows */
+.remote-sensing-processed-column .remote-sensing-processed-date-item {
+  padding: 8px 12px;
+  gap: 8px;
+  line-height: 1.3;
+}
+
+.remote-sensing-processed-column .remote-sensing-processed-date-values {
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+/* Keep unavailable products independently scrollable */
+.unavailable-products-column {
+  height: 150px;
+  max-height: 150px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+/* Biophysical category: independent vertical scrolling */
+#remoteSensingBiophysicalGrid {
+  max-height: 180px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  scrollbar-width: thin;
+}
+
+#remoteSensingBiophysicalGrid::-webkit-scrollbar {
+  width: 8px;
+}
+/* Collapsible Biophysical category */
+.remote-sensing-biophysical-details > summary {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+}
+
+.remote-sensing-biophysical-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.remote-sensing-biophysical-details .remote-sensing-collapse-arrow {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.remote-sensing-biophysical-details .remote-sensing-collapse-arrow::before {
+  content: "▾";
+}
+
+.remote-sensing-biophysical-details:not([open])
+.remote-sensing-collapse-arrow::before {
+  content: "▸";
 }

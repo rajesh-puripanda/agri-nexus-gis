@@ -26,6 +26,12 @@ const {
     getIndexDefinition
 } = require("../../../scientific/remoteSensing/indices/indexRegistry");
 
+const {
+    BIOPHYSICAL_PRODUCT_CODES
+} = require(
+    "../../../scientific/remoteSensing/raster/rasterOutputContract"
+);
+
 function assertNonEmptyString(value, name) {
     if (
         typeof value !== "string" ||
@@ -60,30 +66,60 @@ function normalizeDate(value) {
     return value.trim().slice(0, 10);
 }
 
+
 function buildProductMetadata({
     workflowResult,
     outputDirectory
 }) {
-        assertObject(
-        workflowResult,
-        "workflowResult"
-    );
+    assertObject(workflowResult, "workflowResult");
+    assertNonEmptyString(outputDirectory, "outputDirectory");
 
-    assertNonEmptyString(
-        outputDirectory,
-        "outputDirectory"
-    );
+    // Biophysical product branch: LAI is not a spectral index.
+    if (workflowResult.productCode !== undefined) {
+        const productCode = String(workflowResult.productCode).trim().toUpperCase();
 
+        if (!BIOPHYSICAL_PRODUCT_CODES.includes(productCode)) {
+            throw new Error(`Unknown biophysical product: ${productCode}`);
+        }
+
+        assertNonEmptyString(workflowResult.sceneId, "sceneId");
+        assertNonEmptyString(workflowResult.acquisitionDate, "acquisitionDate");
+        if (
+            !Number.isFinite(workflowResult.targetResolution) ||
+            workflowResult.targetResolution <= 0
+        ) {
+            throw new TypeError(
+                "targetResolution must be a positive finite number."
+            );
+        }
+        assertNonEmptyString(workflowResult.workflowVersion, "workflowVersion");
+        assertNonEmptyString(workflowResult.outputPath, "outputPath");
+
+        return {
+            productCode,
+            productName: workflowResult.productName || "Leaf Area Index",
+            productType: "biophysical",
+            sceneId: workflowResult.sceneId,
+            acquisitionDate: normalizeDate(workflowResult.acquisitionDate),
+            targetResolution: workflowResult.targetResolution,
+            workflowVersion: workflowResult.workflowVersion,
+            inputProduct: workflowResult.inputProduct || "NDVI",
+            model: workflowResult.model || null,
+            outputs: {
+                continuous: path.basename(workflowResult.outputPath)
+            }
+        };
+    }
+
+    // Existing spectral-index branch.
     if (
         !workflowResult.outputProcessing ||
         typeof workflowResult.outputProcessing !== "object"
     ) {
-        throw new Error(
-            "workflowResult.outputProcessing is required."
-        );
+        throw new Error("workflowResult.outputProcessing is required.");
     }
-    const outputPaths =
-        workflowResult.outputProcessing?.outputPaths;
+
+    const outputPaths = workflowResult.outputProcessing?.outputPaths;
 
     if (!outputPaths || typeof outputPaths !== "object") {
         throw new Error(
@@ -91,19 +127,11 @@ function buildProductMetadata({
         );
     }
 
-    assertNonEmptyString(
-        outputPaths.continuous,
-        "outputPaths.continuous"
-    );
+    assertNonEmptyString(outputPaths.continuous, "outputPaths.continuous");
 
-    const definition = getIndexDefinition(
-        workflowResult.indexCode
-    );
-
+    const definition = getIndexDefinition(workflowResult.indexCode);
     const supportsClassification =
-        Array.isArray(
-            definition?.classificationRules?.classes
-        ) &&
+        Array.isArray(definition?.classificationRules?.classes) &&
         definition.classificationRules.classes.length > 0;
 
     if (supportsClassification) {
@@ -117,26 +145,19 @@ function buildProductMetadata({
         indexCode: workflowResult.indexCode,
         indexName: workflowResult.indexName,
         sceneId: workflowResult.sceneId,
-        acquisitionDate: normalizeDate(
-            workflowResult.acquisitionDate
-        ),
+        acquisitionDate: normalizeDate(workflowResult.acquisitionDate),
         targetResolution: workflowResult.targetResolution,
         workflowVersion: workflowResult.workflowVersion,
         requiredBands: workflowResult.requiredBands,
-
         outputs: {
             continuous: path.basename(outputPaths.continuous),
-
             ...(supportsClassification
-                ? {
-                    classification: path.basename(
-                        outputPaths.classification
-                    )
-                }
+                ? { classification: path.basename(outputPaths.classification) }
                 : {})
         }
     };
 }
+
 
 async function writeJsonAtomically(
     filePath,
@@ -240,15 +261,19 @@ async function writeProductionMetadata({
             ? existing.products
             : [];
 
-    const productKey =
-        `${product.indexCode}|${product.sceneId}|${product.acquisitionDate}`;
+        const getProductKey = (item) => {
+        const code = item.productCode
+            ? `product:${item.productCode}`
+            : `index:${item.indexCode}`;
 
-    const filteredProducts =
-        products.filter(
-            (item) =>
-                `${item.indexCode}|${item.sceneId}|${item.acquisitionDate}` !==
-                productKey
-        );
+        return `${code}|${item.sceneId}|${item.acquisitionDate}`;
+    };
+
+    const productKey = getProductKey(product);
+
+    const filteredProducts = products.filter(
+        (item) => getProductKey(item) !== productKey
+    );
 
     filteredProducts.push({
         ...product,

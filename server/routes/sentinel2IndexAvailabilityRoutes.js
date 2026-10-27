@@ -1,10 +1,11 @@
-"use strict";
+﻿"use strict";
 
 const express = require("express");
 
 const {
     getSentinel2IndexAvailability,
     getSentinel2AvailableProductDates,
+    getSentinel2BiophysicalAvailability,
     getSentinel2TemporalProductEligibility
 } = require(
     "../controllers/" +
@@ -26,6 +27,11 @@ router.get(
 router.get(
     "/availability/temporal-products",
     getSentinel2TemporalProductEligibility
+);
+
+router.get(
+    "/availability/biophysical",
+    getSentinel2BiophysicalAvailability
 );
 
 module.exports = router;

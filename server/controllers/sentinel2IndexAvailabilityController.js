@@ -2,7 +2,9 @@
 
 const {
     getIndexAvailability,
-    listAvailableProductDates
+    listAvailableProductDates,
+    listAvailableBiophysicalProductDates,
+    findAvailableBiophysicalProduct
 } = require(
     "../services/remoteSensing/catalog/" +
     "sentinel2IndexAvailabilityService"
@@ -21,20 +23,14 @@ const {
     "temporalProductEligibilityService"
 );
 
-async function getSentinel2IndexAvailability(
-    req,
-    res
-) {
+async function getSentinel2IndexAvailability(req, res) {
     try {
         const acquisitionDate =
             req.query?.observationDate ||
             req.query?.acquisitionDate;
 
-        const indexCode =
-            req.query?.indexCode || null;
-
-        const sceneId =
-            req.query?.sceneId || null;
+        const indexCode = req.query?.indexCode || null;
+        const sceneId = req.query?.sceneId || null;
 
         if (
             typeof acquisitionDate !== "string" ||
@@ -42,24 +38,17 @@ async function getSentinel2IndexAvailability(
         ) {
             return res.status(400).json({
                 success: false,
-                code:
-                    "INVALID_OBSERVATION_DATE",
-                message:
-                    "observationDate is required."
+                code: "INVALID_OBSERVATION_DATE",
+                message: "observationDate is required."
             });
         }
 
-        const result =
-            await getIndexAvailability({
-                productionRoots:
-                    DEFAULT_PRODUCTION_ROOTS,
-
-                acquisitionDate,
-
-                indexCode,
-
-                sceneId
-            });
+        const result = await getIndexAvailability({
+            productionRoots: DEFAULT_PRODUCTION_ROOTS,
+            acquisitionDate,
+            indexCode,
+            sceneId
+        });
 
         return res.status(200).json({
             success: true,
@@ -71,42 +60,81 @@ async function getSentinel2IndexAvailability(
             error
         );
 
-        const statusCode =
-            Number.isInteger(
-                error.statusCode
-            )
-                ? error.statusCode
-                : 500;
+        const statusCode = Number.isInteger(error.statusCode)
+            ? error.statusCode
+            : 500;
 
-        return res
-            .status(statusCode)
-            .json({
-                success: false,
-                code:
-                    error.code ||
-                    "SENTINEL2_INDEX_AVAILABILITY_ERROR",
-                message:
-                    error.message ||
-                    "Failed to determine Sentinel-2 index availability."
-            });
+        return res.status(statusCode).json({
+            success: false,
+            code: error.code ||
+                "SENTINEL2_INDEX_AVAILABILITY_ERROR",
+            message: error.message ||
+                "Failed to determine Sentinel-2 index availability."
+        });
     }
 }
 
-
-async function getSentinel2AvailableProductDates(
-    req,
-    res
-) {
+async function getSentinel2BiophysicalAvailability(req, res) {
     try {
-        const results =
-            await listAvailableProductDates({
-                productionRoots: DEFAULT_PRODUCTION_ROOTS,
+        const acquisitionDate =
+            req.query?.observationDate ||
+            req.query?.acquisitionDate;
+
+        if (
+            typeof acquisitionDate !== "string" ||
+            acquisitionDate.trim().length === 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                code: "INVALID_OBSERVATION_DATE",
+                message: "observationDate is required."
             });
+        }
+
+        const result = await findAvailableBiophysicalProduct({
+            productionRoots: DEFAULT_PRODUCTION_ROOTS,
+            acquisitionDate,
+            productCode: req.query?.productCode || "LAI",
+            sceneId: req.query?.sceneId || null
+        });
+
+        return res.status(200).json({
+            success: true,
+            observationDate: acquisitionDate,
+            result
+        });
+    } catch (error) {
+        console.error(
+            "Sentinel-2 biophysical availability error:",
+            error
+        );
+
+        return res.status(error.statusCode || 500).json({
+            success: false,
+            code: error.code ||
+                "SENTINEL2_BIOPHYSICAL_AVAILABILITY_ERROR",
+            message: error.message ||
+                "Failed to determine biophysical product availability."
+        });
+    }
+}
+
+async function getSentinel2AvailableProductDates(req, res) {
+    try {
+        const [results, biophysicalProducts] = await Promise.all([
+            listAvailableProductDates({
+                productionRoots: DEFAULT_PRODUCTION_ROOTS
+            }),
+            listAvailableBiophysicalProductDates({
+                productionRoots: DEFAULT_PRODUCTION_ROOTS
+            })
+        ]);
 
         return res.status(200).json({
             success: true,
             serviceVersion: "1.0",
             results,
+            biophysicalProducts
         });
     } catch (error) {
         console.error(
@@ -120,12 +148,10 @@ async function getSentinel2AvailableProductDates(
                 : 500
         ).json({
             success: false,
-            code:
-                error.code ||
+            code: error.code ||
                 "SENTINEL2_PROCESSED_DATES_ERROR",
-            message:
-                error.message ||
-                "Failed to list processed Sentinel-2 dates.",
+            message: error.message ||
+                "Failed to list processed Sentinel-2 dates."
         });
     }
 }
@@ -141,12 +167,16 @@ async function getSentinel2TemporalProductEligibility(req, res) {
             ...result
         });
     } catch (error) {
-        console.error("Temporal product eligibility error:", error);
+        console.error(
+            "Temporal product eligibility error:",
+            error
+        );
 
         return res.status(500).json({
             success: false,
             code: "TEMPORAL_PRODUCT_ELIGIBILITY_ERROR",
-            message: "Failed to determine temporal product eligibility."
+            message:
+                "Failed to determine temporal product eligibility."
         });
     }
 }
@@ -154,5 +184,6 @@ async function getSentinel2TemporalProductEligibility(req, res) {
 module.exports = {
     getSentinel2IndexAvailability,
     getSentinel2AvailableProductDates,
+    getSentinel2BiophysicalAvailability,
     getSentinel2TemporalProductEligibility
 };
