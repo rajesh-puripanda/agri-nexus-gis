@@ -182,6 +182,8 @@
 
       const remoteBottomRail = document.getElementById("remoteSensingBottomRail");
       remoteBottomRail?.classList.toggle("workspace-hidden", workspace !== "remote");
+      const remoteRail = document.getElementById("remoteSensingRail");
+      remoteRail?.classList.toggle("is-hidden", workspace !== "remote");
 
       activeWorkspace =
         workspace;
@@ -309,6 +311,8 @@
 
     const remoteBottomRail = document.getElementById("remoteSensingBottomRail");
     remoteBottomRail?.classList.toggle("workspace-hidden", workspace !== "remote");
+    const remoteRail = document.getElementById("remoteSensingRail");
+    remoteRail?.classList.toggle("is-hidden", workspace !== "remote");
 
     activeWorkspace =
       workspace;

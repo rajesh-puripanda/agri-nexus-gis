@@ -3276,8 +3276,6 @@ observationCount:
       );
     }
 
-    clearRemoteSensingLayer();
-
     hideRemoteSensingProgress();
 
     return true;
