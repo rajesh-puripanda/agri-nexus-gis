@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // ============================================================
 // server/services/remoteSensing/raster/rasterOutputService.js
@@ -25,6 +25,7 @@
 const fs = require("fs/promises");
 const path = require("path");
 const geotiff = require("geotiff");
+const { reprojectCategoricalRasterToWebMercator } = require("./categoricalWebMercatorReprojection");
 
 const {
     validateRasterOutputRequest
@@ -309,14 +310,26 @@ async function writeRasterOutput({
         request.outputType
     );
 
-    const band =
-        getOutputBand(
-            request.raster,
-            outputCode
-        );
+    let outputRequest = request;
+    let band = getOutputBand(request.raster, outputCode);
 
-    const writerMetadata =
-        createWriterMetadata(request);
+    if (request.outputType === "classification") {
+        const projected = reprojectCategoricalRasterToWebMercator({
+            data: band.data,
+            width: request.raster.width,
+            height: request.raster.height,
+            spatialReference: request.raster.spatialReference,
+            noData: request.raster.noData ?? 0
+        });
+
+        outputRequest = {
+            ...request,
+            raster: { ...request.raster, ...projected }
+        };
+        band = { ...band, data: projected.data };
+    }
+
+    const writerMetadata = createWriterMetadata(outputRequest);
 
     const arrayBuffer =
         geotiff.writeArrayBuffer(
@@ -344,9 +357,9 @@ async function writeRasterOutput({
             ? { productCode: request.productCode }
             : { indexCode: request.indexCode }),
         dataType: band.dataType,
-        width: request.raster.width,
-        height: request.raster.height,
-        pixelCount: request.raster.pixelCount,
+        width: outputRequest.raster.width,
+        height: outputRequest.raster.height,
+        pixelCount: outputRequest.raster.pixelCount,
         byteLength: stat.size,
         format: "GeoTIFF",
         metadata: {

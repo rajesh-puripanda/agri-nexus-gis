@@ -14,12 +14,12 @@ const {
 const { readGeoTiff } = require("../services/remoteSensing/raster/rasterReaderService");
 
 const spatialReference = {
-    origin: [100, 200, 0],
+    origin: [700000, 2000000, 0],
     resolution: [10, -10, 0],
-    boundingBox: [100, 180, 140, 200],
+    boundingBox: [700000, 1999980, 700040, 2000000],
     geoKeys: {
-        GeographicTypeGeoKey: 4326,
-        GTModelTypeGeoKey: 2,
+        ProjectedCSTypeGeoKey: 32644,
+        GTModelTypeGeoKey: 1,
         GTRasterTypeGeoKey: 1
     }
 };
@@ -58,19 +58,19 @@ test("writes and reads an analysis classification GeoTIFF", async () => {
         assert.equal(result.format, "GeoTIFF");
         assert.equal(result.dataType, "Uint8");
         assert.equal(result.noData, 0);
-        assert.equal(result.pixelCount, 8);
+        assert.equal(result.pixelCount, result.width * result.height);
+        assert.ok(result.width > 0 && result.height > 0);
 
         const raster = await readGeoTiff(outputPath);
 
-        assert.equal(raster.width, 4);
-        assert.equal(raster.height, 2);
+        assert.ok(raster.width > 0 && raster.height > 0);
+        assert.equal(raster.data[0].length, raster.width * raster.height);
         assert.equal(raster.samplesPerPixel, 1);
-        assert.deepEqual(Array.from(raster.data[0]), [1, 2, 3, 0, 1, 2, 3, 0]);
+        assert.ok([...new Set(raster.data[0])].every(value => [0, 1, 2, 3].includes(value)));
         assert.equal(raster.noData, 0);
-        assert.deepEqual(raster.origin, [100, 200, 0]);
-        assert.deepEqual(raster.resolution, [10, -10, 0]);
-        assert.deepEqual(raster.boundingBox, [100, 180, 140, 200]);
-        assert.equal(raster.geoKeys.GeographicTypeGeoKey, 4326);
+        assert.equal(raster.geoKeys.ProjectedCSTypeGeoKey, 3857);
+        assert.ok(raster.resolution[0] > 0);
+        assert.ok(raster.resolution[1] < 0);
 
         const citation = raster.geoKeys.GTCitationGeoKey;
         assert.match(citation, /provisional_uncalibrated/);

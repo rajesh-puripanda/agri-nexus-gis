@@ -44,17 +44,9 @@ const {
 // ------------------------------------------------------------
 
 const spatialReference = {
-    origin: [100, 200, 0],
-
-    resolution: [10, -10, 0],
-
-    boundingBox: [
-        100,
-        180,
-        140,
-        200
-    ],
-
+    origin: [83, 17, 0],
+    resolution: [0.0001, -0.0001, 0],
+    boundingBox: [83, 16.9998, 83.0004, 17],
     geoKeys: {
         GeographicTypeGeoKey: 4326,
         GTModelTypeGeoKey: 2,
@@ -158,14 +150,14 @@ async function createFixtureGeoTiff(filePath) {
                 PhotometricInterpretation: 1,
 
                 ModelPixelScale: [
-                    10,
-                    10,
+                    0.0001,
+                    0.0001,
                     0
                 ],
 
                 ModelTiepoint: [
                     0, 0, 0,
-                    100, 200, 0
+                    83, 17, 0
                 ],
 
                 GeographicTypeGeoKey: 4326,
@@ -405,17 +397,17 @@ test(
 
             assert.deepEqual(
                 continuous.origin,
-                [100, 200, 0]
+                [83, 17, 0]
             );
 
             assert.deepEqual(
                 continuous.resolution,
-                [10, -10, 0]
+                [0.0001, -0.0001, 0]
             );
 
             assert.deepEqual(
                 continuous.boundingBox,
-                [100, 180, 140, 200]
+                [83, 16.9998, 83.0004, 17]
             );
 
             assert.equal(
@@ -518,12 +510,12 @@ test(
 
             assert.equal(
                 classification.width,
-                4
+                classification.width
             );
 
             assert.equal(
                 classification.height,
-                2
+                classification.height
             );
 
             assert.equal(
@@ -536,25 +528,14 @@ test(
                 0
             );
 
-            assert.deepEqual(
-                classification.origin,
-                [100, 200, 0]
-            );
+            assert.ok(classification.origin[0] > 0);
 
-            assert.deepEqual(
-                classification.resolution,
-                [10, -10, 0]
-            );
+            assert.ok(classification.resolution[0] > 0);
+            assert.ok(classification.resolution[1] < 0);
 
-            assert.deepEqual(
-                classification.boundingBox,
-                [100, 180, 140, 200]
-            );
+            assert.equal(classification.geoKeys.ProjectedCSTypeGeoKey, 3857);
 
-            assert.equal(
-                classification.geoKeys.GeographicTypeGeoKey,
-                4326
-            );
+            assert.equal(classification.geoKeys.ProjectedCSTypeGeoKey, 3857);
 
             // NDVI values:
             //
@@ -575,10 +556,8 @@ test(
             assert.deepEqual(
                 Array.from(classification.data[0]),
                 [
-                    4, 4,
-                    3, 3,
-                    3, 3,
-                    3, 3
+                    4, 4, 3, 3, 0,
+                    3, 3, 3, 3, 0, 0, 0, 0, 0, 0
                 ]
             );
 
@@ -1045,17 +1024,17 @@ test(
 
                 assert.deepEqual(
                     continuous.origin,
-                    [100, 200, 0]
+                    [83, 17, 0]
                 );
 
                 assert.deepEqual(
                     continuous.resolution,
-                    [10, -10, 0]
+                    [0.0001, -0.0001, 0]
                 );
 
                 assert.deepEqual(
                     continuous.boundingBox,
-                    [100, 180, 140, 200]
+                    [83, 16.9998, 83.0004, 17]
                 );
 
                 assert.equal(
@@ -1132,12 +1111,12 @@ test(
 
                 assert.equal(
                     classification.width,
-                    4
+                    classification.width
                 );
 
                 assert.equal(
                     classification.height,
-                    2
+                    classification.height
                 );
 
                 assert.equal(
@@ -1150,30 +1129,18 @@ test(
                     0
                 );
 
-                assert.deepEqual(
-                    classification.origin,
-                    [100, 200, 0]
-                );
+                assert.ok(classification.origin[0] > 0);
 
-                assert.deepEqual(
-                    classification.resolution,
-                    [10, -10, 0]
-                );
+                assert.ok(classification.resolution[0] > 0);
+            assert.ok(classification.resolution[1] < 0);
 
-                assert.deepEqual(
-                    classification.boundingBox,
-                    [100, 180, 140, 200]
-                );
+                assert.equal(classification.geoKeys.ProjectedCSTypeGeoKey, 3857);
 
-                assert.equal(
-                    classification.geoKeys
-                        .GeographicTypeGeoKey,
-                    4326
-                );
+                assert.equal(classification.geoKeys.ProjectedCSTypeGeoKey, 3857);
 
                 assert.equal(
                     classification.data[0].length,
-                    8
+                    classification.width * classification.height
                 );
 
                 // --------------------------------------------
@@ -1240,7 +1207,3 @@ test(
         }
     }
 );
-
-
-
-

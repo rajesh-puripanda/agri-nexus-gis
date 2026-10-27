@@ -3,6 +3,7 @@
 const fs = require("fs/promises");
 const path = require("path");
 const geotiff = require("geotiff");
+const { reprojectCategoricalRasterToWebMercator } = require("./categoricalWebMercatorReprojection");
 
 const {
     createModelPixelScale,
@@ -149,8 +150,20 @@ async function writeAnalysisClassificationRaster({ request, outputPath }) {
         );
     }
 
-    const metadata = createAnalysisClassificationMetadata(request);
-    const arrayBuffer = geotiff.writeArrayBuffer(request.raster.data, metadata);
+    const projected = reprojectCategoricalRasterToWebMercator({
+        data: request.raster.data,
+        width: request.raster.width,
+        height: request.raster.height,
+        spatialReference: request.raster.spatialReference,
+        noData: request.raster.noData
+    });
+
+    const outputRequest = {
+        ...request,
+        raster: { ...request.raster, ...projected }
+    };
+    const metadata = createAnalysisClassificationMetadata(outputRequest);
+    const arrayBuffer = geotiff.writeArrayBuffer(projected.data, metadata);
 
     await fs.mkdir(path.dirname(normalizedPath), { recursive: true });
     await fs.writeFile(normalizedPath, Buffer.from(arrayBuffer));
@@ -163,9 +176,9 @@ async function writeAnalysisClassificationRaster({ request, outputPath }) {
         analysisType: "remote_sensing_soil_vegetation_separation",
         dataType: "Uint8",
         noData: 0,
-        width: request.raster.width,
-        height: request.raster.height,
-        pixelCount: request.raster.pixelCount,
+        width: projected.width,
+        height: projected.height,
+        pixelCount: projected.pixelCount,
         byteLength: stat.size,
         format: "GeoTIFF",
         metadata: {

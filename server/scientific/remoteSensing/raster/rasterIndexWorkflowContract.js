@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // ============================================================
 // server/scientific/remoteSensing/raster/rasterIndexWorkflowContract.js
@@ -620,33 +620,37 @@ function validateRasterIndexWorkflowResult(
     }
 
     if (
-        isPlainObject(result.input) &&
         isPlainObject(result.classificationOutput)
     ) {
+        const output = result.classificationOutput;
+
         if (
-            result.classificationOutput.width !==
-                result.input.width
+            !Number.isInteger(output.width) ||
+            output.width <= 0
         ) {
             errors.push(
-                "classificationOutput.width must match input.width"
+                "classificationOutput.width must be a positive integer"
             );
         }
 
         if (
-            result.classificationOutput.height !==
-                result.input.height
+            !Number.isInteger(output.height) ||
+            output.height <= 0
         ) {
             errors.push(
-                "classificationOutput.height must match input.height"
+                "classificationOutput.height must be a positive integer"
             );
         }
 
         if (
-            result.classificationOutput.pixelCount !==
-                result.input.pixelCount
+            Number.isInteger(output.width) &&
+            Number.isInteger(output.height) &&
+            output.width > 0 &&
+            output.height > 0 &&
+            output.pixelCount !== output.width * output.height
         ) {
             errors.push(
-                "classificationOutput.pixelCount must match input.pixelCount"
+                "classificationOutput.pixelCount must equal width * height"
             );
         }
     }

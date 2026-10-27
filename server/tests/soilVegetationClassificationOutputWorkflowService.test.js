@@ -1,3 +1,4 @@
+
 "use strict";
 
 const test = require("node:test");
@@ -14,11 +15,13 @@ const {
 } = require("../services/remoteSensing/soilVegetation/soilVegetationClassificationOutputWorkflowService");
 
 const spatialReference = {
-    origin: [0, 0, 0],
+    origin: [700000, 2000000, 0],
     resolution: [10, -10, 0],
-    boundingBox: [0, -20, 20, 0],
+    boundingBox: [700000, 1999980, 700020, 2000000],
     geoKeys: {
-        ProjectedCSTypeGeoKey: 32644
+        ProjectedCSTypeGeoKey: 32644,
+        GTModelTypeGeoKey: 1,
+        GTRasterTypeGeoKey: 1
     }
 };
 
@@ -63,6 +66,7 @@ test("classifies paired NDVI/BSI and writes a georeferenced GeoTIFF", async () =
     const directory = await fs.mkdtemp(
         path.join(os.tmpdir(), "agrinexus-soil-vegetation-workflow-")
     );
+
     const outputPath = path.join(
         directory,
         "soil_vegetation_classification.tif"
@@ -75,10 +79,11 @@ test("classifies paired NDVI/BSI and writes a georeferenced GeoTIFF", async () =
         });
 
         assert.equal(result.format, "GeoTIFF");
-        assert.equal(result.width, 2);
-        assert.equal(result.height, 2);
-        assert.equal(result.pixelCount, 4);
+        assert.ok(result.width > 0);
+        assert.ok(result.height > 0);
+        assert.equal(result.pixelCount, result.width * result.height);
         assert.equal(result.noData, 0);
+
         assert.equal(
             result.metadata.method,
             "provisional_ndvi_bsi_evidence_rules"
@@ -88,21 +93,38 @@ test("classifies paired NDVI/BSI and writes a georeferenced GeoTIFF", async () =
             "provisional_uncalibrated"
         );
 
+        // Statistics describe the source classification, before reprojection.
         assert.equal(result.statistics.validPixelCount, 3);
         assert.equal(result.statistics.noDataPixelCount, 1);
 
         const raster = await readGeoTiff(outputPath);
 
-        assert.equal(raster.width, 2);
-        assert.equal(raster.height, 2);
+        assert.ok(raster.width > 0);
+        assert.ok(raster.height > 0);
+        assert.equal(raster.width, result.width);
+        assert.equal(raster.height, result.height);
+        assert.equal(raster.pixelCount, undefined);
         assert.equal(raster.samplesPerPixel, 1);
-        assert.deepEqual(Array.from(raster.data[0]), [1, 2, 3, 0]);
+        assert.equal(raster.data[0].length, raster.width * raster.height);
         assert.equal(raster.noData, 0);
-        assert.deepEqual(raster.origin, [0, 0, 0]);
-        assert.deepEqual(raster.resolution, [10, -10, 0]);
-        assert.equal(raster.geoKeys.ProjectedCSTypeGeoKey, 32644);
 
-        console.log("PASS: end-to-end soil/vegetation classification output");
+        assert.equal(raster.geoKeys.ProjectedCSTypeGeoKey, 3857);
+        assert.ok(raster.resolution[0] > 0);
+        assert.ok(raster.resolution[1] < 0);
+
+        const outputClasses = new Set(Array.from(raster.data[0]));
+        for (const value of outputClasses) {
+            assert.ok(
+                [0, 1, 2, 3].includes(value),
+                `Unexpected classification value: ${value}`
+            );
+        }
+
+        assert.ok(outputClasses.has(0), "Expected NoData class 0");
+
+        console.log(
+            "PASS: soil/vegetation classification is written in EPSG:3857"
+        );
     } finally {
         await fs.rm(directory, { recursive: true, force: true });
     }
