@@ -2203,6 +2203,8 @@ observationCount:
 
     let min = Infinity;
     let max = -Infinity;
+    let dataMin = Infinity;
+    let dataMax = -Infinity;
 
     if (!isClassification) {
       for (
@@ -2213,12 +2215,9 @@ observationCount:
         const value =
           Number(values[i]);
 
-        if (
-          Number.isFinite(
-            value
-          ) &&
-          value !== -9999
-        ) {
+        if (Number.isFinite(value) && value !== -9999) {
+          dataMin = Math.min(dataMin, value);
+          dataMax = Math.max(dataMax, value);
           min =
             Math.min(
               min,
@@ -2360,12 +2359,22 @@ observationCount:
       ] = 190;
     }
 
-    context.putImageData(
-      imageData,
-      0,
-      0
-    );
+    context.putImageData(imageData, 0, 0);
+    if (!isClassification) {
+      const {
+        indexLegend,
+        indexLegendMin,
+        indexLegendMax,
+        indexLegendTitle,
+      } = getElements();
+      const formatValue = value =>
+        Number.isFinite(value) ? value.toFixed(3) : "";
 
+      if (indexLegendMin) indexLegendMin.textContent = `Min: ${formatValue(dataMin)}`;
+      if (indexLegendMax) indexLegendMax.textContent = `Max: ${formatValue(dataMax)}`;
+      if (indexLegendTitle) indexLegendTitle.textContent = `${indexCode} value`;
+      indexLegend?.classList.remove("is-hidden");
+    }
     return canvas;
   }
 
