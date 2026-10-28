@@ -1624,6 +1624,31 @@ Combine authoritative analytical layers into agricultural zoning
 surfaces and, where scientifically justified, integrated management
 zones.
 
+## Phase C.1 - Agricultural Intelligence Foundations
+
+### Objective
+Establish shared evidence contracts, data-quality rules, provenance, and API response structures for agricultural intelligence.
+
+### Scope
+- Define consistent evidence and response contracts.
+- Specify validity, spatial coverage, dates, and quality reporting.
+- Record provenance and reuse authoritative existing products and services.
+- Define API boundaries without duplicating existing raster-processing logic.
+
+### Scientific Boundaries
+- Do not present uncalibrated evidence as a validated diagnosis.
+- Do not invent thresholds, classifications, or recommendations.
+- Represent missing or insufficient evidence explicitly.
+- Keep scientific processing in authoritative backend services.
+
+### Acceptance Criteria
+- Evidence contracts and provenance requirements are documented.
+- Reusable products and services are identified.
+- API and validation boundaries are defined.
+- Tests cover contract validity, evidence quality, and response consistency.
+
+**Status:** Planned - implementation and validation pending.
+
 ### Phase 7.1 — Agricultural Zoning Architecture & Existing-Layer Contract
 
 Phase 7.1 establishes the architectural boundary between existing
