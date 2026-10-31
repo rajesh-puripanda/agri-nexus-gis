@@ -180,10 +180,36 @@
         }
       );
 
-      const remoteBottomRail = document.getElementById("remoteSensingBottomRail");
-      remoteBottomRail?.classList.toggle("workspace-hidden", workspace !== "remote");
-      const remoteRail = document.getElementById("remoteSensingRail");
-      remoteRail?.classList.toggle("is-hidden", workspace !== "remote");
+      const remoteBottomRail =
+        document.getElementById(
+          "remoteSensingBottomRail"
+        );
+
+      remoteBottomRail?.classList.toggle(
+        "workspace-hidden",
+        workspace !== "remote" &&
+          workspace !== "crop"
+      );
+
+      const remoteRail =
+        document.getElementById(
+          "remoteSensingRail"
+        );
+
+      remoteRail?.classList.toggle(
+        "is-hidden",
+        workspace !== "remote"
+      );
+
+      const cropRail =
+        document.getElementById(
+          "cropIntelligenceRail"
+        );
+
+      cropRail?.classList.toggle(
+        "is-hidden",
+        workspace !== "crop"
+      );
 
       activeWorkspace =
         workspace;
@@ -201,6 +227,14 @@
           "function"
       ) {
         window.openRemoteSensingTool();
+      }
+
+      if (
+        workspace === "crop" &&
+        typeof window.openCropIntelligenceTool ===
+          "function"
+      ) {
+        window.openCropIntelligenceTool();
       }
 
       return true;
@@ -267,8 +301,10 @@
 
     analysisPanels.forEach(
       (panel) => {
-        panel.classList.remove(
-          "workspace-hidden"
+        panel.classList.toggle(
+          "workspace-hidden",
+          workspace === "crop" ||
+            workspace === "remote"
         );
       }
     );
@@ -309,10 +345,36 @@
       );
     }
 
-    const remoteBottomRail = document.getElementById("remoteSensingBottomRail");
-    remoteBottomRail?.classList.toggle("workspace-hidden", workspace !== "remote");
-    const remoteRail = document.getElementById("remoteSensingRail");
-    remoteRail?.classList.toggle("is-hidden", workspace !== "remote");
+    const remoteBottomRail =
+      document.getElementById(
+        "remoteSensingBottomRail"
+      );
+
+    remoteBottomRail?.classList.toggle(
+      "workspace-hidden",
+      workspace !== "remote" &&
+        workspace !== "crop"
+    );
+
+    const remoteRail =
+      document.getElementById(
+        "remoteSensingRail"
+      );
+
+    remoteRail?.classList.toggle(
+      "is-hidden",
+      workspace !== "remote"
+    );
+
+    const cropRail =
+      document.getElementById(
+        "cropIntelligenceRail"
+      );
+
+    cropRail?.classList.toggle(
+      "is-hidden",
+      workspace !== "crop"
+    );
 
     activeWorkspace =
       workspace;

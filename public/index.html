@@ -555,8 +555,174 @@
             </div>
           </div>
         </section>
+        <section
+          id="cropIntelligenceRail"
+          class="agri-intelligence-panel is-hidden"
+          aria-labelledby="cropIntelligenceRailTitle"
+        >
+          <div class="agri-intelligence-panel-header">
+            <div>
+              <span class="agri-context-kicker">AGRICULTURAL INTELLIGENCE</span>
+              <h2 id="cropIntelligenceRailTitle">Crop Intelligence</h2>
+            </div>
+          </div>
 
+          <div
+            id="cropIntelligenceRailContent"
+            class="agri-intelligence-panel-content"
+          >
 
+            <!-- CROP SUITABILITY -->
+            <details class="crop-intelligence-section">
+              <summary>Crop Suitability</summary>
+              <p>Crop requirements and land compatibility.</p>
+              <div id="cropSuitabilityContent">
+                <p class="analysis-empty-state">
+                  Crop suitability analysis will be available here.
+                </p>
+              </div>
+            </details>
+
+            <!-- CROP CONDITION -->
+            <details class="crop-intelligence-section" open>
+              <summary>Crop Condition</summary>
+              <p>Current status, stress and change.</p>
+
+              <div id="cropConditionContent">
+
+                <h4>Sentinel-2 NDVI Evidence</h4>
+
+                <div id="cropNdviAvailability">
+                  <p class="analysis-empty-state">
+                    Select an observation date to view available NDVI evidence.
+                  </p>
+                </div>
+
+                <button
+                  id="generateCropInterpretation"
+                  type="button"
+                  class="secondary-button"
+                >
+                  Generate Crop Condition Evidence
+                </button>
+
+                <div id="cropInterpretationOutput">
+                  <p class="analysis-empty-state">
+                    Crop condition evidence will appear here when supporting
+                    observations are available.
+                  </p>
+                </div>
+
+              </div>
+            </details>
+
+            <!-- AGRICULTURAL DECISION SUPPORT -->
+            <details class="crop-intelligence-section">
+              <summary>Agricultural Decision Support</summary>
+              <p>
+                Suitability maps · Condition maps · Alerts · Explanations ·
+                Evidence and confidence.
+              </p>
+              <div id="agriculturalDecisionSupportContent">
+                <p class="analysis-empty-state">
+                  Agricultural decision support functions will be developed here.
+                </p>
+              </div>
+            </details>
+
+            <!-- CROP-SPECIFIC RASTER PROPERTIES -->
+            <div
+              id="cropConditionLayerControls"
+              class="remote-sensing-layer-controls"
+              hidden
+            >
+              <h4>Raster Layer Properties</h4>
+
+              <label for="cropConditionLayerToggle">
+                <input
+                  type="checkbox"
+                  id="cropConditionLayerToggle"
+                  checked
+                />
+                Show NDVI layer
+              </label>
+
+              <label for="cropConditionOpacity">Opacity</label>
+              <input
+                type="range"
+                id="cropConditionOpacity"
+                min="0"
+                max="100"
+                value="72"
+              />
+              <span id="cropConditionOpacityValue">72%</span>
+
+              <div
+                id="cropConditionIndexLegend"
+                class="remote-sensing-index-legend"
+              >
+                <div
+                  id="cropConditionIndexLegendTitle"
+                  class="remote-sensing-control-label"
+                >
+                  Crop NDVI
+                </div>
+
+                <div class="remote-sensing-index-legend-ramp"></div>
+
+                <div class="remote-sensing-index-legend-range">
+                  <span id="cropConditionIndexLegendMin">Min</span>
+                  <span id="cropConditionIndexLegendMax">Max</span>
+                </div>
+
+                <div class="remote-sensing-index-legend-note">
+                  Blue → Green → Red
+                </div>
+              </div>
+                            <hr />
+
+              <h5>NDVI Classification</h5>
+
+              <label for="cropNdviClassificationLayerToggle">
+                <input
+                  type="checkbox"
+                  id="cropNdviClassificationLayerToggle"
+                  checked
+                />
+                Show NDVI classification layer
+              </label>
+
+              <label for="cropNdviClassificationOpacity">
+                Classification opacity
+              </label>
+              <input
+                type="range"
+                id="cropNdviClassificationOpacity"
+                min="0"
+                max="100"
+                value="72"
+              />
+              <span id="cropNdviClassificationOpacityValue">72%</span>
+
+              <div id="cropNdviClassificationLegend">
+                <div class="remote-sensing-control-label">
+                  Baseline Vegetation Classification
+                </div>
+
+                <div>1 — Very Low Vegetation</div>
+                <div>2 — Low Vegetation</div>
+                <div>3 — Moderate Vegetation</div>
+                <div>4 — High Vegetation</div>
+                <div>5 — Very High Vegetation</div>
+
+                <div class="remote-sensing-index-legend-note">
+                  Class 0 — NoData
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
       </div>
 
     </aside>

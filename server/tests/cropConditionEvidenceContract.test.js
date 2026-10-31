@@ -85,7 +85,7 @@ test(
 
         assert.deepEqual(
             OPTIONAL_FIELDS,
-            ["metadata"]
+            ["metadata", "rasterReferences"]
         );
     }
 );
@@ -479,6 +479,108 @@ test(
                 (error) =>
                     error.includes(
                         "metadata"
+                    )
+            )
+        );
+    }
+);
+test(
+    "accepts optional raster references",
+    () => {
+        const evidence =
+            createValidEvidence();
+
+        evidence.rasterReferences = [
+            {
+                indexCode: "NDVI",
+                sceneId: "test-scene",
+                fileName: "NDVI_classification.tif"
+            }
+        ];
+
+        const validation =
+            validateCropConditionEvidence(
+                evidence
+            );
+
+        assert.equal(validation.valid, true);
+        assert.deepEqual(validation.errors, []);
+    }
+);
+
+test(
+    "rejects non-array raster references",
+    () => {
+        const evidence =
+            createValidEvidence();
+
+        evidence.rasterReferences = {};
+
+        const validation =
+            validateCropConditionEvidence(
+                evidence
+            );
+
+        assert.equal(validation.valid, false);
+        assert.ok(
+            validation.errors.some(
+                (error) => error.includes("rasterReferences")
+            )
+        );
+    }
+);
+
+test(
+    "rejects invalid raster reference entries",
+    () => {
+        const evidence =
+            createValidEvidence();
+
+        evidence.rasterReferences = [
+            "NDVI_classification.tif"
+        ];
+
+        const validation =
+            validateCropConditionEvidence(
+                evidence
+            );
+
+        assert.equal(validation.valid, false);
+        assert.ok(
+            validation.errors.some(
+                (error) => error.includes("rasterReferences")
+            )
+        );
+    }
+);
+
+test(
+    "does not treat raster references as analytical evidence",
+    () => {
+        const evidence =
+            createValidEvidence();
+
+        evidence.indexObservations = [];
+        evidence.classifications = [];
+        evidence.temporalChanges = [];
+        evidence.rasterReferences = [
+            {
+                indexCode: "NDVI",
+                fileName: "NDVI_classification.tif"
+            }
+        ];
+
+        const validation =
+            validateCropConditionEvidence(
+                evidence
+            );
+
+        assert.equal(validation.valid, false);
+        assert.ok(
+            validation.errors.some(
+                (error) =>
+                    error.includes(
+                        "At least one analytical evidence item"
                     )
             )
         );

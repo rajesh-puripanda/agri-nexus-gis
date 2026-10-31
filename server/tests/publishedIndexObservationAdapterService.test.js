@@ -133,3 +133,62 @@ test("reports NDVI pixels outside the registered range without clamping", async 
         await fs.rm(directory, { recursive: true, force: true });
     }
 });
+test("inspects published raster metadata without requiring pixel statistics", async () => {
+    const {
+        inspectPublishedIndexRaster
+    } = require("../services/remoteSensing/temporal/publishedIndexObservationAdapterService");
+
+    const directory = await fixture();
+
+    try {
+        const result = await inspectPublishedIndexRaster({
+            sceneDirectory: directory,
+            indexCode: "NDVI"
+        });
+
+        assert.equal(result.observation.sceneId, "TEST_SCENE");
+        assert.equal(result.raster.width, 2);
+        assert.equal(result.raster.height, 2);
+        assert.equal(result.spatialContext.projectedCrsCode, 32644);
+    } finally {
+        await fs.rm(directory, { recursive: true, force: true });
+    }
+});
+
+test("calculates statistics and spatial metadata for a pixel window", async () => {
+    const directory = await fixture();
+
+    try {
+        const result = await createPublishedIndexObservation({
+            sceneDirectory: directory,
+            indexCode: "NDVI",
+            chunkRows: 1,
+            window: [1, 0, 2, 2]
+        });
+
+        assert.equal(result.raster.width, 1);
+        assert.equal(result.raster.height, 2);
+        assert.equal(result.raster.pixelCount, 2);
+
+        assert.equal(result.statistics.validPixelCount, 2);
+        assert.equal(result.statistics.noDataPixelCount, 0);
+        assert.ok(Math.abs(result.statistics.mean - 0.6) < 1e-6);
+
+        assert.deepEqual(
+            result.processingContext.pixelWindow,
+            [1, 0, 2, 2]
+        );
+
+        assert.deepEqual(
+            result.spatialContext.origin,
+            [700010, 2000000, 0]
+        );
+
+        assert.deepEqual(
+            result.spatialContext.boundingBox,
+            [700010, 1999980, 700020, 2000000]
+        );
+    } finally {
+        await fs.rm(directory, { recursive: true, force: true });
+    }
+});

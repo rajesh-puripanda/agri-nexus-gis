@@ -190,7 +190,18 @@ function createValidEvidence() {
 
         metadata: {
             test: true
-        }
+        },
+
+        rasterReferences: [
+            {
+                indexCode: "NDVI",
+                sceneId: "S2C_TEST_SCENE",
+                acquisitionDate: "2026-09-08",
+                productType: "index_classification",
+                fileName: "NDVI_classification.tif",
+                targetResolution: 10
+            }
+        ]
     });
 }
 
@@ -509,6 +520,11 @@ test(
         assert.deepEqual(
             result.processingContext,
             evidence.processingContext
+        );
+
+        assert.deepEqual(
+            result.evidence.rasterReferences,
+            evidence.rasterReferences
         );
     }
 );

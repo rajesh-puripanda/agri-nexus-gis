@@ -48,6 +48,8 @@ const sentinel2IndexProductionWorkflowRoutes =
   require("./routes/sentinel2IndexProductionWorkflowRoutes");
 const sentinel2IndexAvailabilityRoutes =
   require("./routes/sentinel2IndexAvailabilityRoutes");
+const cropConditionInterpretationRoutes =
+  require("./routes/cropConditionInterpretationRoutes");
 const sentinel2ObservationDiscoveryRoutes =
   require("./routes/sentinel2ObservationDiscoveryRoutes");
 const sentinel2LocalObservationRoutes =
@@ -185,6 +187,10 @@ app.use(
     "/api/remote-sensing",
     sentinel2IndexAvailabilityRoutes
 );
+app.use(
+    "/api/remote-sensing",
+    cropConditionInterpretationRoutes
+);
 
 // ============================================================
 // RASTER LAYER CONFIGURATION API
@@ -245,7 +251,7 @@ async function startServer() {
 
     const server = app.listen(PORT, () => {
       console.log("");
-      console.log("ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ GIS Server running on port " + PORT);
+      console.log("AgriNexus GIS Server running on port " + PORT);
       console.log("");
       console.log("Open: http://localhost:" + PORT);
       console.log("");

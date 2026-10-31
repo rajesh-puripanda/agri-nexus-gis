@@ -44,7 +44,8 @@ const REQUIRED_FIELDS = [
 ];
 
 const OPTIONAL_FIELDS = [
-    "metadata"
+    "metadata",
+    "rasterReferences"
 ];
 
 const VALID_TEMPORAL_CHANGE_TYPES = [
@@ -211,6 +212,14 @@ function validateCropConditionEvidence(
     ) {
         errors.push(
             "metadata must be a plain object when provided."
+        );
+    }
+    if (evidence.rasterReferences !== undefined) {
+        errors.push(
+            ...validateEvidenceArray(
+                evidence.rasterReferences,
+                "rasterReferences"
+            )
         );
     }
 

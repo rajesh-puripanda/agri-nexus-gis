@@ -640,6 +640,7 @@ module.exports = {
     normalizeIndexCode,
     listAvailableBiophysicalProductDates,
     getIndexAvailability,
+    findAvailableProduct,
     listAvailableProductDates,
     findAvailableBiophysicalProduct,
 };

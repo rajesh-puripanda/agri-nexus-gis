@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 /*
 ============================================================
@@ -22,6 +22,14 @@
   let selectedIndex = null;
   let remoteSensingLayer = null;
   let renderSequence = 0;
+  let cropNdviLayer = null;
+  let cropNdviLayerVisible = true;
+  let cropNdviRenderSequence = 0;
+  let cropNdviOpacity = 0.72;
+  let cropNdviClassificationLayer = null;
+  let cropNdviClassificationLayerVisible = true;
+  let cropNdviClassificationRenderSequence = 0;
+  let cropNdviClassificationOpacity = 0.72;
   let remoteSensingBusy = false;
   const SENTINEL2_OBSERVATION_DISCOVERY_URL =
     "/api/remote-sensing/sentinel2-observations";
@@ -49,11 +57,13 @@
 
   let sentinel2IndexAvailability = {
     observationDate: null,
+    sceneId: null,
     results: [],
     loading: false,
     error: null,
   };
 
+  let sentinel2IndexAvailabilityRequestSequence = 0;
   let sentinel2AvailabilityPromise = null;
 
   let sentinel2AcquisitionContext = {
@@ -429,6 +439,53 @@ observationCount:
 
     updateSentinel2AcquisitionContext();
   }
+  function bindCropNdviControls() {
+    // Continuous NDVI controls
+    const layerToggle = document.getElementById(
+      "cropConditionLayerToggle"
+    );
+
+    const opacity = document.getElementById(
+      "cropConditionOpacity"
+    );
+
+    if (layerToggle) {
+      layerToggle.addEventListener("change", () => {
+        setCropNdviLayerVisibility(layerToggle.checked);
+      });
+    }
+
+    if (opacity) {
+      opacity.addEventListener("input", () => {
+        setCropNdviOpacity(Number(opacity.value) / 100);
+      });
+    }
+
+    // NDVI classification controls
+    const classificationToggle = document.getElementById(
+      "cropNdviClassificationLayerToggle"
+    );
+
+    const classificationOpacity = document.getElementById(
+      "cropNdviClassificationOpacity"
+    );
+
+    if (classificationToggle) {
+      classificationToggle.addEventListener("change", () => {
+        setCropNdviClassificationLayerVisibility(
+          classificationToggle.checked
+        );
+      });
+    }
+
+    if (classificationOpacity) {
+      classificationOpacity.addEventListener("input", () => {
+        setCropNdviClassificationOpacity(
+          Number(classificationOpacity.value) / 100
+        );
+      });
+    }
+  }
   function clearSentinel2ObservationSelection() {
     sentinel2ObservationContext.selectedSceneId =
       null;
@@ -701,6 +758,13 @@ observationCount:
       sentinel2ObservationContext.selectedObservationDate =
         String(observation.acquisitionDate || "").slice(0, 10);
 
+    // Invalidate previous Crop raster requests and clear both overlays.
+    cropNdviRenderSequence++;
+    cropNdviClassificationRenderSequence++;
+
+    clearCropNdviLayer();
+    clearCropNdviClassificationLayer();
+
     sentinel2ObservationContext.selectedSpatialCoverage =
       Array.isArray(
         observation.spatialCoverage,
@@ -740,6 +804,37 @@ observationCount:
       observation.sceneId,
     );
 
+    sentinel2AvailabilityPromise.then(() => {
+      const currentSceneId =
+        String(
+          sentinel2ObservationContext.selectedSceneId || ""
+        );
+
+      const currentDate =
+        String(
+          sentinel2ObservationContext.selectedObservationDate || ""
+        ).slice(0, 10);
+
+      const requestedDate =
+        String(observation.acquisitionDate || "").slice(0, 10);
+
+      if (
+        currentSceneId !== String(observation.sceneId) ||
+        currentDate !== requestedDate
+      ) {
+        return;
+      }
+
+      if (
+        typeof window.getActiveWorkspace === "function" &&
+        window.getActiveWorkspace() === "crop"
+      ) {
+        return Promise.all([
+          renderCropNdviOutput(),
+          renderCropNdviClassificationOutput(),
+        ]);
+      }
+    });
     loadSentinel2BiophysicalAvailability(
       observation.acquisitionDate,
       observation.sceneId,
@@ -992,7 +1087,6 @@ observationCount:
       String(
         sentinel2ObservationContext.selectedObservationDate || ""
       ).slice(0, 10);
-
     return Boolean(
       result &&
       result.status === "AVAILABLE" &&
@@ -1002,6 +1096,88 @@ observationCount:
         selectedSceneId &&
       String(result.acquisitionDate || "").slice(0, 10) ===
         selectedObservationDate
+    );
+  }
+
+  function renderCropNdviAvailability() {
+    const container =
+      document.getElementById("cropNdviAvailability");
+
+    if (!container) return;
+
+    const selectedSceneId =
+      String(sentinel2ObservationContext.selectedSceneId || "");
+
+    const selectedDate =
+      String(
+        sentinel2ObservationContext.selectedObservationDate || ""
+      ).slice(0, 10);
+
+    const showMessage = (message) => {
+      const paragraph = document.createElement("p");
+      paragraph.className = "analysis-empty-state";
+      paragraph.textContent = message;
+      container.replaceChildren(paragraph);
+    };
+
+    if (!selectedSceneId || !selectedDate) {
+      showMessage("Select an observation date to view NDVI evidence.");
+      return;
+    }
+
+    const stateMatchesSelection =
+      sentinel2IndexAvailability.sceneId === selectedSceneId &&
+      sentinel2IndexAvailability.observationDate === selectedDate;
+
+    if (!stateMatchesSelection) {
+      showMessage("Waiting for NDVI availability...");
+      return;
+    }
+
+    if (sentinel2IndexAvailability.loading) {
+      showMessage("Checking NDVI availability...");
+      return;
+    }
+
+    if (sentinel2IndexAvailability.error) {
+      showMessage("Unable to check NDVI availability. Please try again.");
+      return;
+    }
+
+    const result = getAvailabilityResult("NDVI");
+
+    const isAvailable =
+      result?.status === "AVAILABLE";
+
+    const continuousAvailable =
+      result?.availability?.continuous === true;
+
+    const classificationAvailable =
+      result?.availability?.classification === true;
+
+    const heading = document.createElement("h5");
+    heading.textContent = "NDVI";
+
+    const status = document.createElement("p");
+    status.textContent = isAvailable ? "Status: Available" : "Status: Process";
+
+    const date = document.createElement("p");
+    date.textContent = `Observation date: ${selectedDate}`;
+
+    const continuous = document.createElement("p");
+    continuous.textContent =
+      `Continuous raster: ${continuousAvailable ? "Available" : "Not available"}`;
+
+    const classification = document.createElement("p");
+    classification.textContent =
+      `Classification raster: ${classificationAvailable ? "Available" : "Not available"}`;
+
+    container.replaceChildren(
+      heading,
+      status,
+      date,
+      continuous,
+      classification
     );
   }
 
@@ -1121,9 +1297,19 @@ observationCount:
     observationDate,
     sceneId = null
   ) {
-    if (!observationDate) {
+    const requestSequence =
+      ++sentinel2IndexAvailabilityRequestSequence;
+
+    const requestedDate =
+      String(observationDate || "").slice(0, 10);
+
+    const requestedSceneId =
+      String(sceneId || "");
+
+    if (!requestedDate) {
       sentinel2IndexAvailability = {
         observationDate: null,
+        sceneId: null,
         results: [],
         loading: false,
         error: null,
@@ -1131,34 +1317,38 @@ observationCount:
 
       renderIndexAvailability();
       renderCatalog();
+      renderCropNdviAvailability();
 
       return;
     }
 
-    sentinel2IndexAvailability.loading =
-      true;
-
-
-    sentinel2IndexAvailability.error = null;
-    sentinel2IndexAvailability.observationDate =
-      String(observationDate).slice(0, 10);
+    sentinel2IndexAvailability = {
+      observationDate: requestedDate,
+      sceneId: requestedSceneId,
+      results: [],
+      loading: true,
+      error: null,
+    };
 
     renderIndexAvailability();
+    renderCatalog();
+    renderCropNdviAvailability();
 
     try {
       const url =
         `${SENTINEL2_INDEX_AVAILABILITY_URL}` +
         `?observationDate=${encodeURIComponent(
-          sentinel2IndexAvailability.observationDate
-        )}&sceneId=${encodeURIComponent(sceneId || "")}`;
+          requestedDate
+        )}&sceneId=${encodeURIComponent(
+          requestedSceneId
+        )}`;
 
-      const response =
-        await fetch(url, {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-          },
-        });
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      });
 
       if (!response.ok) {
         throw new Error(
@@ -1166,8 +1356,7 @@ observationCount:
         );
       }
 
-      const payload =
-        await response.json();
+      const payload = await response.json();
 
       if (
         !payload ||
@@ -1179,9 +1368,24 @@ observationCount:
         );
       }
 
+      if (
+        requestSequence !==
+        sentinel2IndexAvailabilityRequestSequence
+      ) {
+        return;
+      }
+
       sentinel2IndexAvailability.results =
         payload.results;
+
     } catch (error) {
+      if (
+        requestSequence !==
+        sentinel2IndexAvailabilityRequestSequence
+      ) {
+        return;
+      }
+
       console.error(
         "Sentinel-2 index availability failed:",
         error
@@ -1192,12 +1396,18 @@ observationCount:
         error instanceof Error
           ? error.message
           : "Unknown availability error.";
-    } finally {
-      sentinel2IndexAvailability.loading =
-        false;
 
-      renderIndexAvailability();
-      renderCatalog();
+    } finally {
+      if (
+        requestSequence ===
+        sentinel2IndexAvailabilityRequestSequence
+      ) {
+        sentinel2IndexAvailability.loading = false;
+
+        renderIndexAvailability();
+        renderCatalog();
+        renderCropNdviAvailability();
+      }
     }
   }
 
@@ -1544,7 +1754,106 @@ observationCount:
         )}%`;
     }
   }
+  function setCropNdviLayerVisibility(visible) {
+    cropNdviLayerVisible = Boolean(visible);
 
+    const map =
+      typeof window.getMap === "function"
+        ? window.getMap()
+        : null;
+
+    if (!map || !cropNdviLayer) return;
+
+    if (
+      cropNdviLayerVisible &&
+      !map.hasLayer(cropNdviLayer)
+    ) {
+      cropNdviLayer.addTo(map);
+    }
+
+    if (
+      !cropNdviLayerVisible &&
+      map.hasLayer(cropNdviLayer)
+    ) {
+      map.removeLayer(cropNdviLayer);
+    }
+  }
+
+  function setCropNdviOpacity(value) {
+    const numericValue = Number(value);
+
+    if (!Number.isFinite(numericValue)) return;
+
+    cropNdviOpacity = Math.max(
+      0,
+      Math.min(1, numericValue)
+    );
+
+    if (cropNdviLayer) {
+      cropNdviLayer.setOpacity(cropNdviOpacity);
+    }
+
+    updateCropNdviOpacityLabel();
+  }
+  function setCropNdviClassificationLayerVisibility(visible) {
+    cropNdviClassificationLayerVisible = Boolean(visible);
+
+    const map =
+      typeof window.getMap === "function"
+        ? window.getMap()
+        : null;
+
+    if (!map || !cropNdviClassificationLayer) return;
+
+    if (
+      cropNdviClassificationLayerVisible &&
+      !map.hasLayer(cropNdviClassificationLayer)
+    ) {
+      cropNdviClassificationLayer.addTo(map);
+    }
+
+    if (
+      !cropNdviClassificationLayerVisible &&
+      map.hasLayer(cropNdviClassificationLayer)
+    ) {
+      map.removeLayer(cropNdviClassificationLayer);
+    }
+  }
+
+  function setCropNdviClassificationOpacity(value) {
+    const numericValue = Number(value);
+
+    if (!Number.isFinite(numericValue)) return;
+
+    cropNdviClassificationOpacity = Math.max(
+      0,
+      Math.min(1, numericValue)
+    );
+
+    if (cropNdviClassificationLayer) {
+      cropNdviClassificationLayer.setOpacity(
+        cropNdviClassificationOpacity
+      );
+    }
+
+    const opacityValue = document.getElementById(
+      "cropNdviClassificationOpacityValue"
+    );
+
+    if (opacityValue) {
+      opacityValue.textContent =
+        `${Math.round(cropNdviClassificationOpacity * 100)}%`;
+    }
+  }
+  function updateCropNdviOpacityLabel() {
+    const opacityValue =
+      document.getElementById("cropConditionOpacityValue");
+
+    if (opacityValue) {
+      opacityValue.textContent =
+        `${Math.round(cropNdviOpacity * 100)}%`;
+    }
+  }
   function setRemoteSensingLayerVisibility(
     visible
   ) {
@@ -1730,7 +2039,58 @@ observationCount:
       false
     );
   }
+    function updateCropConditionLayerControls() {
+    const controls = document.getElementById(
+      "cropConditionLayerControls"
+    );
 
+    if (controls) {
+      controls.hidden = !(
+        cropNdviLayer ||
+        cropNdviClassificationLayer
+      );
+
+      controls.classList.remove("is-hidden");
+    }
+  }
+
+  function clearCropNdviLayer() {
+    const map =
+      typeof window.getMap === "function"
+        ? window.getMap()
+        : null;
+
+    if (
+      map &&
+      cropNdviLayer &&
+      map.hasLayer(cropNdviLayer)
+    ) {
+      map.removeLayer(cropNdviLayer);
+    }
+
+    cropNdviLayer = null;
+
+    updateCropConditionLayerControls();
+  }
+
+  function clearCropNdviClassificationLayer() {
+    const map =
+      typeof window.getMap === "function"
+        ? window.getMap()
+        : null;
+
+    if (
+      map &&
+      cropNdviClassificationLayer &&
+      map.hasLayer(cropNdviClassificationLayer)
+    ) {
+      map.removeLayer(cropNdviClassificationLayer);
+    }
+
+    cropNdviClassificationLayer = null;
+
+    updateCropConditionLayerControls();
+  }
   function selectRemoteSensingIndex(index) {
     if (remoteSensingBusy) {
       return;
@@ -2171,7 +2531,8 @@ observationCount:
     width,
     height,
     isClassification,
-    indexCode
+    indexCode,
+    displayContext = {}
   ) {
     const canvas =
       document.createElement(
@@ -2272,10 +2633,9 @@ observationCount:
         i * 4;
 
       if (
-        !Number.isFinite(
-          value
-        ) ||
-        value === -9999
+        !Number.isFinite(value) ||
+        value === -9999 ||
+        (isClassification && value === 0)
       ) {
         imageData.data[
           offset + 3
@@ -2314,33 +2674,41 @@ observationCount:
           );
       }
 
-      const red =
-        Math.round(
-          255 *
-          normalized
-        );
+            let red;
+      let green;
+      let blue;
 
-      const green =
-        Math.round(
-          255 *
-          (
-            1 -
-            Math.abs(
-              normalized -
-              0.5
-            ) *
-            2
+      const classificationColors =
+        displayContext.classificationColors;
+
+      if (
+        isClassification &&
+        Array.isArray(classificationColors)
+      ) {
+        const classColor =
+          classificationColors[Math.round(value) - 1];
+
+        if (
+          !Number.isInteger(value) ||
+          !Array.isArray(classColor) ||
+          classColor.length !== 3
+        ) {
+          imageData.data[offset + 3] = 0;
+          continue;
+        }
+
+        [red, green, blue] = classColor;
+      } else {
+        red = Math.round(255 * normalized);
+
+        green = Math.round(
+          255 * (
+            1 - Math.abs(normalized - 0.5) * 2
           )
         );
 
-      const blue =
-        Math.round(
-          255 *
-          (
-            1 -
-            normalized
-          )
-        );
+        blue = Math.round(255 * (1 - normalized));
+      }
 
       imageData.data[
         offset
@@ -2361,29 +2729,44 @@ observationCount:
 
     context.putImageData(imageData, 0, 0);
     if (!isClassification) {
-      const {
-        indexLegend,
-        indexLegendMin,
-        indexLegendMax,
-        indexLegendTitle,
-      } = getElements();
+      const remoteElements = getElements();
+
+      const indexLegend =
+        displayContext.indexLegend ||
+        remoteElements.indexLegend;
+
+      const indexLegendMin =
+        displayContext.indexLegendMin ||
+        remoteElements.indexLegendMin;
+
+      const indexLegendMax =
+        displayContext.indexLegendMax ||
+        remoteElements.indexLegendMax;
+
+      const indexLegendTitle =
+        displayContext.indexLegendTitle ||
+        remoteElements.indexLegendTitle;
       const formatValue = value =>
         Number.isFinite(value) ? value.toFixed(3) : "";
 
       if (indexLegendMin) indexLegendMin.textContent = `Min: ${formatValue(dataMin)}`;
       if (indexLegendMax) indexLegendMax.textContent = `Max: ${formatValue(dataMax)}`;
-      if (indexLegendTitle) indexLegendTitle.textContent = `${indexCode} value`;
+      if (indexLegendTitle) {
+        indexLegendTitle.textContent =
+          displayContext.legendTitle || `${indexCode} value`;
+      }
       indexLegend?.classList.remove("is-hidden");
     }
     return canvas;
   }
 
   async function renderRasterOutput(
-    index,
-    type,
-    sequence,
-    sourceUrl = null
-  ) {
+      index,
+      type,
+      sequence,
+      sourceUrl = null,
+      displayContext = {}
+    ) {
     if (
       typeof GeoTIFF ===
       "undefined"
@@ -2634,7 +3017,8 @@ observationCount:
       renderWidth,
       renderHeight,
       type === "classification",
-      index.code
+      index.code,
+      displayContext
     );
     console.timeEnd(`${index.code} createRasterCanvas`);
 
@@ -2681,7 +3065,8 @@ observationCount:
     );
 
     completeRemoteSensingProgress(
-       `${index.code}: Raster loaded.`
+      displayContext.progressMessage ||
+      `${index.code}: Raster loaded.`
     );
 
     map.fitBounds(
@@ -2697,10 +3082,457 @@ observationCount:
     );
 
     updateStatus(
+      displayContext.statusMessage ||
       `${index.code} ${index.name} ${type} layer loaded.`
     );
   }
+    async function renderCropNdviOutput() {
+    const sequence = ++cropNdviRenderSequence;
 
+    const selectedSceneId =
+      String(
+        sentinel2ObservationContext.selectedSceneId || ""
+      );
+
+    const selectedDate =
+      String(
+        sentinel2ObservationContext.selectedObservationDate || ""
+      ).slice(0, 10);
+
+    const cropRail =
+      document.getElementById("cropIntelligenceRail");
+
+    if (
+      typeof window.getActiveWorkspace !== "function" ||
+      window.getActiveWorkspace() !== "crop" ||
+      !cropRail ||
+      cropRail.classList.contains("is-hidden")
+    ) {
+      return;
+    }
+
+    const result = getAvailabilityResult("NDVI");
+
+    const availabilityMatches =
+      result &&
+      result.status === "AVAILABLE" &&
+      String(result.sceneId || "") === selectedSceneId &&
+      String(result.acquisitionDate || "").slice(0, 10) === selectedDate &&
+      result.availability?.continuous === true;
+
+    if (
+      !selectedSceneId ||
+      !selectedDate ||
+      !availabilityMatches
+    ) {
+      clearCropNdviLayer();
+      return;
+    }
+
+    if (typeof GeoTIFF === "undefined") {
+      clearCropNdviLayer();
+      console.error("GeoTIFF library is unavailable for Crop NDVI.");
+      return;
+    }
+
+    const map =
+      typeof window.getMap === "function"
+        ? window.getMap()
+        : null;
+
+    if (!map) {
+      clearCropNdviLayer();
+      console.error("Map is not initialized for Crop NDVI.");
+      return;
+    }
+
+    try {
+      const url = getRasterUrl("NDVI", "index");
+
+      const response = await fetch(url, {
+        headers: {
+          Accept: "image/tiff",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Crop NDVI raster request failed: ${response.status}`
+        );
+      }
+
+      if (!response.body) {
+        throw new Error(
+          "Crop NDVI raster streaming is unavailable."
+        );
+      }
+
+      const reader = response.body.getReader();
+      const chunks = [];
+      let received = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        if (sequence !== cropNdviRenderSequence) {
+          await reader.cancel();
+          return;
+        }
+
+        chunks.push(value);
+        received += value.length;
+      }
+
+      if (sequence !== cropNdviRenderSequence) return;
+
+      const buffer = new Uint8Array(received);
+      let offset = 0;
+
+      for (const chunk of chunks) {
+        buffer.set(chunk, offset);
+        offset += chunk.length;
+      }
+
+      const tiff =
+        await GeoTIFF.fromArrayBuffer(buffer.buffer);
+
+      if (sequence !== cropNdviRenderSequence) return;
+
+      const image = await tiff.getImage();
+
+      const imageWidth = image.getWidth();
+      const imageHeight = image.getHeight();
+
+      const scale = Math.min(
+        1,
+        MAX_RENDER_SIZE /
+          Math.max(imageWidth, imageHeight)
+      );
+
+      const renderWidth = Math.max(
+        1,
+        Math.round(imageWidth * scale)
+      );
+
+      const renderHeight = Math.max(
+        1,
+        Math.round(imageHeight * scale)
+      );
+
+      const raster = await image.readRasters({
+        samples: [0],
+        width: renderWidth,
+        height: renderHeight,
+        resampleMethod: "nearest",
+        interleave: true,
+      });
+
+      if (sequence !== cropNdviRenderSequence) return;
+
+      const canvas = createRasterCanvas(
+        raster,
+        renderWidth,
+        renderHeight,
+        false,
+        "NDVI",
+        {
+          legendTitle: "Crop NDVI",
+          indexLegend: document.getElementById(
+            "cropConditionIndexLegend"
+          ),
+          indexLegendTitle: document.getElementById(
+            "cropConditionIndexLegendTitle"
+          ),
+          indexLegendMin: document.getElementById(
+            "cropConditionIndexLegendMin"
+          ),
+          indexLegendMax: document.getElementById(
+            "cropConditionIndexLegendMax"
+          ),
+        }
+      );
+
+      const imageUrl = canvas.toDataURL("image/png");
+
+      const bounds = getLatLngBoundsFromGeoTIFF(image);
+
+      if (sequence !== cropNdviRenderSequence) return;
+
+      clearCropNdviLayer();
+
+      cropNdviLayer = L.imageOverlay(
+        imageUrl,
+        bounds,
+        {
+          opacity: cropNdviOpacity,
+          interactive: false,
+          crossOrigin: false,
+          className: "crop-ndvi-raster-layer",
+        }
+      );
+
+      if (cropNdviLayerVisible) {
+        cropNdviLayer.addTo(map);
+      }
+
+      const controls =
+        document.getElementById("cropConditionLayerControls");
+
+      if (controls) {
+        controls.hidden = false;
+      }
+
+      const layerToggle =
+        document.getElementById("cropConditionLayerToggle");
+
+      if (layerToggle) {
+        layerToggle.checked = cropNdviLayerVisible;
+      }
+
+      const opacity =
+        document.getElementById("cropConditionOpacity");
+
+      if (opacity) {
+        opacity.value = String(
+          Math.round(cropNdviOpacity * 100)
+        );
+      }
+
+      const opacityValue =
+        document.getElementById("cropConditionOpacityValue");
+
+      if (opacityValue) {
+        opacityValue.textContent =
+          `${Math.round(cropNdviOpacity * 100)}%`;
+      }
+
+      map.fitBounds(bounds, {
+        padding: [20, 20],
+        maxZoom: 13,
+      });
+
+    } catch (error) {
+      if (sequence !== cropNdviRenderSequence) return;
+
+      clearCropNdviLayer();
+
+      console.error(
+        "Crop NDVI raster loading failed:",
+        error
+      );
+    }
+  }
+  async function renderCropNdviClassificationOutput() {
+    const sequence = ++cropNdviClassificationRenderSequence;
+
+    const selectedSceneId = String(
+      sentinel2ObservationContext.selectedSceneId || ""
+    );
+
+    const selectedDate = String(
+      sentinel2ObservationContext.selectedObservationDate || ""
+    ).slice(0, 10);
+
+    const cropRail = document.getElementById("cropIntelligenceRail");
+
+    const isCropActive = () =>
+      typeof window.getActiveWorkspace === "function" &&
+      window.getActiveWorkspace() === "crop" &&
+      cropRail &&
+      !cropRail.classList.contains("is-hidden");
+
+    if (!isCropActive()) return;
+
+    const result = getAvailabilityResult("NDVI");
+
+    const availabilityMatches =
+      result &&
+      result.status === "AVAILABLE" &&
+      String(result.sceneId || "") === selectedSceneId &&
+      String(result.acquisitionDate || "").slice(0, 10) === selectedDate &&
+      result.availability?.classification === true;
+
+    if (!selectedSceneId || !selectedDate || !availabilityMatches) {
+      clearCropNdviClassificationLayer();
+      return;
+    }
+
+    if (typeof GeoTIFF === "undefined") {
+      clearCropNdviClassificationLayer();
+      console.error("GeoTIFF library is unavailable for NDVI classification.");
+      return;
+    }
+
+    const map =
+      typeof window.getMap === "function"
+        ? window.getMap()
+        : null;
+
+    if (!map) {
+      clearCropNdviClassificationLayer();
+      console.error("Map is not initialized for NDVI classification.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        getRasterUrl("NDVI", "classification"),
+        { headers: { Accept: "image/tiff" } }
+      );
+
+      if (!response.ok || !response.body) {
+        throw new Error(
+          `NDVI classification request failed: ${response.status}`
+        );
+      }
+
+      const reader = response.body.getReader();
+      const chunks = [];
+      let received = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        if (sequence !== cropNdviClassificationRenderSequence) {
+          await reader.cancel();
+          return;
+        }
+
+        chunks.push(value);
+        received += value.length;
+      }
+
+      if (sequence !== cropNdviClassificationRenderSequence) return;
+
+      const buffer = new Uint8Array(received);
+      let offset = 0;
+
+      for (const chunk of chunks) {
+        buffer.set(chunk, offset);
+        offset += chunk.length;
+      }
+
+      const tiff = await GeoTIFF.fromArrayBuffer(buffer.buffer);
+      const image = await tiff.getImage();
+
+      const imageWidth = image.getWidth();
+      const imageHeight = image.getHeight();
+
+      const scale = Math.min(
+        1,
+        MAX_RENDER_SIZE / Math.max(imageWidth, imageHeight)
+      );
+
+      const renderWidth = Math.max(1, Math.round(imageWidth * scale));
+      const renderHeight = Math.max(1, Math.round(imageHeight * scale));
+
+      const raster = await image.readRasters({
+        samples: [0],
+        width: renderWidth,
+        height: renderHeight,
+        resampleMethod: "nearest",
+        interleave: true,
+      });
+
+      if (
+        sequence !== cropNdviClassificationRenderSequence ||
+        !isCropActive() ||
+        selectedSceneId !== sentinel2ObservationContext.selectedSceneId ||
+        selectedDate !== String(
+          sentinel2ObservationContext.selectedObservationDate || ""
+        ).slice(0, 10)
+      ) {
+        return;
+      }
+
+      const canvas = createRasterCanvas(
+        raster,
+        renderWidth,
+        renderHeight,
+        true,
+        "NDVI",
+        {
+          classificationColors: [
+            [215, 48, 39],
+            [252, 141, 89],
+            [254, 224, 139],
+            [145, 207, 96],
+            [26, 152, 80],
+          ],
+        }
+      );
+
+      const imageUrl = canvas.toDataURL("image/png");
+      const bounds = getLatLngBoundsFromGeoTIFF(image);
+
+      if (sequence !== cropNdviClassificationRenderSequence) return;
+
+      clearCropNdviClassificationLayer();
+
+      cropNdviClassificationLayer = L.imageOverlay(
+        imageUrl,
+        bounds,
+        {
+          opacity: cropNdviClassificationOpacity,
+          interactive: false,
+          crossOrigin: false,
+          className: "crop-ndvi-classification-layer",
+        }
+      );
+
+      if (cropNdviClassificationLayerVisible) {
+        cropNdviClassificationLayer.addTo(map);
+      }
+
+      updateCropConditionLayerControls();
+
+      const toggle = document.getElementById(
+        "cropNdviClassificationLayerToggle"
+      );
+
+      if (toggle) {
+        toggle.checked = cropNdviClassificationLayerVisible;
+      }
+
+      const opacity = document.getElementById(
+        "cropNdviClassificationOpacity"
+      );
+
+      if (opacity) {
+        opacity.value = String(
+          Math.round(cropNdviClassificationOpacity * 100)
+        );
+      }
+
+      const opacityValue = document.getElementById(
+        "cropNdviClassificationOpacityValue"
+      );
+
+      if (opacityValue) {
+        opacityValue.textContent =
+          `${Math.round(cropNdviClassificationOpacity * 100)}%`;
+      }
+
+      map.fitBounds(bounds, {
+        padding: [20, 20],
+        maxZoom: 13,
+      });
+
+    } catch (error) {
+      if (sequence !== cropNdviClassificationRenderSequence) return;
+
+      clearCropNdviClassificationLayer();
+
+      console.error(
+        "Crop NDVI classification loading failed:",
+        error
+      );
+    }
+  }
   async function loadRemoteSensingMap(
     index
   ) {
@@ -3290,6 +4122,50 @@ observationCount:
     return true;
   }
 
+  function openCropIntelligenceTool() {
+    const { observationResults } = getElements();
+
+    if (observationResults) {
+      observationResults.classList.remove("is-hidden");
+    }
+      discoverSentinel2Observations()
+        .then(() => {
+          const selectedSceneId =
+            sentinel2ObservationContext.selectedSceneId;
+
+          const selectedDate =
+            String(
+              sentinel2ObservationContext.selectedObservationDate || ""
+            ).slice(0, 10);
+
+          const availabilityMatches =
+            sentinel2IndexAvailability.sceneId === selectedSceneId &&
+            String(
+              sentinel2IndexAvailability.observationDate || ""
+            ).slice(0, 10) === selectedDate &&
+            !sentinel2IndexAvailability.loading;
+
+          if (
+            selectedSceneId &&
+            selectedDate &&
+            availabilityMatches &&
+            typeof window.getActiveWorkspace === "function" &&
+            window.getActiveWorkspace() === "crop"
+          ) {
+            Promise.all([
+              renderCropNdviOutput(),
+              renderCropNdviClassificationOutput(),
+            ]);
+          }
+        })
+        .catch((error) => {
+          console.error(
+            "Unable to discover Sentinel-2 observations for Crop Intelligence:",
+            error,
+          );
+        });
+    return true;
+  }
 
   function renderSentinel2ProcessedDates(results, biophysicalProducts = []) {
     const { processedDatesStatus: status, processedDatesList: list } =
@@ -3640,7 +4516,101 @@ observationCount:
     }
   }
 
+  async function generateCropInterpretation() {
+    const button = document.getElementById("generateCropInterpretation");
+    const content = document.getElementById("cropInterpretationOutput");
+    const sceneId = sentinel2ObservationContext.selectedSceneId;
+    const observationDate = sentinel2ObservationContext.selectedObservationDate;
+    const indexCode = "NDVI";
+
+    if (!sceneId || !observationDate || !indexCode) {
+      if (content) content.textContent =
+        "Select a Sentinel-2 observation and spectral index first.";
+      return;
+    }
+
+    button.disabled = true;
+    if (content) content.textContent = "Generating interpretation";
+
+    try {
+      const response = await fetch("/api/remote-sensing/crop-interpretation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ observationDate, sceneId, indexCode })
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Interpretation request failed.");
+      }
+
+      const interpretation = result.interpretation;
+      content.replaceChildren();
+
+      const heading = document.createElement("h4");
+      heading.textContent = "Crop Condition Evidence";
+      content.appendChild(heading);
+
+      const status = document.createElement("p");
+      status.textContent =
+        `Status: ${interpretation.overallInterpretation.interpretationStatus}`;
+      content.appendChild(status);
+
+      const summary = document.createElement("p");
+      summary.textContent = interpretation.overallInterpretation.summary;
+      content.appendChild(summary);
+
+      for (const item of interpretation.indexInterpretations || []) {
+        const evidence = document.createElement("p");
+        evidence.textContent = item.evidenceSummary.replace(/-?\d+\.\d{6,}/g, value => Number(value).toFixed(4));
+        content.appendChild(evidence);
+      }
+
+      const note = document.createElement("p");
+      note.textContent =
+        "Evidence only - this is not a crop diagnosis. Crop-specific calibration is required.";
+      content.appendChild(note);
+      // Render NDVI through the independent Crop layer.
+        try {
+          if (
+            sceneId !== sentinel2ObservationContext.selectedSceneId ||
+            observationDate !== sentinel2ObservationContext.selectedObservationDate ||
+            typeof window.getActiveWorkspace !== "function" ||
+            window.getActiveWorkspace() !== "crop"
+          ) {
+            throw new Error(
+              "The selected observation changed or Crop Intelligence is no longer active."
+            );
+          }
+
+          await Promise.all([
+            renderCropNdviOutput(),
+            renderCropNdviClassificationOutput(),
+          ]);
+
+        } catch (rasterError) {
+          const rasterNotice = document.createElement("p");
+          rasterNotice.textContent =
+            `Evidence interpretation generated, but the Crop raster could not be displayed: ${rasterError.message}`;
+          content.appendChild(rasterNotice);
+        }
+    } catch (error) {
+      if (content) content.textContent =
+        error.message || "Unable to generate interpretation.";
+    } finally {
+      button.disabled = false;
+    }
+  }
   function initializeRemoteSensingTool() {
+    const cropInterpretationButton = document.getElementById(
+      "generateCropInterpretation"
+    );
+    if (cropInterpretationButton) {
+      cropInterpretationButton.addEventListener(
+        "click",
+        generateCropInterpretation
+      );
+    }
     const {
       close,
       layerToggle,
@@ -3744,11 +4714,8 @@ observationCount:
     );
 
     hideRemoteSensingProgress();
-
     bindSentinel2AcquisitionControls();
-
-
-
+    bindCropNdviControls();
     loadSentinel2ProcessedDates();
   }
 
@@ -3766,6 +4733,9 @@ observationCount:
 
   window.loadRemoteSensingMap =
     loadRemoteSensingMap;
+
+  window.openCropIntelligenceTool =
+    openCropIntelligenceTool;
 
   window.initializeRemoteSensingTool =
     initializeRemoteSensingTool;
