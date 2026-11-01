@@ -12,7 +12,9 @@ const dependencyPaths = [
     "../scientific/remoteSensing/temporal/temporalAnalysisWorkflowRequestContract",
     "../services/remoteSensing/temporal/temporalAnalysisWorkflowService",
     "../scientific/cropIntelligence/cropConditionEvidenceContract",
-    "../services/cropIntelligence/cropConditionInterpretationService"
+    "../services/cropIntelligence/cropConditionInterpretationService",
+    "../services/cropIntelligence/cropConditionTemporalChangeStreamingWorkflowService",
+    "../services/cropIntelligence/cropConditionEvidencePersistenceService"
 ];
 
 const controllerPath = require.resolve(
@@ -109,7 +111,12 @@ function resetState() {
     calls.processTemporalAnalysisWorkflow = [];
     calls.createCropConditionEvidence = [];
     calls.processCropConditionInterpretation = [];
+    calls.calculateCropConditionTemporalChangeStreaming = [];
+    calls.buildCropConditionEvidenceIdentity = [];
+    calls.checkReusableCropConditionEvidence = [];
+    calls.saveCropConditionEvidence = [];
 
+    state.reusable = false;
     state.products = [
         {
             indexCode: "NDVI",
@@ -117,7 +124,10 @@ function resetState() {
             acquisitionDate: "2026-09-08",
             productionDirectory: "test/scene-1",
             targetResolution: 10,
-            outputs: { classification: "NDVI_classification.tif" },
+            outputs: {
+                continuous: "NDVI_index.tif",
+                classification: "NDVI_classification.tif"
+            },
             availability: { continuous: true, classification: true }
         },
         {
@@ -126,7 +136,10 @@ function resetState() {
             acquisitionDate: "2026-09-28",
             productionDirectory: "test/scene-2",
             targetResolution: 10,
-            outputs: { classification: "NDVI_classification.tif" },
+            outputs: {
+                continuous: "NDVI_index.tif",
+                classification: "NDVI_classification.tif"
+            },
             availability: { continuous: true, classification: true }
         }
     ];
@@ -291,6 +304,99 @@ const stubs = [
         processCropConditionInterpretation: evidence => {
             calls.processCropConditionInterpretation.push(evidence);
             return state.interpretation;
+        }
+    },
+    {
+        calculateCropConditionTemporalChangeStreaming: async request => {
+            calls.calculateCropConditionTemporalChangeStreaming.push(request);
+
+            return {
+                outputPath: request.outputPath,
+                productCode: "NDVI_TEMPORAL_CHANGE",
+                format: "GeoTIFF",
+                dataType: "Float32",
+                noData: -9999,
+                width: request.commonFootprint.width,
+                height: request.commonFootprint.height,
+                pixelCount:
+                    request.commonFootprint.width *
+                    request.commonFootprint.height,
+                byteLength: 1000,
+                statistics: {
+                    totalPixelCount:
+                        request.commonFootprint.width *
+                        request.commonFootprint.height,
+                    validPixelCount:
+                        request.commonFootprint.width *
+                        request.commonFootprint.height,
+                    noDataPixelCount: 0,
+                    validCoveragePercent: 100,
+                    noDataCoveragePercent: 0,
+                    min: -0.2,
+                    max: 0.3,
+                    mean: 0.1
+                },
+                baseline: request.baseline,
+                comparison: request.comparison,
+                method: "comparison_minus_baseline",
+                calibrationStatus: "not_calibrated"
+            };
+        }
+    },
+    {
+        PROCESSING_VERSION: "1.0.0",
+
+        buildCropConditionComparisonId: () =>
+            "CROP-CONDITION-NDVI-TEST",
+
+        buildCropConditionEvidenceIdentity: request => {
+            calls.buildCropConditionEvidenceIdentity.push(request);
+            return { testIdentity: true };
+        },
+
+        buildCropConditionEvidencePaths: () => ({
+            outputDirectory: "test/crop-condition",
+            rasterPath: "test/crop-condition/NDVI_CHANGE.tif",
+            manifestPath:
+                "test/crop-condition/crop-condition-evidence.json"
+        }),
+
+        checkReusableCropConditionEvidence: async request => {
+            calls.checkReusableCropConditionEvidence.push(request);
+
+            if (!state.reusable) {
+                return { reusable: false };
+            }
+
+            return {
+                reusable: true,
+                rasterMetadata: {
+                    format: "GeoTIFF",
+                    dataType: "Float32",
+                    noData: -9999,
+                    width: 100,
+                    height: 62,
+                    pixelCount: 6200,
+                    byteLength: 1000
+                },
+                evidence: {
+                    statistics: {
+                        totalPixelCount: 6200,
+                        validPixelCount: 6200,
+                        noDataPixelCount: 0,
+                        validCoveragePercent: 100,
+                        noDataCoveragePercent: 0,
+                        min: -0.2,
+                        max: 0.3,
+                        mean: 0.1
+                    }
+                }
+            };
+        },
+
+        saveCropConditionEvidence: async request => {
+            calls.saveCropConditionEvidence.push(request);
+            return { saved: true };
         }
     }
 ];
@@ -657,7 +763,27 @@ test("builds temporal crop-condition evidence over the common footprint", async 
 
     assert.equal(
         evidence.metadata.pixelWiseChangeCalculated,
-        false
+        true
+    );
+
+    assert.equal(
+        res.body.cropConditionProducts.temporalChange.productCode,
+        "NDVI_TEMPORAL_CHANGE"
+    );
+
+    assert.equal(
+        res.body.cropConditionProducts.temporalChange.cacheStatus,
+        "generated"
+    );
+
+    assert.equal(
+        calls.calculateCropConditionTemporalChangeStreaming.length,
+        1
+    );
+
+    assert.equal(
+        calls.saveCropConditionEvidence.length,
+        1
     );
 
     assert.equal(
@@ -667,7 +793,99 @@ test("builds temporal crop-condition evidence over the common footprint", async 
 
     assert.equal(calls.processCropConditionInterpretation.length, 1);
 });
+test("reuses cached crop-condition evidence without regenerating the raster", async () => {
+    state.reusable = true;
 
+    const res = createResponse();
+
+    await postCropConditionTemporalInterpretation(
+        createRequest(validRequest),
+        res
+    );
+
+    assert.equal(res.statusCode, 200);
+
+    assert.equal(
+        res.body.cropConditionProducts.temporalChange.cacheStatus,
+        "reused"
+    );
+
+    assert.equal(
+        calls.checkReusableCropConditionEvidence.length,
+        1
+    );
+
+    assert.equal(
+        calls.calculateCropConditionTemporalChangeStreaming.length,
+        0
+    );
+
+    assert.equal(
+        calls.saveCropConditionEvidence.length,
+        0
+    );
+});
+test("does not generate NDVI pixel-wise change for BSI", async () => {
+    state.products.forEach(product => {
+        product.indexCode = "BSI";
+        product.outputs.continuous = "BSI_index.tif";
+        product.outputs.classification = "BSI_classification.tif";
+    });
+
+    state.observations.forEach(observation => {
+        observation.observation.indexCode = "BSI";
+        observation.index.code = "BSI";
+    });
+
+    state.rasterMetadata.forEach(metadata => {
+        metadata.observation.indexCode = "BSI";
+        metadata.raster.fileName = "BSI_index.tif";
+    });
+
+    const request = {
+        ...validRequest,
+        indexCode: "BSI"
+    };
+
+    const res = createResponse();
+
+    await postCropConditionTemporalInterpretation(
+        createRequest(request),
+        res
+    );
+
+    assert.equal(res.statusCode, 200);
+
+    assert.equal(
+        res.body.cropConditionProducts.temporalChange,
+        null
+    );
+
+    assert.equal(
+        res.body.interpretation.status,
+        "calibration_required"
+    );
+
+    assert.equal(
+        calls.calculateCropConditionTemporalChangeStreaming.length,
+        0
+    );
+
+    assert.equal(
+        calls.checkReusableCropConditionEvidence.length,
+        0
+    );
+
+    assert.equal(
+        calls.saveCropConditionEvidence.length,
+        0
+    );
+
+    assert.equal(
+        calls.processCropConditionInterpretation.length,
+        1
+    );
+});
 test("omits classification raster references when unavailable", async () => {
     state.products.forEach(product => {
         product.availability.classification = false;

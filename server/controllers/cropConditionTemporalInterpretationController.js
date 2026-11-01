@@ -1,5 +1,18 @@
 "use strict";
+const path = require("path");
 
+const {
+    calculateCropConditionTemporalChangeStreaming
+} = require("../services/cropIntelligence/cropConditionTemporalChangeStreamingWorkflowService");
+
+const {
+    PROCESSING_VERSION,
+    buildCropConditionComparisonId,
+    buildCropConditionEvidenceIdentity,
+    buildCropConditionEvidencePaths,
+    checkReusableCropConditionEvidence,
+    saveCropConditionEvidence
+} = require("../services/cropIntelligence/cropConditionEvidencePersistenceService");
 const {
     findAvailableProduct
 } = require("../services/remoteSensing/catalog/sentinel2IndexAvailabilityService");
@@ -462,7 +475,109 @@ async function postCropConditionTemporalInterpretation(req, res) {
             await processTemporalAnalysisWorkflow(analysisRequest);
 
         const temporalChange = analysisWorkflowResult.result;
+        let pixelWiseChangeProduct = null;
 
+        if (indexCode === "NDVI") {
+            const firstProduct = resolvedProducts[0];
+            const lastProduct = resolvedProducts[resolvedProducts.length - 1];
+
+            const baseline = {
+                sceneId: firstProduct.sceneId,
+                date: firstProduct.observationDate,
+                indexCode
+            };
+
+            const comparison = {
+                sceneId: lastProduct.sceneId,
+                date: lastProduct.observationDate,
+                indexCode
+            };
+
+            const comparisonId = buildCropConditionComparisonId({
+                indexCode,
+                baseline,
+                comparison
+            });
+
+            const identity = buildCropConditionEvidenceIdentity({
+                indexCode,
+                baseline,
+                comparison,
+                commonFootprint,
+                spatialContext: observations[0].spatialContext
+            });
+
+            const paths = buildCropConditionEvidencePaths({
+                comparisonId
+            });
+
+            const cachedEvidence =
+                await checkReusableCropConditionEvidence({
+                    outputDirectory: paths.outputDirectory,
+                    expectedIdentity: identity
+                });
+
+            let rasterMetadata;
+            let changeEvidence;
+            let cacheStatus;
+
+            if (cachedEvidence.reusable) {
+                rasterMetadata = cachedEvidence.rasterMetadata;
+                changeEvidence = cachedEvidence.evidence;
+                cacheStatus = "reused";
+            } else {
+                const result =
+                    await calculateCropConditionTemporalChangeStreaming({
+                        baselinePath: path.join(
+                            firstProduct.product.productionDirectory,
+                            firstProduct.product.outputs.continuous
+                        ),
+                        comparisonPath: path.join(
+                            lastProduct.product.productionDirectory,
+                            lastProduct.product.outputs.continuous
+                        ),
+                        commonFootprint,
+                        outputPath: paths.rasterPath,
+                        baseline,
+                        comparison
+                    });
+
+                await saveCropConditionEvidence({
+                    outputDirectory: paths.outputDirectory,
+                    rasterPath: paths.rasterPath,
+                    identity,
+                    result
+                });
+
+                rasterMetadata = result;
+                changeEvidence = result;
+                cacheStatus = "generated";
+            }
+
+            pixelWiseChangeProduct = {
+                comparisonId,
+                productCode: "NDVI_TEMPORAL_CHANGE",
+                fileName: "NDVI_CHANGE.tif",
+                relativePath: path.relative(
+                    process.cwd(),
+                    paths.rasterPath
+                ).split(path.sep).join("/"),
+                format: rasterMetadata.format,
+                dataType: rasterMetadata.dataType,
+                noData: rasterMetadata.noData,
+                width: rasterMetadata.width,
+                height: rasterMetadata.height,
+                pixelCount: rasterMetadata.pixelCount,
+                byteLength: rasterMetadata.byteLength,
+                statistics: changeEvidence.statistics,
+                baseline,
+                comparison,
+                method: "comparison_minus_baseline",
+                calibrationStatus: "not_calibrated",
+                processingVersion: PROCESSING_VERSION,
+                cacheStatus
+            };
+        }
         const evidence = createCropConditionEvidence({
             indexObservations: observations,
             classifications: [],
@@ -498,7 +613,10 @@ async function postCropConditionTemporalInterpretation(req, res) {
             metadata: {
                 calibrationStatus: "not_calibrated",
                 temporalComparisonScope: comparisonScope,
-                pixelWiseChangeCalculated: false
+                pixelWiseChangeCalculated: Boolean(pixelWiseChangeProduct),
+                pixelWiseChangeStatus: pixelWiseChangeProduct
+                    ? pixelWiseChangeProduct.cacheStatus
+                    : "not_applicable"
             }
         });
 
@@ -507,7 +625,10 @@ async function postCropConditionTemporalInterpretation(req, res) {
 
         return res.status(200).json({
             success: true,
-            interpretation
+            interpretation,
+            cropConditionProducts: {
+                temporalChange: pixelWiseChangeProduct
+            }
         });
     } catch (error) {
         console.error(
