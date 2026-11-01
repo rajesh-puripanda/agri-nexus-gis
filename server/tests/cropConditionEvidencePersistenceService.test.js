@@ -71,6 +71,15 @@ async function createFixture(t) {
         format: "GeoTIFF",
         dataType: "Float32",
         noData: -9999,
+        spatialReference: {
+            origin: [700160, 1900600, 0],
+            resolution: [10, -10, 0],
+            geoKeys: {
+                GTModelTypeGeoKey: 1,
+                GTRasterTypeGeoKey: 1,
+                ProjectedCSTypeGeoKey: 32644
+            }
+        },
         width: 100,
         height: 100,
         pixelCount: 10000,
@@ -133,6 +142,33 @@ test("matching manifest and raster are reusable", async t => {
     assert.equal(cached.reason, "identity_and_raster_match");
     assert.equal(cached.evidence.statistics.validPixelCount, 9000);
     assert.equal(cached.rasterMetadata.byteLength, 11);
+});
+
+test("missing spatial-temporal contract prevents cache reuse", async t => {
+    const fixture = await createFixture(t);
+    await saveFixture(fixture);
+
+    const manifest = JSON.parse(
+        await fs.readFile(fixture.paths.manifestPath, "utf8")
+    );
+
+    delete manifest.spatialTemporalChangeEvidence;
+
+    await fs.writeFile(
+        fixture.paths.manifestPath,
+        JSON.stringify(manifest)
+    );
+
+    const cached = await service.checkReusableCropConditionEvidence({
+        outputDirectory: fixture.paths.outputDirectory,
+        expectedIdentity: fixture.identity
+    });
+
+    assert.equal(cached.reusable, false);
+    assert.equal(
+        cached.reason,
+        "spatial_temporal_change_evidence_invalid"
+    );
 });
 
 test("same-size raster replacement invalidates cached evidence", async t => {
@@ -283,4 +319,151 @@ test("invalid index code is rejected", () => {
         }),
         /NDVI only/
     );
+});
+
+test("valid manifest and raster are published", async t => {
+    const fixture = await createFixture(t);
+    await saveFixture(fixture);
+
+    const published =
+        await service.findPublishedCropConditionEvidence({
+            projectRoot: fixture.projectRoot,
+            comparisonId: fixture.paths.comparisonId
+        });
+
+    assert.equal(published.published, true);
+    assert.equal(published.comparisonId, fixture.paths.comparisonId);
+    assert.equal(published.raster.fileName, "NDVI_CHANGE.tif");
+    assert.equal(published.raster.width, 100);
+    assert.equal(published.evidence.method, "comparison_minus_baseline");
+    assert.equal(published.identity.indexCode, "NDVI");
+});
+
+test("missing spatial-temporal contract prevents publication", async t => {
+    const fixture = await createFixture(t);
+    await saveFixture(fixture);
+
+    const manifest = JSON.parse(
+        await fs.readFile(fixture.paths.manifestPath, "utf8")
+    );
+
+    delete manifest.spatialTemporalChangeEvidence;
+
+    await fs.writeFile(
+        fixture.paths.manifestPath,
+        JSON.stringify(manifest)
+    );
+
+    const published =
+        await service.findPublishedCropConditionEvidence({
+            projectRoot: fixture.projectRoot,
+            comparisonId: fixture.paths.comparisonId
+        });
+
+    assert.equal(published.published, false);
+    assert.equal(
+        published.reason,
+        "spatial_temporal_change_evidence_invalid"
+    );
+});
+
+test("invalid comparison ID is rejected", async t => {
+    const fixture = await createFixture(t);
+
+    const published =
+        await service.findPublishedCropConditionEvidence({
+            projectRoot: fixture.projectRoot,
+            comparisonId: "../invalid"
+        });
+
+    assert.equal(published.published, false);
+    assert.equal(published.reason, "invalid_comparison_id");
+});
+
+test("missing publication manifest is rejected", async t => {
+    const fixture = await createFixture(t);
+
+    const published =
+        await service.findPublishedCropConditionEvidence({
+            projectRoot: fixture.projectRoot,
+            comparisonId: fixture.paths.comparisonId
+        });
+
+    assert.equal(published.published, false);
+    assert.equal(published.reason, "manifest_missing");
+});
+
+test("missing published raster is rejected", async t => {
+    const fixture = await createFixture(t);
+    await saveFixture(fixture);
+
+    await fs.rm(fixture.paths.rasterPath);
+
+    const published =
+        await service.findPublishedCropConditionEvidence({
+            projectRoot: fixture.projectRoot,
+            comparisonId: fixture.paths.comparisonId
+        });
+
+    assert.equal(published.published, false);
+    assert.equal(published.reason, "raster_missing");
+});
+
+test("invalid manifest content is rejected", async t => {
+    const fixture = await createFixture(t);
+    await fs.mkdir(fixture.paths.outputDirectory, {
+        recursive: true
+    });
+
+    await fs.writeFile(fixture.paths.manifestPath, "null");
+
+    const published =
+        await service.findPublishedCropConditionEvidence({
+            projectRoot: fixture.projectRoot,
+            comparisonId: fixture.paths.comparisonId
+        });
+
+    assert.equal(published.published, false);
+    assert.equal(published.reason, "manifest_invalid");
+});
+
+test("changed comparison identity is rejected", async t => {
+    const fixture = await createFixture(t);
+    await saveFixture(fixture);
+
+    const manifest = JSON.parse(
+        await fs.readFile(fixture.paths.manifestPath, "utf8")
+    );
+
+    manifest.identity.comparison.sceneId = "DIFFERENT_SCENE";
+
+    await fs.writeFile(
+        fixture.paths.manifestPath,
+        JSON.stringify(manifest)
+    );
+
+    const published =
+        await service.findPublishedCropConditionEvidence({
+            projectRoot: fixture.projectRoot,
+            comparisonId: fixture.paths.comparisonId
+        });
+
+    assert.equal(published.published, false);
+    assert.equal(published.reason, "comparison_identity_mismatch");
+});
+
+test("modified raster fails publication checksum verification", async t => {
+    const fixture = await createFixture(t);
+    await saveFixture(fixture);
+
+    await fs.writeFile(fixture.paths.rasterPath, "fake-raster");
+
+    const published =
+        await service.findPublishedCropConditionEvidence({
+            projectRoot: fixture.projectRoot,
+            comparisonId: fixture.paths.comparisonId
+        });
+
+    assert.equal(published.published, false);
+    assert.equal(published.reason, "raster_checksum_mismatch");
 });

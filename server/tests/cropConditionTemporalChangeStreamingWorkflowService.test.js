@@ -139,6 +139,11 @@ test("calculates pixel-wise NDVI change over an aligned common footprint", async
         assert.equal(result.width, 3);
         assert.equal(result.height, 2);
         assert.equal(result.noData, NO_DATA);
+        assert.deepEqual(result.spatialReference.origin, [100, 120, 0]);
+        assert.deepEqual(result.spatialReference.resolution, [10, -10, 0]);
+        assert.equal(result.spatialReference.geoKeys.GTModelTypeGeoKey, 1);
+        assert.equal(result.spatialReference.geoKeys.GTRasterTypeGeoKey, 1);
+        assert.equal(result.spatialReference.geoKeys.ProjectedCSTypeGeoKey, 32644);
 
         const stats = result.statistics;
 

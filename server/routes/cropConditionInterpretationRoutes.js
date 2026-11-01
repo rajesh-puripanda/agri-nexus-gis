@@ -7,7 +7,9 @@ const {
 const {
     postCropConditionTemporalInterpretation
 } = require("../controllers/cropConditionTemporalInterpretationController");
-
+const {
+    getCropConditionTemporalChangeRaster
+} = require("../controllers/cropConditionRasterController");
 const router = express.Router();
 
 router.post(
@@ -19,5 +21,8 @@ router.post(
     "/crop-interpretation/temporal",
     postCropConditionTemporalInterpretation
 );
-
+router.get(
+    "/crop-condition/comparisons/:comparisonId/raster",
+    getCropConditionTemporalChangeRaster
+);
 module.exports = router;

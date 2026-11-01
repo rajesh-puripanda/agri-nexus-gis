@@ -1,4 +1,4 @@
-﻿const path = require("path");
+const path = require("path");
 const geotiff = require("geotiff");
 
 const {
@@ -403,6 +403,7 @@ async function calculateCropConditionTemporalChangeStreaming({
 
         return {
             ...rasterMetadata,
+            spatialReference,
             statistics: {
                 totalPixelCount,
                 validPixelCount,

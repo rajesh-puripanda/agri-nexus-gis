@@ -34,3 +34,4 @@ build/
 # Local remote-sensing data / tooling
 /data/remote-sensing/
 /tools/
+/data/crop-intelligence/condition/

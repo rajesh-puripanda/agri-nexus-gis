@@ -3,7 +3,10 @@
 const fs = require("fs/promises");
 const path = require("path");
 const crypto = require("crypto");
-
+const {
+    createSpatialTemporalChangeEvidence,
+    validateSpatialTemporalChangeEvidence
+} = require("../../scientific/cropIntelligence/spatialTemporalChangeEvidenceContract");
 const MANIFEST_FILENAME = "crop-condition-evidence.json";
 const RASTER_FILENAME = "NDVI_CHANGE.tif";
 const MANIFEST_SCHEMA_VERSION = 1;
@@ -251,6 +254,34 @@ async function checkReusableCropConditionEvidence({
         throw error;
     }
 
+        const contract = manifest.spatialTemporalChangeEvidence;
+
+    const contractValidation =
+        validateSpatialTemporalChangeEvidence(contract);
+
+    const manifestEvidence = {
+        statistics: manifest.evidence?.statistics,
+        method: manifest.evidence?.method,
+        calibrationStatus: manifest.evidence?.calibrationStatus
+    };
+
+    if (
+        !contractValidation.valid ||
+        stableStringify(contract.identity) !==
+            stableStringify(manifest.identity) ||
+        stableStringify(contract.raster) !==
+            stableStringify(manifest.raster) ||
+        stableStringify(contract.evidence) !==
+            stableStringify(manifestEvidence) ||
+        contract.processingContext?.processingVersion !==
+            manifest.identity?.processingVersion
+    ) {
+        return {
+            reusable: false,
+            reason: "spatial_temporal_change_evidence_invalid"
+        };
+    }
+
     return {
         reusable: true,
         reason: "identity_and_raster_match",
@@ -295,29 +326,49 @@ async function saveCropConditionEvidence({
 
     await fs.mkdir(outputDirectory, { recursive: true });
 
+        const rasterMetadata = {
+        fileName: RASTER_FILENAME,
+        productCode: result.productCode,
+        format: result.format,
+        dataType: result.dataType,
+        noData: result.noData,
+        width: result.width,
+        height: result.height,
+        pixelCount: result.pixelCount,
+        byteLength: stat.size,
+        sha256
+    };
+
+    const evidenceMetadata = {
+        statistics: result.statistics,
+        baseline: result.baseline,
+        comparison: result.comparison,
+        method: result.method,
+        calibrationStatus: result.calibrationStatus
+    };
+
+    const spatialTemporalChangeEvidence =
+        createSpatialTemporalChangeEvidence({
+            identity,
+            spatialReference: result.spatialReference,
+            raster: rasterMetadata,
+            evidence: {
+                statistics: result.statistics,
+                method: result.method,
+                calibrationStatus: result.calibrationStatus
+            },
+            processingContext: {
+                processingVersion: identity.processingVersion
+            }
+        });
+
     const manifest = {
         schemaVersion: MANIFEST_SCHEMA_VERSION,
         createdAt: new Date().toISOString(),
         identity,
-        raster: {
-            fileName: RASTER_FILENAME,
-            productCode: result.productCode,
-            format: result.format,
-            dataType: result.dataType,
-            noData: result.noData,
-            width: result.width,
-            height: result.height,
-            pixelCount: result.pixelCount,
-            byteLength: stat.size,
-            sha256
-        },
-        evidence: {
-            statistics: result.statistics,
-            baseline: result.baseline,
-            comparison: result.comparison,
-            method: result.method,
-            calibrationStatus: result.calibrationStatus
-        }
+        raster: rasterMetadata,
+        evidence: evidenceMetadata,
+        spatialTemporalChangeEvidence
     };
 
     const manifestPath = path.join(
@@ -350,6 +401,259 @@ async function saveCropConditionEvidence({
     };
 }
 
+function isValidIsoDate(value) {
+    if (
+        typeof value !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(value)
+    ) {
+        return false;
+    }
+
+    const date = new Date(`${value}T00:00:00.000Z`);
+
+    return (
+        !Number.isNaN(date.getTime()) &&
+        date.toISOString().slice(0, 10) === value
+    );
+}
+
+async function findPublishedCropConditionEvidence({
+    projectRoot = process.cwd(),
+    comparisonId
+}) {
+    let paths;
+
+    try {
+        paths = buildCropConditionEvidencePaths({
+            projectRoot,
+            comparisonId
+        });
+    } catch {
+        return {
+            published: false,
+            reason: "invalid_comparison_id"
+        };
+    }
+
+    let manifest;
+
+    try {
+        manifest = JSON.parse(
+            await fs.readFile(paths.manifestPath, "utf8")
+        );
+    } catch (error) {
+        return {
+            published: false,
+            reason: error.code === "ENOENT"
+                ? "manifest_missing"
+                : "manifest_unreadable"
+        };
+    }
+
+    // Reject null, arrays and non-object manifests.
+    if (
+        !manifest ||
+        typeof manifest !== "object" ||
+        Array.isArray(manifest)
+    ) {
+        return {
+            published: false,
+            reason: "manifest_invalid"
+        };
+    }
+
+    if (
+        !manifest ||
+        typeof manifest !== "object" ||
+        Array.isArray(manifest)
+    ) {
+        return {
+            published: false,
+            reason: "manifest_invalid"
+        };
+    }
+
+    const identity = manifest.identity;
+    const raster = manifest.raster;
+    const evidence = manifest.evidence;
+
+    // Validate observation identity and chronological order.
+    if (
+        manifest.schemaVersion !== MANIFEST_SCHEMA_VERSION ||
+        identity?.schemaVersion !== MANIFEST_SCHEMA_VERSION ||
+        identity?.processingVersion !== PROCESSING_VERSION ||
+        identity?.indexCode !== "NDVI" ||
+        typeof identity?.baseline?.sceneId !== "string" ||
+        !identity.baseline.sceneId ||
+        typeof identity?.comparison?.sceneId !== "string" ||
+        !identity.comparison.sceneId ||
+        identity.baseline.indexCode !== "NDVI" ||
+        identity.comparison.indexCode !== "NDVI" ||
+        !isValidIsoDate(identity.baseline.date) ||
+        !isValidIsoDate(identity.comparison.date) ||
+        identity.baseline.date >= identity.comparison.date
+    ) {
+        return {
+            published: false,
+            reason: "manifest_identity_invalid"
+        };
+    }
+
+    // Validate common footprint and spatial context.
+    const footprint = identity.commonFootprint;
+    const spatialContext = footprint?.spatialContext;
+
+    if (
+        !Number.isSafeInteger(footprint?.width) ||
+        footprint.width <= 0 ||
+        !Number.isSafeInteger(footprint?.height) ||
+        footprint.height <= 0 ||
+        !Array.isArray(footprint.boundingBox) ||
+        footprint.boundingBox.length !== 4 ||
+        !footprint.boundingBox.every(Number.isFinite) ||
+        !Array.isArray(footprint.windows) ||
+        footprint.windows.length < 2 ||
+        !spatialContext ||
+        !Array.isArray(spatialContext.origin) ||
+        !Array.isArray(spatialContext.resolution) ||
+        !spatialContext.origin.every(Number.isFinite) ||
+        !spatialContext.resolution.every(Number.isFinite) ||
+        spatialContext.projectedCrsCode == null ||
+        spatialContext.rasterType == null
+    ) {
+        return {
+            published: false,
+            reason: "manifest_spatial_context_invalid"
+        };
+    }
+
+    // Confirm that the requested comparison ID matches its identity.
+    const expectedId = buildCropConditionComparisonId({
+        indexCode: identity.indexCode,
+        baseline: identity.baseline,
+        comparison: identity.comparison
+    });
+
+    if (expectedId !== comparisonId) {
+        return {
+            published: false,
+            reason: "comparison_identity_mismatch"
+        };
+    }
+
+    const expectedPixelCount =
+        raster?.width * raster?.height;
+
+    // Validate the published raster metadata.
+    if (
+        raster?.fileName !== RASTER_FILENAME ||
+        raster?.productCode !== "NDVI_TEMPORAL_CHANGE" ||
+        raster?.format !== "GeoTIFF" ||
+        raster?.dataType !== "Float32" ||
+        !Number.isSafeInteger(raster.width) ||
+        raster.width <= 0 ||
+        !Number.isSafeInteger(raster.height) ||
+        raster.height <= 0 ||
+        !Number.isSafeInteger(expectedPixelCount) ||
+        !Number.isSafeInteger(raster.pixelCount) ||
+        raster.pixelCount !== expectedPixelCount ||
+        raster.width !== footprint.width ||
+        raster.height !== footprint.height ||
+        !Number.isSafeInteger(raster.byteLength) ||
+        raster.byteLength <= 0 ||
+        typeof raster.sha256 !== "string" ||
+        !/^[a-f0-9]{64}$/.test(raster.sha256)
+    ) {
+        return {
+            published: false,
+            reason: "raster_metadata_invalid"
+        };
+    }
+
+    // Confirm that the evidence describes the same comparison.
+    if (
+        evidence?.baseline?.sceneId !== identity.baseline.sceneId ||
+        evidence?.baseline?.date !== identity.baseline.date ||
+        evidence?.comparison?.sceneId !== identity.comparison.sceneId ||
+        evidence?.comparison?.date !== identity.comparison.date ||
+        evidence?.method !== "comparison_minus_baseline" ||
+        evidence?.calibrationStatus !== "not_calibrated"
+    ) {
+        return {
+            published: false,
+            reason: "evidence_metadata_invalid"
+        };
+    }
+
+        // Validate the standalone spatial-temporal evidence contract.
+    const contract = manifest.spatialTemporalChangeEvidence;
+
+    const contractValidation =
+        validateSpatialTemporalChangeEvidence(contract);
+
+    const manifestEvidence = {
+        statistics: evidence?.statistics,
+        method: evidence?.method,
+        calibrationStatus: evidence?.calibrationStatus
+    };
+
+    if (
+        !contractValidation.valid ||
+        stableStringify(contract.identity) !==
+            stableStringify(identity) ||
+        stableStringify(contract.raster) !==
+            stableStringify(raster) ||
+        stableStringify(contract.evidence) !==
+            stableStringify(manifestEvidence) ||
+        contract.processingContext?.processingVersion !==
+            identity?.processingVersion
+    ) {
+        return {
+            published: false,
+            reason: "spatial_temporal_change_evidence_invalid"
+        };
+    }
+
+    // Verify the actual raster file and its checksum.
+    try {
+        const stat = await fs.stat(paths.rasterPath);
+
+        if (!stat.isFile() || stat.size !== raster.byteLength) {
+            return {
+                published: false,
+                reason: "raster_size_mismatch"
+            };
+        }
+
+        const actualChecksum = await calculateFileSha256(
+            paths.rasterPath
+        );
+
+        if (actualChecksum !== raster.sha256) {
+            return {
+                published: false,
+                reason: "raster_checksum_mismatch"
+            };
+        }
+    } catch (error) {
+        return {
+            published: false,
+            reason: error.code === "ENOENT"
+                ? "raster_missing"
+                : "raster_unreadable"
+        };
+    }
+
+    return {
+        published: true,
+        comparisonId,
+        rasterPath: paths.rasterPath,
+        raster,
+        evidence,
+        identity
+    };
+}
+
 module.exports = {
     MANIFEST_SCHEMA_VERSION,
     PROCESSING_VERSION,
@@ -359,5 +663,6 @@ module.exports = {
     buildCropConditionEvidenceIdentity,
     buildCropConditionEvidencePaths,
     checkReusableCropConditionEvidence,
-    saveCropConditionEvidence
+    saveCropConditionEvidence,
+    findPublishedCropConditionEvidence,
 };
