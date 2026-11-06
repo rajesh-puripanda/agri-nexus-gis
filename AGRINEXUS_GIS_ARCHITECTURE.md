@@ -1649,6 +1649,76 @@ Establish shared evidence contracts, data-quality rules, provenance, and API res
 
 **Status:** Planned - implementation and validation pending.
 
+## Phase C.2 - Crop Condition Calibration Applicability Evaluator
+
+### Objective
+Establish a deterministic evaluator for deciding whether a validated crop-condition calibration is applicable to a specific agricultural context and temporal index observation.
+
+### Scope
+- Validate agricultural context and temporal observation inputs.
+- Evaluate calibration applicability against index, sensor, crop, growth stage, season, study area, and observation date.
+- Distinguish applicable, not applicable, insufficient information, invalid calibration, and unvalidated calibration outcomes.
+- Treat unresolved applicability dimensions explicitly rather than assuming compatibility.
+
+### Scientific Boundaries
+- Applicability does not establish scientific validity.
+- The evaluator does not create, modify, or validate calibration evidence.
+- Descriptive study-area names alone do not establish spatial applicability.
+- Missing or conflicting information must not be silently treated as a match.
+
+**Status:** Implemented and tested.
+
+## Phase C.3 - Crop Condition Calibration Registry and Persistence
+
+### Objective
+Establish controlled registration, lifecycle management, and persistent audit history for crop-condition calibration records.
+
+### Scope
+- Persist calibration records and lifecycle history.
+- Support registration, validation, validation rejection, and retirement.
+- Enforce explicit lifecycle transitions and preserve audit reasons.
+- Synchronize registry status with the calibration contract.
+- Use transactional persistence and row-level locking for lifecycle operations.
+
+### Scientific Boundaries
+- Registry approval is an explicit governance operation, not automatic scientific validation.
+- Registration does not establish that calibration evidence is scientifically adequate.
+- No empirical calibration dataset or crop-condition thresholds are created by this phase.
+- Calibration lifecycle operations must not be exposed through an unauthenticated public API.
+
+**Status:** Implemented and tested, including MySQL repository integration.
+
+## Phase C.4 - Validated Crop Condition Calibration Resolution
+
+### Objective
+Resolve the validated calibration applicable to a given agricultural context and temporal index observation.
+
+### Scope
+- Discover validated calibration candidates using crop, index, and season.
+- Retrieve complete calibration records from the registry.
+- Evaluate each candidate using the Phase C.2 applicability evaluator.
+- Select a calibration only when exactly one candidate is applicable and no candidate remains unresolved.
+- Report ambiguous, insufficient-information, not-applicable, and no-calibration outcomes explicitly.
+
+### Scientific Boundaries
+- Resolution does not create or validate calibration evidence.
+- Multiple applicable candidates must not be resolved through arbitrary ranking or selection.
+- Unresolved candidates must not be silently discarded.
+- Calibration resolution does not itself produce crop-condition scores, classifications, or recommendations.
+- Existing evidence-only interpretation remains in force until scientifically validated calibration and interpretation are available.
+
+**Status:** Implemented and tested.
+
+### Domain C calibration readiness boundary
+
+Phases C.2 through C.4 establish calibration applicability evaluation, controlled registry persistence, and deterministic calibration resolution.
+
+They do not establish empirical scientific calibration for any crop, index, sensor, or study area.
+
+Existing H1/H2 soil observations remain contextual evidence and must not be treated as crop-condition calibration datasets without appropriate reference observations and validation.
+
+Crop-condition interpretation therefore remains evidence-only and calibration-dependent until authoritative calibration evidence and its scientific validation are established.
+
 ### Phase 7.1 — Agricultural Zoning Architecture & Existing-Layer Contract
 
 Phase 7.1 establishes the architectural boundary between existing
