@@ -282,8 +282,23 @@ function validateRaster(raster, identity) {
         return ["raster must be a plain object."];
     }
 
-    if (raster.fileName !== "NDVI_CHANGE.tif") {
-        errors.push('raster.fileName must be "NDVI_CHANGE.tif".');
+    const expectedFileName =
+        isValidIsoDate(identity?.baseline?.date) &&
+        isValidIsoDate(identity?.comparison?.date) &&
+        identity.baseline.date < identity.comparison.date
+            ? (
+                `NDVI_CHANGE_${identity.baseline.date.replace(/-/g, "")}_` +
+                `${identity.comparison.date.replace(/-/g, "")}.tif`
+            )
+            : null;
+
+    if (
+        expectedFileName === null ||
+        raster.fileName !== expectedFileName
+    ) {
+        errors.push(
+            "raster.fileName must match the chronological identity observation dates."
+        );
     }
 
     if (raster.productCode !== EXPECTED_PRODUCT_CODE) {

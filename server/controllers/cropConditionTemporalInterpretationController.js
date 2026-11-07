@@ -1,4 +1,6 @@
+
 "use strict";
+
 const path = require("path");
 
 const {
@@ -13,6 +15,7 @@ const {
     checkReusableCropConditionEvidence,
     saveCropConditionEvidence
 } = require("../services/cropIntelligence/cropConditionEvidencePersistenceService");
+
 const {
     findAvailableProduct
 } = require("../services/remoteSensing/catalog/sentinel2IndexAvailabilityService");
@@ -49,21 +52,37 @@ const {
 const DEFAULT_PRODUCTION_ROOTS = [
     "./data/remote-sensing/outputs",
     "./data/remote-sensing/production",
-    "./data/remote-sensing/production/ssmi",
+    "./data/remote-sensing/production/ssmi"
 ];
 
 const GRID_TOLERANCE = 1e-6;
 
-function nearlyEqual(first, next) {
+function nearlyEqual(first, second) {
     return (
         Number.isFinite(first) &&
-        Number.isFinite(next) &&
-        Math.abs(first - next) <= GRID_TOLERANCE
+        Number.isFinite(second) &&
+        Math.abs(first - second) <= GRID_TOLERANCE
     );
 }
 
 function spatialError(message, code) {
     return Object.assign(new Error(message), { code });
+}
+
+function isValidDateString(value) {
+    if (
+        typeof value !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(value)
+    ) {
+        return false;
+    }
+
+    const date = new Date(`${value}T00:00:00Z`);
+
+    return (
+        !Number.isNaN(date.getTime()) &&
+        date.toISOString().slice(0, 10) === value
+    );
 }
 
 function calculateCommonFootprint(rasterMetadata) {
@@ -74,12 +93,12 @@ function calculateCommonFootprint(rasterMetadata) {
         );
     }
 
-    const first = rasterMetadata[0];
+    const firstSpatial = rasterMetadata[0]?.spatialContext;
 
     if (
-        !first?.spatialContext ||
-        !Array.isArray(first.spatialContext.origin) ||
-        !Array.isArray(first.spatialContext.resolution)
+        !firstSpatial ||
+        !Array.isArray(firstSpatial.origin) ||
+        !Array.isArray(firstSpatial.resolution)
     ) {
         throw spatialError(
             "Reference raster spatial metadata is incomplete.",
@@ -87,7 +106,6 @@ function calculateCommonFootprint(rasterMetadata) {
         );
     }
 
-    const firstSpatial = first.spatialContext;
     const firstResolution = firstSpatial.resolution;
 
     for (const item of rasterMetadata) {
@@ -146,18 +164,10 @@ function calculateCommonFootprint(rasterMetadata) {
     }
 
     const commonBounds = [
-        Math.max(
-            ...rasterMetadata.map(item => item.spatialContext.boundingBox[0])
-        ),
-        Math.max(
-            ...rasterMetadata.map(item => item.spatialContext.boundingBox[1])
-        ),
-        Math.min(
-            ...rasterMetadata.map(item => item.spatialContext.boundingBox[2])
-        ),
-        Math.min(
-            ...rasterMetadata.map(item => item.spatialContext.boundingBox[3])
-        )
+        Math.max(...rasterMetadata.map(item => item.spatialContext.boundingBox[0])),
+        Math.max(...rasterMetadata.map(item => item.spatialContext.boundingBox[1])),
+        Math.min(...rasterMetadata.map(item => item.spatialContext.boundingBox[2])),
+        Math.min(...rasterMetadata.map(item => item.spatialContext.boundingBox[3]))
     ];
 
     if (
@@ -172,7 +182,6 @@ function calculateCommonFootprint(rasterMetadata) {
 
     const windows = rasterMetadata.map(item => {
         const spatial = item.spatialContext;
-
         const [minX, minY, maxX, maxY] = commonBounds;
         const [originX, originY] = spatial.origin;
         const [resolutionX, resolutionY] = spatial.resolution;
@@ -222,22 +231,6 @@ function calculateCommonFootprint(rasterMetadata) {
     };
 }
 
-function isValidDateString(value) {
-    if (
-        typeof value !== "string" ||
-        !/^\d{4}-\d{2}-\d{2}$/.test(value)
-    ) {
-        return false;
-    }
-
-    const date = new Date(`${value}T00:00:00Z`);
-
-    return (
-        !Number.isNaN(date.getTime()) &&
-        date.toISOString().slice(0, 10) === value
-    );
-}
-
 function hasMatchingWindowGrid(observations, commonFootprint) {
     const first = observations[0];
 
@@ -283,11 +276,7 @@ async function postCropConditionTemporalInterpretation(req, res) {
             });
         }
 
-        for (
-            let index = 1;
-            index < requestedObservations.length;
-            index += 1
-        ) {
+        for (let index = 1; index < requestedObservations.length; index += 1) {
             if (
                 requestedObservations[index].observationDate <=
                 requestedObservations[index - 1].observationDate
@@ -303,7 +292,7 @@ async function postCropConditionTemporalInterpretation(req, res) {
         const resolvedProducts = [];
         const rasterReferences = [];
 
-        // Pass 1: resolve products and inspect raster metadata.
+        // Resolve published products and inspect their raster metadata.
         for (const requested of requestedObservations) {
             const observationDate = requested.observationDate;
             const sceneId = requested.sceneId.trim();
@@ -363,19 +352,14 @@ async function postCropConditionTemporalInterpretation(req, res) {
             }
         }
 
-        // Calculate the exact shared footprint without resampling.
         const commonFootprint = calculateCommonFootprint(
             resolvedProducts.map(item => item.rasterMetadata)
         );
 
-        // Pass 2: read statistics only within each common-footprint window.
+        // Read observation statistics within the common footprint.
         const observations = [];
 
-        for (
-            let index = 0;
-            index < resolvedProducts.length;
-            index += 1
-        ) {
+        for (let index = 0; index < resolvedProducts.length; index += 1) {
             const item = resolvedProducts[index];
 
             const observation = await createPublishedIndexObservation({
@@ -409,9 +393,7 @@ async function postCropConditionTemporalInterpretation(req, res) {
             });
         }
 
-        const firstDate =
-            observations[0].observation.observationDate;
-
+        const firstDate = observations[0].observation.observationDate;
         const lastDate =
             observations[observations.length - 1].observation.observationDate;
 
@@ -477,6 +459,8 @@ async function postCropConditionTemporalInterpretation(req, res) {
         const temporalChange = analysisWorkflowResult.result;
         let pixelWiseChangeProduct = null;
 
+        // Generate the pixel-wise NDVI change raster only when no valid
+        // persisted result exists for this exact comparison identity.
         if (indexCode === "NDVI") {
             const firstProduct = resolvedProducts[0];
             const lastProduct = resolvedProducts[resolvedProducts.length - 1];
@@ -508,7 +492,9 @@ async function postCropConditionTemporalInterpretation(req, res) {
             });
 
             const paths = buildCropConditionEvidencePaths({
-                comparisonId
+                comparisonId,
+                baselineDate: baseline.date,
+                comparisonDate: comparison.date
             });
 
             const cachedEvidence =
@@ -557,7 +543,7 @@ async function postCropConditionTemporalInterpretation(req, res) {
             pixelWiseChangeProduct = {
                 comparisonId,
                 productCode: "NDVI_TEMPORAL_CHANGE",
-                fileName: "NDVI_CHANGE.tif",
+                fileName: paths.rasterFileName,
                 relativePath: path.relative(
                     process.cwd(),
                     paths.rasterPath
@@ -578,6 +564,7 @@ async function postCropConditionTemporalInterpretation(req, res) {
                 cacheStatus
             };
         }
+
         const evidence = createCropConditionEvidence({
             indexObservations: observations,
             classifications: [],
@@ -600,13 +587,10 @@ async function postCropConditionTemporalInterpretation(req, res) {
                     windows: commonFootprint.windows
                 },
                 observations: observations.map((observation, index) => ({
-                    observationDate:
-                        observation.observation.observationDate,
+                    observationDate: observation.observation.observationDate,
                     sceneId: observation.observation.sceneId,
-                    validPixelCount:
-                        observation.statistics.validPixelCount,
-                    noDataPixelCount:
-                        observation.statistics.noDataPixelCount,
+                    validPixelCount: observation.statistics.validPixelCount,
+                    noDataPixelCount: observation.statistics.noDataPixelCount,
                     pixelWindow: commonFootprint.windows[index]
                 }))
             },
@@ -641,11 +625,9 @@ async function postCropConditionTemporalInterpretation(req, res) {
             "NO_COMMON_TEMPORAL_FOOTPRINT"
         ];
 
-        const status = spatialConflictCodes.includes(error.code)
-            ? 409
-            : 500;
-
-        return res.status(status).json({
+        return res.status(
+            spatialConflictCodes.includes(error.code) ? 409 : 500
+        ).json({
             success: false,
             code: error.code ||
                 "CROP_CONDITION_TEMPORAL_INTERPRETATION_ERROR",

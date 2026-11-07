@@ -4,7 +4,40 @@ const path = require("path");
 const crypto = require("crypto");
 const NO_DATA_VALUE = -9999;
 const PRODUCT_CODE = "NDVI_TEMPORAL_CHANGE";
-const OUTPUT_BASENAME = "NDVI_CHANGE.tif";
+function isValidIsoDate(value) {
+    if (
+        typeof value !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(value)
+    ) {
+        return false;
+    }
+
+    const date = new Date(`${value}T00:00:00.000Z`);
+
+    return (
+        !Number.isNaN(date.getTime()) &&
+        date.toISOString().slice(0, 10) === value
+    );
+}
+
+function buildTemporalChangeRasterFilename(observationDates) {
+    if (
+        !Array.isArray(observationDates) ||
+        observationDates.length !== 2 ||
+        !isValidIsoDate(observationDates[0]) ||
+        !isValidIsoDate(observationDates[1]) ||
+        observationDates[0] >= observationDates[1]
+    ) {
+        throw new Error(
+            "Exactly two valid chronological observation dates are required"
+        );
+    }
+
+    const baselineDate = observationDates[0].replace(/-/g, "");
+    const comparisonDate = observationDates[1].replace(/-/g, "");
+
+    return `NDVI_CHANGE_${baselineDate}_${comparisonDate}.tif`;
+}
 
 function ascii(value) {
     return Buffer.from(`${value}\0`, "ascii");
@@ -153,15 +186,19 @@ async function writeCropConditionTemporalChangeRaster({
     }
 
     const destination = path.resolve(outputPath);
-    if (path.basename(destination).toUpperCase() !== OUTPUT_BASENAME.toUpperCase()) {
-        throw new Error("Output filename must be NDVI_CHANGE.tif");
+    const expectedBasename = buildTemporalChangeRasterFilename(
+        productMetadata.observationDates
+    );
+
+    if (path.basename(destination) !== expectedBasename) {
+        throw new Error(`Output filename must be ${expectedBasename}`);
     }
 
     await fs.mkdir(path.dirname(destination), { recursive: true });
 
     const temporaryPath = path.join(
         path.dirname(destination),
-        `.${OUTPUT_BASENAME}.${process.pid}.${crypto.randomUUID()}.tmp`
+        `.${expectedBasename}.${process.pid}.${crypto.randomUUID()}.tmp`
     );
 
     const stripBytes = width * 4;

@@ -71,9 +71,21 @@ test("calculates pixel-wise NDVI change over an aligned common footprint", async
     );
 
     const files = {
-        baseline: path.join(directory, "baseline", "NDVI_CHANGE.tif"),
-        comparison: path.join(directory, "comparison", "NDVI_CHANGE.tif"),
-        output: path.join(directory, "condition", "NDVI_CHANGE.tif")
+        baseline: path.join(
+            directory,
+            "baseline",
+            "NDVI_CHANGE_20260908_20260928.tif"
+        ),
+        comparison: path.join(
+            directory,
+            "comparison",
+            "NDVI_CHANGE_20260908_20260928.tif"
+        ),
+        output: path.join(
+            directory,
+            "condition",
+            "NDVI_CHANGE_20260908_20260928.tif"
+        )
     };
 
     const baseline = {

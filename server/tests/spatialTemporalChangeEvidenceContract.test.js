@@ -66,7 +66,7 @@ function createValidEvidence() {
         },
 
         raster: {
-            fileName: "NDVI_CHANGE.tif",
+            fileName: "NDVI_CHANGE_20260908_20260928.tif",
             productCode: "NDVI_TEMPORAL_CHANGE",
             format: "GeoTIFF",
             dataType: "Float32",
@@ -204,6 +204,19 @@ test("rejects a non-chronological comparison", () => {
     assert.equal(validation.valid, false);
     assert.ok(validation.errors.some(
         error => error.includes("later than baseline")
+    ));
+});
+
+test("rejects a raster filename that does not match observation dates", () => {
+    const evidence = createValidEvidence();
+    evidence.raster.fileName = "NDVI_CHANGE.tif";
+
+    const validation =
+        validateSpatialTemporalChangeEvidence(evidence);
+
+    assert.equal(validation.valid, false);
+    assert.ok(validation.errors.some(
+        error => error.includes("raster.fileName")
     ));
 });
 

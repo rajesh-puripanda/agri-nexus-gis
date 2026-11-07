@@ -62,7 +62,9 @@ async function createFixture(t) {
 
     const paths = service.buildCropConditionEvidencePaths({
         projectRoot,
-        comparisonId
+        comparisonId,
+        baselineDate: baseline.date,
+        comparisonDate: comparison.date
     });
 
     const result = {
@@ -259,7 +261,10 @@ test("missing raster prevents reuse", async t => {
             schemaVersion: service.MANIFEST_SCHEMA_VERSION,
             identity: fixture.identity,
             raster: {
-                fileName: service.RASTER_FILENAME,
+                fileName: service.buildTemporalChangeRasterFilename([
+                    fixture.baseline.date,
+                    fixture.comparison.date
+                ]),
                 byteLength: 11
             },
             evidence: fixture.result
@@ -333,7 +338,10 @@ test("valid manifest and raster are published", async t => {
 
     assert.equal(published.published, true);
     assert.equal(published.comparisonId, fixture.paths.comparisonId);
-    assert.equal(published.raster.fileName, "NDVI_CHANGE.tif");
+    assert.equal(
+        published.raster.fileName,
+        "NDVI_CHANGE_20260801_20260908.tif"
+    );
     assert.equal(published.raster.width, 100);
     assert.equal(published.evidence.method, "comparison_minus_baseline");
     assert.equal(published.identity.indexCode, "NDVI");
