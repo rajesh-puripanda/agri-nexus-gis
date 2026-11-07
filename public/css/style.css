@@ -4063,3 +4063,25 @@ PRINT
   overflow-y: auto;
   overflow-x: hidden;
 }
+/* Temporal NDVI change legend */
+#cropTemporalChangeLegend {
+  display: block;
+  margin-top: 14px;
+  font-size: 0.82rem;
+}
+
+#cropTemporalChangeLegend h4 {
+  margin-bottom: 8px;
+}
+
+#cropTemporalChangeLegend .index-legend-gradient {
+  height: 14px;
+  border-radius: 4px;
+  margin: 6px 0;
+}
+
+#cropTemporalChangeLegend .index-legend-labels {
+  display: flex;
+  justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+}

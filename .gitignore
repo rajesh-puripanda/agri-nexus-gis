@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 node_modules/
 
 # Environment / secrets
@@ -35,3 +35,4 @@ build/
 /data/remote-sensing/
 /tools/
 /data/crop-intelligence/condition/
+/data/crop-intelligence/render-cache/

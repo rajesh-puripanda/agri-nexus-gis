@@ -612,7 +612,88 @@
                     observations are available.
                   </p>
                 </div>
+                <hr />
 
+                <h4>Temporal NDVI Comparison</h4>
+
+                <label for="cropTemporalBaseline">
+                  Baseline observation
+                </label>
+                <select id="cropTemporalBaseline">
+                  <option value="">Select baseline observation</option>
+                </select>
+
+                <label for="cropTemporalComparison">
+                  Comparison observation
+                </label>
+                <select id="cropTemporalComparison">
+                  <option value="">Select comparison observation</option>
+                </select>
+
+                <button
+                  id="generateCropTemporalComparison"
+                  type="button"
+                  class="secondary-button"
+                >
+                  Generate Temporal Comparison
+                </button>
+
+                <div id="cropTemporalComparisonOutput">
+                  <p class="analysis-empty-state">
+                    Select two observations to compare temporal NDVI change.
+                  </p>
+                </div>
+                <div
+                  id="cropTemporalLayerControls"
+                  class="analysis-layer-controls"
+                  hidden
+                >
+                  <hr />
+
+                  <h4>Temporal NDVI Change Layer</h4>
+
+                  <label>
+                    <input
+                      id="cropTemporalLayerToggle"
+                      type="checkbox"
+                      checked
+                    />
+                    Show temporal change layer
+                  </label>
+
+                  <label for="cropTemporalOpacity">
+                    Layer opacity
+                  </label>
+
+                  <div class="opacity-control">
+                    <input
+                      id="cropTemporalOpacity"
+                      type="range"
+                      min="0"
+                      max="100"
+                      value="72"
+                    />
+                    <span id="cropTemporalOpacityValue">72%</span>
+                  </div>
+
+                  <div
+                    id="cropTemporalChangeLegend"
+                    class="index-legend"
+                  >
+                    <h4>NDVI Change (Comparison − Baseline)</h4>
+
+                    <div
+                      class="index-legend-gradient"
+                      style="background: linear-gradient(to right, #be232d, #e6e6e6, #1e964b);"
+                    ></div>
+
+                    <div class="index-legend-labels">
+                      <span id="cropTemporalLegendMin">Negative</span>
+                      <span>Zero</span>
+                      <span id="cropTemporalLegendMax">Positive</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </details>
 

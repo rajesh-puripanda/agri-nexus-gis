@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 /*
 ============================================================
@@ -31,6 +31,11 @@
   let cropNdviClassificationRenderSequence = 0;
   let cropNdviClassificationOpacity = 0.72;
   let remoteSensingBusy = false;
+  let cropNdviTemporalComparison = null;
+  let cropNdviTemporalChangeLayer = null;
+  let cropNdviTemporalChangeLayerVisible = true;
+  let cropNdviTemporalChangeOpacity = 0.72;
+  let cropNdviTemporalChangeRenderSequence = 0;
   const SENTINEL2_OBSERVATION_DISCOVERY_URL =
     "/api/remote-sensing/sentinel2-observations";
 
@@ -439,6 +444,116 @@ observationCount:
 
     updateSentinel2AcquisitionContext();
   }
+    function renderTemporalObservationOptions() {
+    const baselineSelect = document.getElementById(
+      "cropTemporalBaseline"
+    );
+
+    const comparisonSelect = document.getElementById(
+      "cropTemporalComparison"
+    );
+
+    if (!baselineSelect || !comparisonSelect) {
+      return;
+    }
+
+    const observations =
+      sentinel2ObservationContext.observations
+        .filter(
+          (observation) =>
+            observation.sceneId &&
+            observation.acquisitionDate
+        )
+        .sort(
+          (a, b) =>
+            String(a.acquisitionDate).localeCompare(
+              String(b.acquisitionDate)
+            )
+        );
+
+    const populate = (select, placeholder) => {
+      const previousValue = select.value;
+
+      select.replaceChildren(
+        new Option(placeholder, "")
+      );
+
+      observations.forEach((observation) => {
+        const date = String(
+          observation.acquisitionDate
+        ).slice(0, 10);
+
+        const option = new Option(
+          `${date} — ${observation.sceneId}`,
+          observation.sceneId
+        );
+
+        option.dataset.observationDate = date;
+        select.add(option);
+      });
+
+      if (
+        previousValue &&
+        observations.some(
+          (observation) =>
+            observation.sceneId === previousValue
+        )
+      ) {
+        select.value = previousValue;
+      }
+    };
+
+    populate(
+      baselineSelect,
+      "Select baseline observation"
+    );
+
+    populate(
+      comparisonSelect,
+      "Select comparison observation"
+    );
+
+    updateTemporalComparisonOptions();
+  }
+    function updateTemporalComparisonOptions() {
+    const baselineSelect = document.getElementById(
+      "cropTemporalBaseline"
+    );
+
+    const comparisonSelect = document.getElementById(
+      "cropTemporalComparison"
+    );
+
+    if (!baselineSelect || !comparisonSelect) {
+      return;
+    }
+
+    const baselineOption =
+      baselineSelect.selectedOptions[0];
+
+    const baselineDate =
+      baselineOption?.dataset.observationDate || "";
+
+    Array.from(comparisonSelect.options).forEach(
+      (option) => {
+        if (!option.value) {
+          option.disabled = false;
+          return;
+        }
+
+        option.disabled =
+          option.value === baselineSelect.value ||
+          (baselineDate &&
+            option.dataset.observationDate <= baselineDate);
+      }
+    );
+
+    if (
+      comparisonSelect.selectedOptions[0]?.disabled
+    ) {
+      comparisonSelect.value = "";
+    }
+  }
   function bindCropNdviControls() {
     // Continuous NDVI controls
     const layerToggle = document.getElementById(
@@ -485,6 +600,50 @@ observationCount:
         );
       });
     }
+        // Temporal NDVI comparison controls
+    const temporalBaseline = document.getElementById(
+      "cropTemporalBaseline"
+    );
+
+    const temporalComparison = document.getElementById(
+      "cropTemporalComparison"
+    );
+
+    if (temporalBaseline) {
+      temporalBaseline.addEventListener("change", () => {
+        updateTemporalComparisonOptions();
+      });
+    }
+
+    if (temporalComparison) {
+      temporalComparison.addEventListener("change", () => {
+        updateTemporalComparisonOptions();
+      });
+    }
+
+        const temporalLayerToggle = document.getElementById(
+      "cropTemporalLayerToggle"
+    );
+
+    const temporalOpacity = document.getElementById(
+      "cropTemporalOpacity"
+    );
+
+    if (temporalLayerToggle) {
+      temporalLayerToggle.addEventListener("change", () => {
+        setCropNdviTemporalChangeVisibility(
+          temporalLayerToggle.checked
+        );
+      });
+    }
+
+    if (temporalOpacity) {
+      temporalOpacity.addEventListener("input", () => {
+        setCropNdviTemporalChangeOpacity(
+          Number(temporalOpacity.value) / 100
+        );
+      });
+    }  
   }
   function clearSentinel2ObservationSelection() {
     sentinel2ObservationContext.selectedSceneId =
@@ -930,6 +1089,7 @@ observationCount:
 
   async function discoverSentinel2Observations() {
     updateSentinel2AcquisitionContext();
+    renderTemporalObservationOptions();
     if (
       sentinel2AcquisitionContext.startDate &&
       sentinel2AcquisitionContext.endDate &&
@@ -987,8 +1147,8 @@ observationCount:
             Array.isArray(observation.scenes)
               ? observation.scenes
               : [],
-        );
-
+        );  
+      renderTemporalObservationOptions();
       const observationDates =
         groupedObservations
           .map(
@@ -2073,6 +2233,62 @@ observationCount:
     updateCropConditionLayerControls();
   }
 
+    function clearCropNdviTemporalChangeLayer() {
+    const map =
+      typeof window.getMap === "function"
+        ? window.getMap()
+        : null;
+
+    if (
+      map &&
+      cropNdviTemporalChangeLayer &&
+      map.hasLayer(cropNdviTemporalChangeLayer)
+    ) {
+      map.removeLayer(cropNdviTemporalChangeLayer);
+    }
+
+    cropNdviTemporalChangeLayer = null;
+  }
+
+  function setCropNdviTemporalChangeVisibility(isVisible) {
+    cropNdviTemporalChangeLayerVisible = Boolean(isVisible);
+
+    const map =
+      typeof window.getMap === "function"
+        ? window.getMap()
+        : null;
+
+    if (!map || !cropNdviTemporalChangeLayer) return;
+
+    if (cropNdviTemporalChangeLayerVisible) {
+      cropNdviTemporalChangeLayer.addTo(map);
+    } else if (map.hasLayer(cropNdviTemporalChangeLayer)) {
+      map.removeLayer(cropNdviTemporalChangeLayer);
+    }
+  }
+
+  function setCropNdviTemporalChangeOpacity(opacity) {
+    const value = Number(opacity);
+
+    cropNdviTemporalChangeOpacity = Math.max(
+      0,
+      Math.min(1, Number.isFinite(value) ? value : 0.72)
+    );
+
+    cropNdviTemporalChangeLayer?.setOpacity(
+      cropNdviTemporalChangeOpacity
+    );
+
+    const label = document.getElementById(
+      "cropTemporalOpacityValue"
+    );
+
+    if (label) {
+      label.textContent =
+        `${Math.round(cropNdviTemporalChangeOpacity * 100)}%`;
+    }
+  }
+
   function clearCropNdviClassificationLayer() {
     const map =
       typeof window.getMap === "function"
@@ -2698,6 +2914,30 @@ observationCount:
         }
 
         [red, green, blue] = classColor;
+            } else if (displayContext.diverging) {
+        const range = Math.max(
+          Math.abs(displayContext.min ?? 0),
+          Math.abs(displayContext.max ?? 0)
+        );
+
+        const ratio = range > 0
+          ? Math.max(-1, Math.min(1, value / range))
+          : 0;
+
+        const neutral = [230, 230, 230];
+        const negative = [190, 35, 45];
+        const positive = [30, 150, 75];
+
+        const target = ratio < 0 ? negative : positive;
+        const intensity = Math.abs(ratio);
+
+        [red, green, blue] = neutral.map(
+          (channel, index) =>
+            Math.round(
+              channel +
+              (target[index] - channel) * intensity
+            )
+        );
       } else {
         red = Math.round(255 * normalized);
 
@@ -2728,7 +2968,7 @@ observationCount:
     }
 
     context.putImageData(imageData, 0, 0);
-    if (!isClassification) {
+    if (!isClassification && !displayContext.diverging) {
       const remoteElements = getElements();
 
       const indexLegend =
@@ -4152,6 +4392,10 @@ observationCount:
             typeof window.getActiveWorkspace === "function" &&
             window.getActiveWorkspace() === "crop"
           ) {
+            updateRemoteSensingProgress(
+              65,
+              "Loading Crop Condition raster layers..."
+            );
             Promise.all([
               renderCropNdviOutput(),
               renderCropNdviClassificationOutput(),
@@ -4530,6 +4774,14 @@ observationCount:
     }
 
     button.disabled = true;
+    setRemoteSensingBusy(true);
+    setApplicationProcessingLock(true);
+    updateApplicationProcessingLockMessage(
+      "Generating Crop Condition Evidence..."
+    );
+    resetRemoteSensingProgress(
+      "Generating Crop Condition Evidence..."
+    );
     if (content) content.textContent = "Generating interpretation";
 
     try {
@@ -4543,6 +4795,11 @@ observationCount:
       if (!response.ok || !result.success) {
         throw new Error(result.message || "Interpretation request failed.");
       }
+
+      updateRemoteSensingProgress(
+        55,
+        "Crop Condition Evidence generated. Preparing raster layers..."
+      );
 
       const interpretation = result.interpretation;
       content.replaceChildren();
@@ -4583,6 +4840,11 @@ observationCount:
             );
           }
 
+          updateRemoteSensingProgress(
+            65,
+            "Loading Crop Condition raster layers..."
+          );
+
           await Promise.all([
             renderCropNdviOutput(),
             renderCropNdviClassificationOutput(),
@@ -4599,6 +4861,370 @@ observationCount:
         error.message || "Unable to generate interpretation.";
     } finally {
       button.disabled = false;
+      setRemoteSensingBusy(false);
+      setApplicationProcessingLock(false);
+      hideRemoteSensingProgress();
+    }
+  }
+  
+  async function renderCropNdviTemporalChange(product) {
+    const sequence = ++cropNdviTemporalChangeRenderSequence;
+
+    if (typeof GeoTIFF === "undefined") {
+      throw new Error("GeoTIFF library is unavailable.");
+    }
+
+    const map =
+      typeof window.getMap === "function"
+        ? window.getMap()
+        : null;
+
+    if (!map) {
+      throw new Error("Map is not initialized.");
+    }
+
+    if (!product?.comparisonId) {
+      throw new Error("Temporal comparison ID is missing.");
+    }
+
+    updateRemoteSensingProgress(
+      55,
+      "Temporal comparison generated. Preparing raster..."
+    );
+
+    const url =
+      `/api/remote-sensing/crop-condition/comparisons/` +
+      `${encodeURIComponent(product.comparisonId)}/raster`;
+
+    updateRemoteSensingProgress(
+      65,
+      "Downloading temporal NDVI change raster..."
+    );
+
+    const response = await fetch(url, {
+      headers: { Accept: "image/tiff" },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Temporal NDVI raster request failed: ${response.status}`
+      );
+    }
+
+    if (!response.body) {
+      throw new Error("Temporal raster streaming is unavailable.");
+    }
+
+    const reader = response.body.getReader();
+    const chunks = [];
+    let received = 0;
+    const total = Number(response.headers.get("Content-Length")) || 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      if (sequence !== cropNdviTemporalChangeRenderSequence) {
+        await reader.cancel();
+        return;
+      }
+
+      chunks.push(value);
+      received += value.length;
+
+      if (total > 0) {
+        const percent = 65 + Math.round(
+          (received / total) * 20
+        );
+
+        updateRemoteSensingProgress(
+          Math.min(85, percent),
+          "Downloading temporal NDVI change raster..."
+        );
+      }
+    }
+
+    if (sequence !== cropNdviTemporalChangeRenderSequence) return;
+
+    const buffer = new Uint8Array(received);
+    let offset = 0;
+
+    for (const chunk of chunks) {
+      buffer.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    updateRemoteSensingProgress(
+      88,
+      "Decoding temporal NDVI change raster..."
+    );
+
+    const tiff = await GeoTIFF.fromArrayBuffer(buffer.buffer);
+    if (sequence !== cropNdviTemporalChangeRenderSequence) return;
+
+    const image = await tiff.getImage();
+    const imageWidth = image.getWidth();
+    const imageHeight = image.getHeight();
+
+    const scale = Math.min(
+      1,
+      MAX_RENDER_SIZE / Math.max(imageWidth, imageHeight)
+    );
+
+    const renderWidth = Math.max(
+      1,
+      Math.round(imageWidth * scale)
+    );
+
+    const renderHeight = Math.max(
+      1,
+      Math.round(imageHeight * scale)
+    );
+
+    const raster = await image.readRasters({
+      samples: [0],
+      width: renderWidth,
+      height: renderHeight,
+      resampleMethod: "nearest",
+      interleave: true,
+    });
+
+    if (sequence !== cropNdviTemporalChangeRenderSequence) return;
+
+    const statistics = product.statistics || {};
+    const min = Number(statistics.min);
+    const max = Number(statistics.max);
+
+    if (!Number.isFinite(min) || !Number.isFinite(max)) {
+      throw new Error("Temporal raster statistics are unavailable.");
+    }
+
+    const range = Math.max(Math.abs(min), Math.abs(max));
+
+    const canvas = createRasterCanvas(
+      raster,
+      renderWidth,
+      renderHeight,
+      false,
+      "NDVI_TEMPORAL_CHANGE",
+      {
+        diverging: true,
+        min: -range,
+        max: range,
+      }
+    );
+
+    const bounds = getLatLngBoundsFromGeoTIFF(image);
+    const imageUrl = canvas.toDataURL("image/png");
+
+    if (sequence !== cropNdviTemporalChangeRenderSequence) return;
+
+    clearCropNdviTemporalChangeLayer();
+
+    cropNdviTemporalChangeLayer = L.imageOverlay(
+      imageUrl,
+      bounds,
+      {
+        opacity: cropNdviTemporalChangeOpacity,
+        interactive: false,
+        crossOrigin: false,
+        className: "crop-ndvi-temporal-change-layer",
+      }
+    );
+
+    if (cropNdviTemporalChangeLayerVisible) {
+      cropNdviTemporalChangeLayer.addTo(map);
+    }
+
+    const controls = document.getElementById(
+      "cropTemporalLayerControls"
+    );
+
+    if (controls) controls.hidden = false;
+
+    const toggle = document.getElementById(
+      "cropTemporalLayerToggle"
+    );
+
+    if (toggle) {
+      toggle.checked = cropNdviTemporalChangeLayerVisible;
+    }
+
+    const opacity = document.getElementById(
+      "cropTemporalOpacity"
+    );
+
+    if (opacity) {
+      opacity.value = String(
+        Math.round(cropNdviTemporalChangeOpacity * 100)
+      );
+    }
+
+    setCropNdviTemporalChangeOpacity(
+      cropNdviTemporalChangeOpacity
+    );
+
+    const legendMin = document.getElementById(
+      "cropTemporalLegendMin"
+    );
+
+    const legendMax = document.getElementById(
+      "cropTemporalLegendMax"
+    );
+
+    if (legendMin) legendMin.textContent = (-range).toFixed(3);
+    if (legendMax) legendMax.textContent = range.toFixed(3);
+
+    map.fitBounds(bounds, {
+      padding: [20, 20],
+      maxZoom: 13,
+    });
+  }
+
+  async function generateTemporalCropComparison() {
+    const button = document.getElementById(
+      "generateCropTemporalComparison"
+    );
+    const content = document.getElementById(
+      "cropTemporalComparisonOutput"
+    );
+    const baselineSelect = document.getElementById(
+      "cropTemporalBaseline"
+    );
+    const comparisonSelect = document.getElementById(
+      "cropTemporalComparison"
+    );
+
+    const baselineSceneId = baselineSelect?.value;
+    const comparisonSceneId = comparisonSelect?.value;
+
+    const baselineDate =
+      baselineSelect?.selectedOptions[0]?.dataset.observationDate;
+
+    const comparisonDate =
+      comparisonSelect?.selectedOptions[0]?.dataset.observationDate;
+
+    if (
+      !baselineSceneId ||
+      !comparisonSceneId ||
+      !baselineDate ||
+      !comparisonDate ||
+      baselineDate >= comparisonDate
+    ) {
+      if (content) {
+        content.textContent =
+          "Select two distinct observations in chronological order.";
+      }
+      return;
+    }
+
+    button.disabled = true;
+    setRemoteSensingBusy(true);
+    setApplicationProcessingLock(true);
+    updateApplicationProcessingLockMessage(
+      "Generating temporal NDVI comparison..."
+    );
+    resetRemoteSensingProgress(
+      "Submitting temporal NDVI comparison..."
+    );
+
+    if (content) {
+      content.textContent = "Generating temporal NDVI comparison...";
+    }
+
+    try {
+      const response = await fetch(
+        "/api/remote-sensing/crop-interpretation/temporal",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            indexCode: "NDVI",
+            observations: [
+              {
+                observationDate: baselineDate,
+                sceneId: baselineSceneId,
+              },
+              {
+                observationDate: comparisonDate,
+                sceneId: comparisonSceneId,
+              },
+            ],
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message ||
+          "Temporal NDVI comparison request failed."
+        );
+      }
+
+      const product =
+        result.cropConditionProducts?.temporalChange;
+
+      if (!product?.comparisonId) {
+        throw new Error(
+          "The temporal comparison response contains no comparison ID."
+        );
+      }
+
+      if (content) {
+        content.replaceChildren();
+
+        const heading = document.createElement("h4");
+        heading.textContent = "Temporal NDVI Change Evidence";
+        content.appendChild(heading);
+
+        const dates = document.createElement("p");
+        dates.textContent =
+          `Baseline: ${baselineDate} | Comparison: ${comparisonDate}`;
+        content.appendChild(dates);
+
+        const method = document.createElement("p");
+        method.textContent =
+          `Method: ${product.method} | Calibration: ${product.calibrationStatus}`;
+        content.appendChild(method);
+
+        const statistics = product.statistics || {};
+        const summary = document.createElement("p");
+        summary.textContent =
+          `Valid coverage: ${Number(statistics.validCoveragePercent).toFixed(2)}% | ` +
+          `Minimum: ${Number(statistics.min).toFixed(4)} | ` +
+          `Maximum: ${Number(statistics.max).toFixed(4)} | ` +
+          `Mean: ${Number(statistics.mean).toFixed(4)}`;
+        content.appendChild(summary);
+
+        const note = document.createElement("p");
+        note.textContent =
+          "Positive values indicate an increase in NDVI; negative values indicate a decrease. Evidence only — not a calibrated crop diagnosis.";
+        content.appendChild(note);
+      }
+
+      cropNdviTemporalComparison = product;
+
+      await renderCropNdviTemporalChange(product);
+
+      completeRemoteSensingProgress(
+        "Temporal NDVI change layer loaded."
+      );
+
+    } catch (error) {
+      if (content) {
+        content.textContent =
+          error.message ||
+          "Unable to generate temporal NDVI comparison.";
+      }
+    } finally {
+      button.disabled = false;
+      setRemoteSensingBusy(false);
+      setApplicationProcessingLock(false);
+      hideRemoteSensingProgress();
     }
   }
   function initializeRemoteSensingTool() {
@@ -4649,6 +5275,16 @@ observationCount:
     const frequencyPanel = document.getElementById(
       "remoteSensingFrequencyPanel"
     );
+        const temporalComparisonButton = document.getElementById(
+      "generateCropTemporalComparison"
+    );
+
+    if (temporalComparisonButton) {
+      temporalComparisonButton.addEventListener(
+        "click",
+        generateTemporalCropComparison
+      );
+    }    
 
     function selectAnalysisTab(showFrequency) {
       if (
