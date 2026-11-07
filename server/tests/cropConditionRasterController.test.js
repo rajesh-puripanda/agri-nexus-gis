@@ -1,4 +1,3 @@
-
 "use strict";
 
 const { test, after, beforeEach } = require("node:test");
@@ -7,14 +6,22 @@ const assert = require("node:assert/strict");
 const dependencyPath =
     "../services/cropIntelligence/cropConditionEvidencePersistenceService";
 
+const renderDependencyPath =
+    "../services/cropIntelligence/cropConditionTemporalRasterRenderService";
+
 const controllerPath = require.resolve(
     "../controllers/cropConditionRasterController"
 );
 
 const resolvedDependency = require.resolve(dependencyPath);
+const resolvedRenderDependency = require.resolve(renderDependencyPath);
 
 const originalModules = new Map(
-    [resolvedDependency, controllerPath].map(path => [
+    [
+        resolvedDependency,
+        resolvedRenderDependency,
+        controllerPath
+    ].map(path => [
         path,
         require.cache[path]
     ])
@@ -25,6 +32,7 @@ const state = {};
 
 function resetState() {
     calls.findPublishedCropConditionEvidence = [];
+    calls.ensureCropConditionTemporalRasterRenderCache = [];
 
     state.result = {
         published: true,
@@ -51,6 +59,22 @@ require.cache[resolvedDependency] = {
             }
 
             return state.result;
+        }
+    }
+};
+
+require.cache[resolvedRenderDependency] = {
+    id: resolvedRenderDependency,
+    filename: resolvedRenderDependency,
+    loaded: true,
+    exports: {
+        ensureCropConditionTemporalRasterRenderCache: async request => {
+            calls.ensureCropConditionTemporalRasterRenderCache.push(request);
+
+            return {
+                cachePath: "test/crop-condition/NDVI_CHANGE_webmercator.tif",
+                reused: true
+            };
         }
     }
 };
@@ -121,11 +145,19 @@ test("serves a verified Crop Condition temporal-change GeoTIFF", async () => {
         [{ comparisonId: "CROP-CONDITION-NDVI-TEST" }]
     );
 
+    assert.deepEqual(
+        calls.ensureCropConditionTemporalRasterRenderCache,
+        [{
+            comparisonId: "CROP-CONDITION-NDVI-TEST",
+            sourcePath: "test/crop-condition/NDVI_CHANGE.tif"
+        }]
+    );
+
     assert.equal(res.statusCode, 200);
     assert.equal(res.contentType, "image/tiff");
     assert.equal(
         res.sentFile,
-        "test/crop-condition/NDVI_CHANGE.tif"
+        "test/crop-condition/NDVI_CHANGE_webmercator.tif"
     );
 });
 
@@ -148,6 +180,10 @@ test("returns 404 when the comparison is not published", async () => {
         "CROP_CONDITION_RASTER_NOT_FOUND"
     );
     assert.equal(res.sentFile, null);
+    assert.equal(
+        calls.ensureCropConditionTemporalRasterRenderCache.length,
+        0
+    );
 });
 
 test("returns 500 when publication verification fails", async () => {
@@ -170,6 +206,10 @@ test("returns 500 when publication verification fails", async () => {
             "CROP_CONDITION_RASTER_DELIVERY_ERROR"
         );
         assert.equal(res.sentFile, null);
+        assert.equal(
+            calls.ensureCropConditionTemporalRasterRenderCache.length,
+            0
+        );
     } finally {
         console.error = originalError;
     }

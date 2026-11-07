@@ -5,6 +5,10 @@ const {
     findPublishedCropConditionEvidence
 } = require("../services/cropIntelligence/cropConditionEvidencePersistenceService");
 
+const {
+    ensureCropConditionTemporalRasterRenderCache
+} = require("../services/cropIntelligence/cropConditionTemporalRasterRenderService");
+
 async function getCropConditionTemporalChangeRaster(req, res) {
     try {
         const { comparisonId } = req.params;
@@ -21,9 +25,15 @@ async function getCropConditionTemporalChangeRaster(req, res) {
             });
         }
 
-        res.type("image/tiff");
+        const renderResult =
+            await ensureCropConditionTemporalRasterRenderCache({
+                comparisonId,
+                sourcePath: result.rasterPath
+            });
 
-        return res.sendFile(result.rasterPath);
+        res.type("image/tiff");
+        return res.sendFile(renderResult.cachePath);
+
     } catch (error) {
         console.error(
             "Crop condition raster delivery error:",
