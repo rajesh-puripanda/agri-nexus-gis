@@ -503,6 +503,12 @@ async function postCropConditionTemporalInterpretation(req, res) {
                     expectedIdentity: identity
                 });
 
+            console.log("[Temporal cache check]", {
+                comparisonId,
+                reusable: cachedEvidence.reusable,
+                reason: cachedEvidence.reason
+            });
+
             let rasterMetadata;
             let changeEvidence;
             let cacheStatus;

@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 /*
 ============================================================
@@ -5118,18 +5118,38 @@ observationCount:
       return;
     }
 
+    const comparisonAlreadyLoaded =
+      cropNdviTemporalComparison?.baselineSceneId === baselineSceneId &&
+      cropNdviTemporalComparison?.comparisonSceneId === comparisonSceneId &&
+      cropNdviTemporalComparison?.comparisonId &&
+      Boolean(cropNdviTemporalChangeLayer);
+
+    if (comparisonAlreadyLoaded) {
+      if (content) {
+        content.textContent =
+          "This temporal NDVI comparison is already loaded.";
+      }
+
+      completeRemoteSensingProgress(
+        "Existing temporal NDVI comparison is already loaded."
+      );
+      return;
+    }
+
     button.disabled = true;
     setRemoteSensingBusy(true);
     setApplicationProcessingLock(true);
     updateApplicationProcessingLockMessage(
-      "Generating temporal NDVI comparison..."
+      "Checking for existing temporal NDVI evidence..."
     );
+
     resetRemoteSensingProgress(
-      "Submitting temporal NDVI comparison..."
+      "Checking saved temporal NDVI evidence..."
     );
 
     if (content) {
-      content.textContent = "Generating temporal NDVI comparison...";
+      content.textContent =
+        "Checking whether this temporal comparison already exists...";
     }
 
     try {
@@ -5173,6 +5193,8 @@ observationCount:
           "The temporal comparison response contains no comparison ID."
         );
       }
+      product.baselineSceneId = baselineSceneId;
+      product.comparisonSceneId = comparisonSceneId;
 
       if (content) {
         content.replaceChildren();
@@ -5185,6 +5207,12 @@ observationCount:
         dates.textContent =
           `Baseline: ${baselineDate} | Comparison: ${comparisonDate}`;
         content.appendChild(dates);
+        const cacheStatus = document.createElement("p");
+        cacheStatus.textContent =
+          product.cacheStatus === "reused"
+            ? "Existing temporal NDVI evidence found. Reusing saved raster and evidence."
+            : "New temporal NDVI evidence generated and saved.";
+        content.appendChild(cacheStatus);
 
         const method = document.createElement("p");
         method.textContent =
@@ -5206,12 +5234,21 @@ observationCount:
         content.appendChild(note);
       }
 
-      cropNdviTemporalComparison = product;
+      const comparisonAlreadyLoaded =
+      cropNdviTemporalComparison?.comparisonId ===
+        product.comparisonId &&
+      Boolean(cropNdviTemporalChangeLayer);
 
+    cropNdviTemporalComparison = product;
+
+    if (!comparisonAlreadyLoaded) {
       await renderCropNdviTemporalChange(product);
+    }
 
       completeRemoteSensingProgress(
-        "Temporal NDVI change layer loaded."
+        product.cacheStatus === "reused"
+          ? "Existing temporal NDVI evidence loaded."
+          : "New temporal NDVI evidence generated and loaded."
       );
 
     } catch (error) {
